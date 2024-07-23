@@ -14,12 +14,11 @@ const Hero = () => {
           animate={{ opacity: 0.9, scale: 1, backgroundColor: "#000000" }}
           transition={{
             duration: 3,
-
             ease: "easeInOut",
           }}
         >
           <Image
-            src="/pexels-olia-danilevich-4974912.jpg"
+            src="/heroBg.jpg"
             alt="background image"
             className="w-full"
             style={{
@@ -30,7 +29,7 @@ const Hero = () => {
             fill
           />
         </motion.div>
-        <div className="absolute inset-0 flex justify-center items-center mb-24">
+        <div className="absolute inset-0 flex flex-col justify-center items-center mb-24 space-y-6">
           <motion.h1
             className="text-white text-7xl text-center"
             initial={{ opacity: 0, y: -100, x: 0 }}
@@ -46,8 +45,24 @@ const Hero = () => {
             }}
           >
             Welcome to, <br />
-            Top of the Web
+            Bsites.io
           </motion.h1>
+          <motion.p
+            className="text-white text-2xl text-center"
+            initial={{ opacity: 0, y: 100, x: 0 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            transition={{ duration: 3 }}
+          >
+            Where the best websites are crafted
+          </motion.p>
+          <motion.button
+            className="mt-8 px-6 py-3 bg-blue-600 text-white text-lg rounded-full shadow-lg"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 2, ease: "easeInOut" }}
+          >
+            Get Started
+          </motion.button>
         </div>
       </div>
     </main>
