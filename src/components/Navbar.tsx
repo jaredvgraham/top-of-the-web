@@ -1,6 +1,8 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import Image from "next/image";
 
 const Navbar = () => {
@@ -20,11 +22,20 @@ const Navbar = () => {
     };
   }, []);
 
+  const linkVariants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
-    <nav className="whiteBoxTwo lightC w-full ">
+    <nav className="whiteBoxTwo lightC w-full">
       <ul className="flex justify-between items-center p-6">
-        <li>
-          <Link href="/" className=" text-gray-600 flex items-center gap-2">
+        <motion.li
+          initial="hidden"
+          animate="visible"
+          transition={{ duration: 1, ease: "easeInOut" }}
+        >
+          <Link href="/" className="text-gray-600 flex items-center gap-2">
             {/* <Image
               className="rounded-full"
               alt="logo"
@@ -34,26 +45,42 @@ const Navbar = () => {
             /> */}
             {!isMobile && <p>Top of the Web</p>}
           </Link>
-        </li>
+        </motion.li>
         <div className="flex justify-between gap-4">
-          <li>
-            <Link href="/pricing" className=" text-gray-600 ">
+          <motion.li
+            initial="hidden"
+            animate="visible"
+            transition={{ duration: 2, delay: 0.2, ease: "easeInOut" }}
+            variants={linkVariants}
+          >
+            <Link href="/pricing" className="text-gray-600">
               Pricing
             </Link>
-          </li>
-          <li>
-            <a href="/#about" className="  text-gray-600">
+          </motion.li>
+          <motion.li
+            initial="hidden"
+            animate="visible"
+            transition={{ duration: 2, delay: 0.4, ease: "easeInOut" }}
+            variants={linkVariants}
+          >
+            <a href="/#about" className="text-gray-600">
               Our Mission
             </a>
-          </li>
-          <li>
-            <Link href="/contact" className=" text-gray-600">
+          </motion.li>
+          <motion.li
+            initial="hidden"
+            animate="visible"
+            transition={{ duration: 2, delay: 0.6, ease: "easeInOut" }}
+            variants={linkVariants}
+          >
+            <Link href="/contact" className="text-gray-600">
               Contact
             </Link>
-          </li>
+          </motion.li>
         </div>
       </ul>
     </nav>
   );
 };
+
 export default Navbar;

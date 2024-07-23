@@ -14,11 +14,12 @@ const Hero = () => {
           animate={{ opacity: 0.9, scale: 1, backgroundColor: "#000000" }}
           transition={{
             duration: 3,
+
             ease: "easeInOut",
           }}
         >
           <Image
-            src="/bg1.jpg"
+            src="/bg2.jpg"
             alt="background image"
             className="w-full"
             style={{
