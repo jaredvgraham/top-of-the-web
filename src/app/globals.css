@@ -31,3 +31,7 @@ body {
     text-wrap: balance;
   }
 }
+
+.hero-height {
+  height: 80vh;
+}
