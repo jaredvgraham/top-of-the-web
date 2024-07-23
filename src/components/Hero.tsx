@@ -19,7 +19,7 @@ const Hero = () => {
           }}
         >
           <Image
-            src="/pexels-divinetechygirl-1181244.jpg"
+            src="/pexels-olia-danilevich-4974912.jpg"
             alt="background image"
             className="w-full"
             style={{
