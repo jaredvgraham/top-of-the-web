@@ -34,7 +34,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="whiteBoxTwo lightC w-full">
+    <nav className="absolute top-0 left-0 w-full  z-20">
       <ul className="flex justify-between items-center p-6">
         <motion.li
           initial="hidden"
@@ -43,7 +43,7 @@ const Navbar = () => {
           onMouseEnter={() => setHoveredLink("home")}
           onMouseLeave={() => setHoveredLink(null)}
         >
-          <Link href="/" className="text-gray-600 flex items-center gap-2">
+          <Link href="/" className="text-white flex items-center gap-2">
             {!isMobile && <p>Top of the Web</p>}
           </Link>
         </motion.li>
@@ -56,7 +56,7 @@ const Navbar = () => {
             onMouseEnter={() => setHoveredLink("pricing")}
             onMouseLeave={() => setHoveredLink(null)}
           >
-            <Link href="/pricing" className="text-gray-600">
+            <Link href="/pricing" className="text-white">
               Pricing
             </Link>
             <AnimatePresence>
@@ -87,7 +87,7 @@ const Navbar = () => {
             onMouseEnter={() => setHoveredLink("mission")}
             onMouseLeave={() => setHoveredLink(null)}
           >
-            <a href="/#about" className="text-gray-600">
+            <a href="/#about" className="text-white">
               Our Mission
             </a>
             <AnimatePresence>
@@ -118,7 +118,7 @@ const Navbar = () => {
             onMouseEnter={() => setHoveredLink("contact")}
             onMouseLeave={() => setHoveredLink(null)}
           >
-            <Link href="/contact" className="text-gray-600">
+            <Link href="/contact" className="text-white">
               Contact
             </Link>
             <AnimatePresence>
