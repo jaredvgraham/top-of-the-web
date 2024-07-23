@@ -16,6 +16,18 @@
   }
 }
 
+.box {
+  padding: 10px 20px;
+  border: 2px solid white;
+  border-radius: 5px;
+  text-align: center;
+  transition: background-color 0.3s ease;
+}
+
+.box:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(

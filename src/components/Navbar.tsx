@@ -24,7 +24,7 @@ const Navbar = () => {
     <nav className="whiteBoxTwo bg-black ">
       <ul className="flex justify-between items-center p-6">
         <li>
-          <Link href="/" className="text-white flex items-center gap-2">
+          <Link href="/" className="box text-white flex items-center gap-2">
             {/* <Image
               className="rounded-full"
               alt="logo"
@@ -37,17 +37,17 @@ const Navbar = () => {
         </li>
         <div className="flex justify-between gap-4">
           <li>
-            <Link href="/pricing" className="text-white">
+            <Link href="/pricing" className="box text-white">
               Pricing
             </Link>
           </li>
           <li>
-            <a href="/#about" className="text-white">
-              About
+            <a href="/#about" className=" box text-white">
+              Our Mission
             </a>
           </li>
           <li>
-            <Link href="/contact" className="text-white">
+            <Link href="/contact" className="box text-white">
               Contact
             </Link>
           </li>
