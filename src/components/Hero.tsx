@@ -19,7 +19,7 @@ const Hero = () => {
           }}
         >
           <Image
-            src="/bg2.jpg"
+            src="/pexels-divinetechygirl-1181244.jpg"
             alt="background image"
             className="w-full"
             style={{
