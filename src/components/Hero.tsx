@@ -11,7 +11,7 @@ const Hero = () => {
         <motion.div
           className="absolute -z-10 w-full hero-height"
           initial={{ opacity: 0, scale: 2 }}
-          animate={{ opacity: 0.8, scale: 1 }}
+          animate={{ opacity: 0.9, scale: 1 }}
           transition={{
             duration: 3,
             ease: "easeInOut",
@@ -24,14 +24,14 @@ const Hero = () => {
             style={{
               objectFit: "cover",
               objectPosition: "center",
-              opacity: 0.8,
+              opacity: 0.9,
             }}
             fill
           />
         </motion.div>
         <div className="absolute inset-0 flex justify-center items-center mb-24">
           <motion.h1
-            className="text-white text-4xl text-center"
+            className="text-white text-7xl text-center"
             initial={{ opacity: 0, y: -100, x: 0 }}
             animate={{
               opacity: 1,
