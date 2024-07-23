@@ -33,7 +33,7 @@ const Navbar = () => {
         <motion.li
           initial="hidden"
           animate="visible"
-          transition={{ duration: 1, ease: "easeInOut" }}
+          transition={{ duration: 3, ease: "easeInOut" }}
         >
           <Link href="/" className="text-gray-600 flex items-center gap-2">
             {/* <Image
@@ -50,7 +50,7 @@ const Navbar = () => {
           <motion.li
             initial="hidden"
             animate="visible"
-            transition={{ duration: 2, delay: 0.2, ease: "easeInOut" }}
+            transition={{ duration: 1, delay: 0.2, ease: "easeInOut" }}
             variants={linkVariants}
           >
             <Link href="/pricing" className="text-gray-600">
@@ -60,7 +60,7 @@ const Navbar = () => {
           <motion.li
             initial="hidden"
             animate="visible"
-            transition={{ duration: 2, delay: 0.4, ease: "easeInOut" }}
+            transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
             variants={linkVariants}
           >
             <a href="/#about" className="text-gray-600">
@@ -70,7 +70,7 @@ const Navbar = () => {
           <motion.li
             initial="hidden"
             animate="visible"
-            transition={{ duration: 2, delay: 0.6, ease: "easeInOut" }}
+            transition={{ duration: 1, delay: 0.7, ease: "easeInOut" }}
             variants={linkVariants}
           >
             <Link href="/contact" className="text-gray-600">
