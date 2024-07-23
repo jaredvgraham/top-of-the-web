@@ -11,7 +11,7 @@ const Hero = () => {
         <motion.div
           className="absolute -z-10 w-full hero-height"
           initial={{ opacity: 0, scale: 2 }}
-          animate={{ opacity: 0.9, scale: 1 }}
+          animate={{ opacity: 0.9, scale: 1, backgroundColor: "#000000" }}
           transition={{
             duration: 3,
             ease: "easeInOut",

@@ -21,10 +21,10 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className="whiteBoxTwo bg-gray-50 ">
+    <nav className="whiteBoxTwo lightC w-full ">
       <ul className="flex justify-between items-center p-6">
         <li>
-          <Link href="/" className="box text-gray-600 flex items-center gap-2">
+          <Link href="/" className=" text-gray-600 flex items-center gap-2">
             {/* <Image
               className="rounded-full"
               alt="logo"
@@ -37,17 +37,17 @@ const Navbar = () => {
         </li>
         <div className="flex justify-between gap-4">
           <li>
-            <Link href="/pricing" className="box text-gray-600">
+            <Link href="/pricing" className=" text-gray-600 ">
               Pricing
             </Link>
           </li>
           <li>
-            <a href="/#about" className=" box text-gray-600">
+            <a href="/#about" className="  text-gray-600">
               Our Mission
             </a>
           </li>
           <li>
-            <Link href="/contact" className="box text-gray-600">
+            <Link href="/contact" className=" text-gray-600">
               Contact
             </Link>
           </li>
