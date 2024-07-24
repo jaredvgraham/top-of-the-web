@@ -1,3 +1,4 @@
+// components/Navbar.tsx
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
@@ -5,12 +6,16 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { MenuIcon, XIcon } from "@heroicons/react/solid";
+import { usePathname } from "next/navigation";
 
 const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  const isHomePage = pathname === "/";
 
   useEffect(() => {
     const handleResize = () => {
@@ -44,7 +49,11 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="absolute w-full navbarColor z-20">
+    <nav
+      className={`w-full z-20 ${
+        isHomePage ? "absolute navbarColor" : "bg-black"
+      }`}
+    >
       <ul className="flex justify-between items-center p-2">
         <motion.li
           initial="hidden"
