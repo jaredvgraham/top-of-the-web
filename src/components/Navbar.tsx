@@ -34,8 +34,8 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="absolute top-0 left-0 w-full  z-20 navbarColor">
-      <ul className="flex justify-between items-center p-6">
+    <nav className=" absolute w-full  navbarColor z-20 ">
+      <ul className="flex justify-between items-center p-2">
         <motion.li
           initial="hidden"
           animate="visible"
@@ -43,11 +43,15 @@ const Navbar = () => {
           onMouseEnter={() => setHoveredLink("home")}
           onMouseLeave={() => setHoveredLink(null)}
         >
-          <Link href="/" className="text-white flex items-center gap-2">
-            {!isMobile && <p>Bsites.io</p>}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Image src="/logo.png" width={120} height={120} alt={""} />
+            <Link
+              href="/"
+              className="text-white flex items-center gap-2"
+            ></Link>
+          </div>
         </motion.li>
-        <div className="flex justify-between gap-4">
+        <div className="flex justify-around gap-4 w-1/2">
           <motion.li
             initial="hidden"
             animate="visible"
@@ -56,7 +60,7 @@ const Navbar = () => {
             onMouseEnter={() => setHoveredLink("pricing")}
             onMouseLeave={() => setHoveredLink(null)}
           >
-            <Link href="/pricing" className="text-white">
+            <Link href="/pricing" className="text-white text-2xl">
               Pricing
             </Link>
             <AnimatePresence>
@@ -69,7 +73,7 @@ const Navbar = () => {
                   variants={submenuVariants}
                   transition={{ duration: 0.3 }}
                 >
-                  <li className="p-2">
+                  <li className="p-2 ">
                     <Link href="/pricing/basic">Basic Plan</Link>
                   </li>
                   <li className="p-2">
@@ -87,7 +91,7 @@ const Navbar = () => {
             onMouseEnter={() => setHoveredLink("mission")}
             onMouseLeave={() => setHoveredLink(null)}
           >
-            <a href="/#about" className="text-white">
+            <a href="/#about" className="text-white text-2xl">
               Our Mission
             </a>
             <AnimatePresence>
@@ -118,7 +122,7 @@ const Navbar = () => {
             onMouseEnter={() => setHoveredLink("contact")}
             onMouseLeave={() => setHoveredLink(null)}
           >
-            <Link href="/contact" className="text-white">
+            <Link href="/contact" className="text-white text-2xl">
               Contact
             </Link>
             <AnimatePresence>

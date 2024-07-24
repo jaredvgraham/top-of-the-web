@@ -87,7 +87,7 @@ const Hero = () => {
       <div className="relative z-10 flex flex-col md:flex-row justify-center items-center w-full h-full space-y-6 md:space-y-0 md:space-x-12 px-6">
         <div className="flex flex-col justify-center items-center text-center mb-24 md:mb-0">
           <motion.h1
-            className="text-white text-7xl font-extrabold "
+            className="text-white text-9xl font-extrabold gradient-text "
             initial={{ opacity: 0, y: -100, x: 0 }}
             animate={{
               opacity: 1,
