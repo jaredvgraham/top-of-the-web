@@ -115,7 +115,7 @@ const Hero = () => {
         </div>
         <div className=" relative flex flex-col justify-center items-center text-center bg-white bg-opacity-80 p-6 rounded-lg shadow-lg space-y-6 max-w-96">
           <motion.h1
-            className="text-3xl font-bold"
+            className="text-3xl font-bold text-gray-800"
             initial="hidden"
             animate="visible"
             variants={textVariants}
@@ -128,13 +128,8 @@ const Hero = () => {
             animate="visible"
             variants={textVariants}
             transition={{ delay: 1.5 }}
-            className="font-bold"
+            className="font-bold text-gray-700"
           >
-            {/* Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ipsum at,
-            rem accusamus doloremque minima enim reprehenderit? Explicabo
-            dolorum sint facilis minus reprehenderit omnis numquam voluptatem
-            consequatur in vitae laboriosam a, praesentium aliquid similique?
-            Labore deleniti ipsam nulla temporibus praesentium dolor. */}
             Launch your website quickly with our professional web development
             services. Get started with your highly functional and uniquely
             tailored website below.
