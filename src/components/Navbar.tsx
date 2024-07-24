@@ -51,7 +51,7 @@ const Navbar = () => {
   return (
     <nav
       className={`w-full z-20 ${
-        isHomePage ? "absolute navbarColor" : "bg-black"
+        isHomePage ? "absolute navbarColor" : "gradient-bg"
       }`}
     >
       <ul className="flex justify-between items-center p-2">
