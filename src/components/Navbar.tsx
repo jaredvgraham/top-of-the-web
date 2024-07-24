@@ -1,25 +1,35 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { MenuIcon, XIcon } from "@heroicons/react/solid";
 
 const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
 
-    handleResize();
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
 
+    handleResize();
     window.addEventListener("resize", handleResize);
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       window.removeEventListener("resize", handleResize);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -34,7 +44,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className=" absolute w-full  navbarColor z-20 ">
+    <nav className="absolute w-full navbarColor z-20">
       <ul className="flex justify-between items-center p-2">
         <motion.li
           initial="hidden"
@@ -49,102 +59,149 @@ const Navbar = () => {
             </Link>
           </div>
         </motion.li>
-        <div className="flex justify-around gap-4 w-1/2">
-          <motion.li
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 1, delay: 0.2, ease: "easeInOut" }}
-            variants={linkVariants}
-            onMouseEnter={() => setHoveredLink("pricing")}
-            onMouseLeave={() => setHoveredLink(null)}
-          >
-            <Link href="/pricing" className="text-white text-2xl font-bold">
-              Pricing
-            </Link>
-            <AnimatePresence>
-              {hoveredLink === "pricing" && (
-                <motion.ul
-                  className="absolute bg-white shadow-lg rounded-lg mt-2"
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                  variants={submenuVariants}
-                  transition={{ duration: 0.3 }}
-                >
-                  <li className="p-2 ">
-                    <Link href="/pricing/basic">Basic Plan</Link>
-                  </li>
-                  <li className="p-2">
-                    <Link href="/pricing/premium">Premium Plan</Link>
-                  </li>
-                </motion.ul>
+
+        {isMobile ? (
+          <div className="flex items-center">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-white"
+            >
+              {isMenuOpen ? (
+                <XIcon className="h-8 w-8" />
+              ) : (
+                <MenuIcon className="h-16 w-16" />
               )}
-            </AnimatePresence>
-          </motion.li>
-          <motion.li
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
-            variants={linkVariants}
-            onMouseEnter={() => setHoveredLink("mission")}
-            onMouseLeave={() => setHoveredLink(null)}
-          >
-            <a href="/#about" className="text-white text-2xl font-bold">
-              Our Mission
-            </a>
-            <AnimatePresence>
-              {hoveredLink === "mission" && (
-                <motion.ul
-                  className="absolute bg-white shadow-lg rounded-lg mt-2"
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                  variants={submenuVariants}
-                  transition={{ duration: 0.3 }}
-                >
-                  <li className="p-2">
-                    <a href="#about">Our Vision</a>
-                  </li>
-                  <li className="p-2">
-                    <a href="/mission/ourTeam">Our Team</a>
-                  </li>
-                </motion.ul>
-              )}
-            </AnimatePresence>
-          </motion.li>
-          <motion.li
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 1, delay: 0.7, ease: "easeInOut" }}
-            variants={linkVariants}
-            onMouseEnter={() => setHoveredLink("contact")}
-            onMouseLeave={() => setHoveredLink(null)}
-          >
-            <Link href="/contact" className="text-white text-2xl font-bold">
-              Contact
-            </Link>
-            <AnimatePresence>
-              {hoveredLink === "contact" && (
-                <motion.ul
-                  className="absolute bg-white shadow-lg rounded-lg mt-2"
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                  variants={submenuVariants}
-                  transition={{ duration: 0.3 }}
-                >
-                  <li className="p-2">
-                    <Link href="/contact/email">Email Us</Link>
-                  </li>
-                  <li className="p-2">
-                    <Link href="/contact/phone">Call Us</Link>
-                  </li>
-                </motion.ul>
-              )}
-            </AnimatePresence>
-          </motion.li>
-        </div>
+            </button>
+          </div>
+        ) : (
+          <div className="flex justify-around gap-4 w-1/2">
+            <motion.li
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 1, delay: 0.2, ease: "easeInOut" }}
+              variants={linkVariants}
+              onMouseEnter={() => setHoveredLink("pricing")}
+              onMouseLeave={() => setHoveredLink(null)}
+            >
+              <Link href="/pricing" className="text-white text-2xl font-bold">
+                Pricing
+              </Link>
+              <AnimatePresence>
+                {hoveredLink === "pricing" && (
+                  <motion.ul
+                    className="absolute bg-white shadow-lg rounded-lg mt-2"
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={submenuVariants}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <li className="p-2">
+                      <Link href="/pricing/basic">Basic Plan</Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/pricing/premium">Premium Plan</Link>
+                    </li>
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </motion.li>
+            <motion.li
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
+              variants={linkVariants}
+              onMouseEnter={() => setHoveredLink("mission")}
+              onMouseLeave={() => setHoveredLink(null)}
+            >
+              <a href="/#about" className="text-white text-2xl font-bold">
+                Our Mission
+              </a>
+              <AnimatePresence>
+                {hoveredLink === "mission" && (
+                  <motion.ul
+                    className="absolute bg-white shadow-lg rounded-lg mt-2"
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={submenuVariants}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <li className="p-2">
+                      <a href="#about">Our Vision</a>
+                    </li>
+                    <li className="p-2">
+                      <a href="/mission/ourTeam">Our Team</a>
+                    </li>
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </motion.li>
+            <motion.li
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 1, delay: 0.7, ease: "easeInOut" }}
+              variants={linkVariants}
+              onMouseEnter={() => setHoveredLink("contact")}
+              onMouseLeave={() => setHoveredLink(null)}
+            >
+              <Link href="/contact" className="text-white text-2xl font-bold">
+                Contact
+              </Link>
+              <AnimatePresence>
+                {hoveredLink === "contact" && (
+                  <motion.ul
+                    className="absolute bg-white shadow-lg rounded-lg mt-2"
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={submenuVariants}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <li className="p-2">
+                      <Link href="/contact/email">Email Us</Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/contact/phone">Call Us</Link>
+                    </li>
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </motion.li>
+          </div>
+        )}
       </ul>
+
+      <AnimatePresence>
+        {isMobile && isMenuOpen && (
+          <motion.div
+            ref={menuRef}
+            className="absolute top-0 left-0 w-full bg-white shadow-lg rounded-lg z-10"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ul>
+              <li className="p-4">
+                <Link href="/pricing" className="text-black text-2xl font-bold">
+                  Pricing
+                </Link>
+              </li>
+              <li className="p-4">
+                <a href="/#about" className="text-black text-2xl font-bold">
+                  Our Mission
+                </a>
+              </li>
+              <li className="p-4">
+                <Link href="/contact" className="text-black text-2xl font-bold">
+                  Contact
+                </Link>
+              </li>
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };
