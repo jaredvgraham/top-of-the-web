@@ -11,7 +11,7 @@ const WhyUs = () => {
   const [ref3, inView3] = useInView({ triggerOnce: true, threshold: 0.1 });
 
   return (
-    <div className="w-full py-16 bg-gray-100">
+    <div className="w-full py-16 ">
       <h1 className="text-4xl font-bold text-center mb-12 text-gray-800">
         Why Bsites.io?
       </h1>

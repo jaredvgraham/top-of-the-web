@@ -78,6 +78,7 @@ const Hero = () => {
           className="w-full h-full"
           style={{
             objectFit: "cover",
+
             objectPosition: "center",
           }}
           fill
