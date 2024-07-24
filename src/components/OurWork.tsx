@@ -15,11 +15,11 @@ const slideInVariants = (direction: string, delayAmount: number) => ({
 
 const OurWork = () => {
   const [ref1, inView1] = useInView({ triggerOnce: true, threshold: 0.2 });
-  const [ref2, inView2] = useInView({ triggerOnce: true, threshold: 0.4 });
+  const [ref2, inView2] = useInView({ triggerOnce: true, threshold: 0.2 });
 
   return (
     <div className="">
-      <h1 className="text-4xl font-bold text-center text-gray-800">
+      <h1 className="text-4xl font-light text-center text-gray-800">
         Happy Clients
       </h1>
       <div className="p-8 mt-4  grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
