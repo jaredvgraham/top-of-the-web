@@ -128,12 +128,16 @@ const Hero = () => {
             animate="visible"
             variants={textVariants}
             transition={{ delay: 1.5 }}
+            className="font-bold"
           >
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ipsum at,
+            {/* Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ipsum at,
             rem accusamus doloremque minima enim reprehenderit? Explicabo
             dolorum sint facilis minus reprehenderit omnis numquam voluptatem
             consequatur in vitae laboriosam a, praesentium aliquid similique?
-            Labore deleniti ipsam nulla temporibus praesentium dolor.
+            Labore deleniti ipsam nulla temporibus praesentium dolor. */}
+            Launch your website quickly with our professional web development
+            services. Get started with your highly functional and uniquely
+            tailored website below.
           </motion.p>
           <motion.button
             className="px-6 py-3 bg-blue-600 text-white text-lg rounded-full shadow-lg"

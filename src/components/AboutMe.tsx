@@ -27,7 +27,7 @@ const AboutMe = () => {
         !isMobile && "w-3/5"
       }flex flex-col   justify-center mx-auto items-center p-8 whiteBoxTwo `}
     >
-      <h1 className="text-center text-3xl p-4">Our Mission</h1>
+      <h1 className="text-center text-3xl p-4">Our Vision</h1>
       <div
         className={` flex justify-center  ${isMobile && "flex-col"} ${
           !isMobile && "ml-16"
@@ -42,7 +42,7 @@ const AboutMe = () => {
         /> */}
 
         <p className={`p-5  ${!isMobile && "w-1/2 pt-0"}`}>
-          At Top of the Web, our mission is to empower small businesses by
+          At Top of the Web, our vision is to empower small businesses by
           providing affordable, professional, and highly functional websites.
           With years of experience, our team of skilled web developers
           specializes in using cutting-edge technologies such as Next.js, React,

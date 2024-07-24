@@ -34,7 +34,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="absolute top-0 left-0 w-full  z-20">
+    <nav className="absolute top-0 left-0 w-full  z-20 navbarColor">
       <ul className="flex justify-between items-center p-6">
         <motion.li
           initial="hidden"
@@ -44,7 +44,7 @@ const Navbar = () => {
           onMouseLeave={() => setHoveredLink(null)}
         >
           <Link href="/" className="text-white flex items-center gap-2">
-            {!isMobile && <p>Top of the Web</p>}
+            {!isMobile && <p>Bsites.io</p>}
           </Link>
         </motion.li>
         <div className="flex justify-between gap-4">
@@ -101,10 +101,10 @@ const Navbar = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <li className="p-2">
-                    <a href="/mission/vision">Our Vision</a>
+                    <a href="#about">Our Vision</a>
                   </li>
                   <li className="p-2">
-                    <a href="/mission/team">Our Team</a>
+                    <a href="/mission/ourTeam">Our Team</a>
                   </li>
                 </motion.ul>
               )}
