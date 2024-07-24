@@ -38,7 +38,7 @@ const GettingStarted = () => {
           viewport={{ once: true }}
           transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
           whileHover={{ scale: 1.1 }}
-          onClick={() => Router.push("/contact")}
+          onClick={() => Router.push("/pricing")}
         >
           Get Started
         </motion.button>
