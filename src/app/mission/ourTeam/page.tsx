@@ -134,10 +134,10 @@ const OurTeam = () => {
               className="text-center mt-2 text-gray-600"
               variants={itemVariants}
             >
-              Jared is a talented front-end developer and designer with a keen
-              eye for aesthetics and user experience. Specializing in creating
-              visually appealing and highly functional interfaces, Jared
-              combines his expertise in design with cutting-edge front-end
+              Jared Graham is a talented front-end developer and designer with a
+              keen eye for aesthetics and user experience. Specializing in
+              creating visually appealing and highly functional interfaces,
+              Jared combines his expertise in design with cutting-edge front-end
               technologies. His passion lies in crafting intuitive and engaging
               user experiences that not only meet but exceed client
               expectations. Jared&apos;s dedication to staying current with
