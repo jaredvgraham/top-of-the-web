@@ -19,7 +19,7 @@ const OurWork = () => {
 
   return (
     <div className="p-3 bg-gray-50">
-      <h1 className="text-4xl font-bold text-center text-gray-600">
+      <h1 className="text-5xl font-extrabold text-center text-gray-800">
         Happy Clients
       </h1>
       <div className="p-8 mt-4  grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">

@@ -12,7 +12,7 @@ const WhyUs = () => {
 
   return (
     <div className="w-full py-16 bg-gray-50  ">
-      <h1 className="text-4xl bg-gray-50 font-bold text-center mb-12 text-gray-800">
+      <h1 className="text-5xl font-extrabold bg-gray-50 text-center mb-12 text-gray-800">
         Why Bsites.io?
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gray-50">
