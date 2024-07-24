@@ -113,7 +113,7 @@ const Hero = () => {
             Crafting Digital Excellence
           </motion.p>
         </div>
-        <div className=" relative flex flex-col justify-center items-center text-center bg-white bg-opacity-80 p-6 rounded-lg shadow-lg space-y-6 max-w-96">
+        <div className=" relative flex flex-col justify-center items-center text-center bg-white bg-opacity-60 p-6 rounded-lg shadow-lg space-y-6 max-w-96">
           <motion.h1
             className="text-3xl font-bold text-gray-800"
             initial="hidden"
