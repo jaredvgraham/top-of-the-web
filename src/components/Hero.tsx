@@ -1,5 +1,4 @@
 "use client";
-
 import Image from "next/image";
 import React from "react";
 import { motion } from "framer-motion";
@@ -147,7 +146,7 @@ const Hero = () => {
             whileHover="hover"
             onClick={() => Router.push("/pricing")}
           >
-            Get Started
+            Get Startedd
           </motion.button>
         </div>
       </div>
