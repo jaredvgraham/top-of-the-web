@@ -50,7 +50,7 @@ const steps = [
 
 const Process = () => {
   return (
-    <div className="relative py-16 ">
+    <div className="relative py-16 bg-gray-50 ">
       <div className="absolute top-0 left-0 w-full h-full bg-pattern opacity-10 pointer-events-none"></div>
       <div className="container mx-auto text-center relative z-10">
         <h2 className="text-5xl font-extrabold mb-16 text-gray-800">

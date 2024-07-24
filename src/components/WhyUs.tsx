@@ -11,11 +11,11 @@ const WhyUs = () => {
   const [ref3, inView3] = useInView({ triggerOnce: true, threshold: 0.1 });
 
   return (
-    <div className="w-full py-16   ">
-      <h1 className="text-4xl  font-bold text-center mb-12 text-gray-800">
+    <div className="w-full py-16 bg-gray-50  ">
+      <h1 className="text-4xl bg-gray-50 font-bold text-center mb-12 text-gray-800">
         Why Bsites.io?
       </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gray-50">
         <motion.div
           ref={ref1}
           className="p-8 m-4 rounded-lg shadow-2xl bg-white"
