@@ -140,10 +140,10 @@ const OurTeam = () => {
               combines his expertise in design with cutting-edge front-end
               technologies. His passion lies in crafting intuitive and engaging
               user experiences that not only meet but exceed client
-              expectations. Jared's dedication to staying current with industry
-              trends ensures that every project he undertakes is innovative and
-              modern. He is committed to delivering top-notch design solutions
-              that elevate the digital presence of any brand.
+              expectations. Jared&apos;s dedication to staying current with
+              industry trends ensures that every project he undertakes is
+              innovative and modern. He is committed to delivering top-notch
+              design solutions that elevate the digital presence of any brand.
             </motion.p>
           </motion.div>
         </div>

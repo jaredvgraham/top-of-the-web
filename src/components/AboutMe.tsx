@@ -54,9 +54,9 @@ const AboutMe = () => {
           advanced user authentication systems, and seamlessly integrate
           third-party services, all tailored to your unique business needs. By
           leveraging these advanced technologies, we ensure your business stands
-          out in today's competitive digital landscape, offering you a seamless,
-          efficient, and scalable online experience that goes beyond the
-          limitations of traditional platforms.
+          out in today&#39;s competitive digital landscape, offering you a
+          seamless, efficient, and scalable online experience that goes beyond
+          the limitations of traditional platforms.
         </p>
       </div>
     </div>

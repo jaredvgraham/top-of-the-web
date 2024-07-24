@@ -28,14 +28,14 @@ const WhyUs = () => {
             Fast Delivery
           </h2>
           <p className="text-gray-600">
-            Time is of the essence in today's fast-paced business environment,
-            and we pride ourselves on delivering high-quality websites within an
-            impressive timeframe of 1 to 5 days. Unlike many competitors who may
-            take weeks or even months to complete a project, our efficient
-            workflow and experienced team enable us to deliver rapid results
-            without compromising on quality. This quick turnaround time allows
-            you to launch your website sooner, helping you to start attracting
-            customers and generating revenue almost immediately.
+            Time is of the essence in today&#39;s fast-paced business
+            environment, and we pride ourselves on delivering high-quality
+            websites within an impressive timeframe of 1 to 5 days. Unlike many
+            competitors who may take weeks or even months to complete a project,
+            our efficient workflow and experienced team enable us to deliver
+            rapid results without compromising on quality. This quick turnaround
+            time allows you to launch your website sooner, helping you to start
+            attracting customers and generating revenue almost immediately.
           </p>
         </motion.div>
         <motion.div
