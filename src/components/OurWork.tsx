@@ -44,6 +44,11 @@ const OurWork = () => {
               ></iframe>
             </div>
           </div>
+          <a href="https://grahampowerwashing.com">
+            <h2 className="text-xl italic font-semibold text-center mb-8 text-blue-500 underline ">
+              GrahamPowerWashing.com
+            </h2>
+          </a>
         </motion.section>
         <motion.section
           className="mb-16"
@@ -66,6 +71,11 @@ const OurWork = () => {
               ></iframe>
             </div>
           </div>
+          <a href="https://jakecleanscars.com">
+            <h2 className="text-xl italic font-semibold text-center mb-8 text-blue-500 underline ">
+              JakeCleansCars.com
+            </h2>
+          </a>
         </motion.section>
       </div>
     </div>
