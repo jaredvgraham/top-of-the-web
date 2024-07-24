@@ -44,11 +44,9 @@ const Navbar = () => {
           onMouseLeave={() => setHoveredLink(null)}
         >
           <div className="flex items-center gap-2">
-            <Image src="/logo.png" width={120} height={120} alt={""} />
-            <Link
-              href="/"
-              className="text-white flex items-center gap-2"
-            ></Link>
+            <Link href="/" className="text-white flex items-center gap-2">
+              <Image src="/logo.png" width={120} height={120} alt={""} />
+            </Link>
           </div>
         </motion.li>
         <div className="flex justify-around gap-4 w-1/2">
@@ -60,7 +58,7 @@ const Navbar = () => {
             onMouseEnter={() => setHoveredLink("pricing")}
             onMouseLeave={() => setHoveredLink(null)}
           >
-            <Link href="/pricing" className="text-white text-2xl">
+            <Link href="/pricing" className="text-white text-2xl font-bold">
               Pricing
             </Link>
             <AnimatePresence>
@@ -91,7 +89,7 @@ const Navbar = () => {
             onMouseEnter={() => setHoveredLink("mission")}
             onMouseLeave={() => setHoveredLink(null)}
           >
-            <a href="/#about" className="text-white text-2xl">
+            <a href="/#about" className="text-white text-2xl font-bold">
               Our Mission
             </a>
             <AnimatePresence>
@@ -122,7 +120,7 @@ const Navbar = () => {
             onMouseEnter={() => setHoveredLink("contact")}
             onMouseLeave={() => setHoveredLink(null)}
           >
-            <Link href="/contact" className="text-white text-2xl">
+            <Link href="/contact" className="text-white text-2xl font-bold">
               Contact
             </Link>
             <AnimatePresence>

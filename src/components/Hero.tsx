@@ -26,7 +26,7 @@ const Hero = () => {
       opacity: 1,
       x: 0,
       transition: {
-        duration: 1.5,
+        duration: 1.2,
         ease: "easeOut",
         delay: 2, // Add delay here
       },
@@ -55,7 +55,7 @@ const Hero = () => {
   const imageVariants = {
     hidden: { opacity: 0, scale: 2 },
     visible: {
-      opacity: 1,
+      opacity: 0.8,
       scale: 1,
       backgroundColor: "#000000",
       transition: {
@@ -66,7 +66,7 @@ const Hero = () => {
   };
 
   return (
-    <main className="relative flex flex-col justify-between items-center w-full h-screen">
+    <main className="relative flex flex-col justify-between items-center w-full h-screen imageOverlay">
       <motion.div
         className="absolute -z-10 w-full h-full"
         initial="hidden"
@@ -87,7 +87,7 @@ const Hero = () => {
       <div className="relative z-10 flex flex-col md:flex-row justify-center items-center w-full h-full space-y-6 md:space-y-0 md:space-x-12 px-6">
         <div className="flex flex-col justify-center items-center text-center mb-24 md:mb-0">
           <motion.h1
-            className="text-white text-9xl font-extrabold gradient-text "
+            className="text-white text-9xl font-extrabold "
             initial={{ opacity: 0, y: -100, x: 0 }}
             animate={{
               opacity: 1,
@@ -104,13 +104,13 @@ const Hero = () => {
             Bsites.io
           </motion.h1>
           <motion.p
-            className="text-white text-2xl"
+            className="text-white text-2xl font-bold"
             initial="hidden"
             animate="visible"
             variants={slideInVariants}
             transition={{ delay: 0.5 }} // Slight delay for a staggered effect
           >
-            Where the best websites are crafted
+            Crafting Digital Excellence
           </motion.p>
         </div>
         <div className="flex flex-col justify-center items-center text-center bg-white bg-opacity-80 p-6 rounded-lg shadow-lg space-y-6 max-w-96">
