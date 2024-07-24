@@ -87,7 +87,7 @@ const Hero = () => {
       <div className="relative z-10 flex flex-col md:flex-row justify-center items-center w-full h-full space-y-6 md:space-y-0 md:space-x-12 px-6">
         <div className="flex flex-col justify-center items-center text-center mb-24 md:mb-0">
           <motion.h1
-            className="text-white text-4xl md:text-6xl lg:text-9xl font-extrabold "
+            className="gradient-text text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-extrabold "
             initial={{ opacity: 0, y: -100, x: 0 }}
             animate={{
               opacity: 1,
@@ -104,7 +104,7 @@ const Hero = () => {
             Bsites.io
           </motion.h1>
           <motion.p
-            className="text-white text-2xl font-bold"
+            className="gradient-text text-2xl font-bold"
             initial="hidden"
             animate="visible"
             variants={slideInVariants}
@@ -140,7 +140,7 @@ const Hero = () => {
             tailored website below.
           </motion.p>
           <motion.button
-            className="px-6 py-3 bg-blue-600 text-white text-lg rounded-full shadow-lg"
+            className="px-6 py-3 gradient-bg text-white text-lg rounded-full shadow-lg"
             initial="hidden"
             animate="visible"
             variants={buttonVariants}

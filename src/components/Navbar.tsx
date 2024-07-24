@@ -54,7 +54,7 @@ const Navbar = () => {
           onMouseLeave={() => setHoveredLink(null)}
         >
           <div className="flex items-center gap-2">
-            <Link href="/" className="text-white flex items-center gap-2">
+            <Link href="/" className="gradient-text flex items-center gap-2">
               <Image src="/logo.png" width={120} height={120} alt={""} />
             </Link>
           </div>
