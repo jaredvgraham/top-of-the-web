@@ -30,7 +30,7 @@ const AboutMe = () => {
       <h1 className="text-center text-3xl p-4">Our Vision</h1>
       <div
         className={` flex justify-center  ${isMobile && "flex-col"} ${
-          !isMobile && "ml-16"
+          !isMobile && "ml-16 "
         }`}
       >
         {/* <Image
