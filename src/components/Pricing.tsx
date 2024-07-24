@@ -179,13 +179,18 @@ const Pricing = () => {
         {packages.map((pkg) => (
           <motion.div
             key={pkg.title}
-            className={`p-10 rounded-lg shadow-2xl transform transition-transform bg-white hover:shadow-3xl ${
+            className={`relative p-10 rounded-lg shadow-2xl transform transition-transform bg-white hover:shadow-3xl ${
               pkg.title === "Standard Website Package"
-                ? "border-2 border-blue-500 scale-105"
+                ? "border-2 gradient-border scale-105 "
                 : ""
             }`}
             variants={itemVariants}
           >
+            {pkg.title === "Standard Website Package" && (
+              <div className="absolute top-0 right-0 gradient-tag text-white text-xs font-bold px-2 py-1 rounded-bl-lg">
+                Most Popular
+              </div>
+            )}
             <h2 className="text-4xl font-bold mb-6 text-gray-900">
               {pkg.title}
             </h2>

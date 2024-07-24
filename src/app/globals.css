@@ -103,3 +103,12 @@ body {
   z-index: 10;
   background: transparent;
 }
+
+.gradient-border {
+  border-image-source: linear-gradient(45deg, #ca98fb, #73c2ff, #379cc1);
+  border-image-slice: 1;
+}
+
+.gradient-tag {
+  background: linear-gradient(45deg, #ca98fb, #73c2ff, #379cc1);
+}
