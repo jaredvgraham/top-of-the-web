@@ -55,7 +55,7 @@ const Navbar = () => {
         >
           <div className="flex items-center gap-2">
             <Link href="/" className="gradient-text flex items-center gap-2">
-              <Image src="/logo.png" width={120} height={120} alt={""} />
+              <Image src="/white-logo.png" width={120} height={120} alt={""} />
             </Link>
           </div>
         </motion.li>

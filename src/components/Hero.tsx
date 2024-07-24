@@ -113,7 +113,7 @@ const Hero = () => {
             Crafting Digital Excellence
           </motion.p>
         </div>
-        <div className="flex flex-col justify-center items-center text-center bg-white bg-opacity-80 p-6 rounded-lg shadow-lg space-y-6 max-w-96">
+        <div className=" relative flex flex-col justify-center items-center text-center bg-white bg-opacity-80 p-6 rounded-lg shadow-lg space-y-6 max-w-96">
           <motion.h1
             className="text-3xl font-bold"
             initial="hidden"
@@ -149,6 +149,13 @@ const Hero = () => {
           >
             Get Started
           </motion.button>
+          <Image
+            src="/logo.png"
+            className=" absolute bottom-1 right-2"
+            width={60}
+            height={60}
+            alt="logo"
+          />
         </div>
       </div>
     </main>
