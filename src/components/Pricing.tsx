@@ -165,8 +165,8 @@ const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-300 p-12">
-      <h1 className="text-6xl font-normal text-center mb-20 text-gray-800">
+    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-300 p-10">
+      <h1 className="text-6xl font-extrabold text-center mb-20 text-gray-800">
         Our Pricing
       </h1>
       <motion.div
@@ -178,25 +178,27 @@ const Pricing = () => {
         {packages.map((pkg) => (
           <motion.div
             key={pkg.title}
-            className={`relative p-10 rounded-lg shadow-2xl transform transition-transform bg-white hover:shadow-3xl ${
+            className={`relative p-7 rounded-lg shadow-lg transform transition-transform bg-white hover:shadow-2xl ${
               pkg.title === "Standard Website Package"
-                ? "border-2 gradient-border scale-105 "
+                ? "border-4 gradient-border scale-105 "
                 : ""
             }`}
             variants={itemVariants}
           >
             {pkg.title === "Standard Website Package" && (
-              <div className="absolute top-0 right-0 gradient-tag text-white text-xs font-bold px-2 py-1 rounded-bl-lg">
+              <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-400 to-purple-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg">
                 Most Popular
               </div>
             )}
-            <h2 className="text-4xl font-bold mb-6 text-gray-900">
-              {pkg.title}
-            </h2>
-            <p className="text-3xl font-semibold mb-6 text-blue-500">
-              {pkg.price}
-            </p>
-            <ul className="list-disc pl-5 space-y-4 text-gray-700">
+            <div className="bg-gradient-to-r from-gray-400 to-gray-600 p-4 rounded-t-lg">
+              <h2 className="text-4xl font-bold mb-4 text-white text-center">
+                {pkg.title}
+              </h2>
+              <p className="text-3xl font-semibold mb-6 text-white text-center">
+                {pkg.price}
+              </p>
+            </div>
+            <ul className="list-disc pl-12 space-y-3 p-4 text-gray-700">
               {pkg.features.map((feature) => (
                 <li key={feature}>{feature}</li>
               ))}
@@ -204,7 +206,7 @@ const Pricing = () => {
           </motion.div>
         ))}
       </motion.div>
-      <h2 className="text-5xl font-bold text-center my-20 text-gray-800">
+      <h2 className="text-5xl font-extrabold text-center my-20 text-gray-800">
         Add-On Services
       </h2>
       <motion.div
@@ -216,16 +218,18 @@ const Pricing = () => {
         {addOns.map((addon) => (
           <motion.div
             key={addon.title}
-            className="p-10 rounded-lg shadow-2xl transform transition-transform bg-white hover:shadow-3xl"
+            className="p-6 rounded-lg shadow-lg transform transition-transform bg-white hover:shadow-2xl"
             variants={itemVariants}
           >
-            <h2 className="text-4xl font-bold mb-6 text-gray-900">
-              {addon.title}
-            </h2>
-            <p className="text-3xl font-semibold mb-6 text-blue-500">
-              {addon.price}
-            </p>
-            <ul className="list-disc pl-5 space-y-4 text-gray-700">
+            <div className="bg-gradient-to-r from-gray-400 to-gray-600 p-4 rounded-t-lg">
+              <h2 className="text-4xl font-bold mb-4 text-white text-center">
+                {addon.title}
+              </h2>
+              <p className="text-3xl font-semibold mb-6 text-white text-center">
+                {addon.price}
+              </p>
+            </div>
+            <ul className="list-disc pl-12 space-y-3 p-4 text-gray-700">
               {addon.features.map((feature) => (
                 <li key={feature}>{feature}</li>
               ))}
