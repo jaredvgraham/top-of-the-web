@@ -165,12 +165,12 @@ const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-300 p-10">
+    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-300 p-2 md:p-10">
       <h1 className="text-6xl font-extrabold text-center mb-20 text-gray-800">
         Our Pricing
       </h1>
       <motion.div
-        className="grid grid-cols-1 lg:grid-cols-3 gap-12"
+        className="grid grid-cols-1 lg:grid-cols-3 gap-12 "
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -178,7 +178,7 @@ const Pricing = () => {
         {packages.map((pkg) => (
           <motion.div
             key={pkg.title}
-            className={`relative p-7 rounded-lg shadow-lg transform transition-transform bg-white hover:shadow-2xl ${
+            className={`relative p-7  rounded-lg shadow-lg transform transition-transform bg-white hover:shadow-2xl ${
               pkg.title === "Standard Website Package"
                 ? "border-4 gradient-border scale-105 "
                 : ""
