@@ -36,7 +36,7 @@ const Mission = () => {
           className="relative flex items-center justify-center bg-cover bg-center text-white"
           style={{ backgroundImage: "url('/mission-background.jpg')" }}
         >
-          <div className="absolute inset-0 bg-black opacity-50"></div>
+          <div className="inset-0 bg-black opacity-50"></div>
           <motion.div
             className="relative z-10 text-center p-8"
             initial={{ opacity: 0, y: -50 }}
