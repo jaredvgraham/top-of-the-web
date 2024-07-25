@@ -7,6 +7,7 @@ import OurWork from "@/components/OurWork";
 import Services from "@/components/Services";
 import Process from "@/components/Process";
 import GettingStarted from "@/components/GettingStarted";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -67,6 +68,7 @@ export default function Home() {
       <WhyUs />
       <Process />
       <GettingStarted />
+      <Footer />
     </>
   );
 }
