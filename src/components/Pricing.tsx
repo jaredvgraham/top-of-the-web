@@ -106,54 +106,6 @@ const packages = [
     ],
   },
   {
-    title: "E-commerce Website Package",
-    price: "$5,000",
-    features: [
-      {
-        icon: FaShoppingCart,
-        text: "Custom e-commerce site with up to 50 products",
-        color: "text-blue-500",
-      },
-      {
-        icon: FaCogs,
-        text: "Payment gateway integration",
-        color: "text-green-500",
-      },
-      {
-        icon: FaChartBar,
-        text: "Inventory management system",
-        color: "text-purple-500",
-      },
-      {
-        icon: FaChartBar,
-        text: "Advanced analytics and reporting",
-        color: "text-red-500",
-      },
-      {
-        icon: FaEnvelope,
-        text: "Email marketing integration",
-        color: "text-orange-500",
-      },
-      {
-        icon: FaShoppingCart,
-        text: "Abandoned cart recovery",
-        color: "text-pink-500",
-      },
-      {
-        icon: FaStar,
-        text: "Customer reviews and ratings",
-        color: "text-yellow-500",
-      },
-      { icon: FaGlobe, text: "Custom website design", color: "text-teal-500" },
-      { icon: FaSearch, text: "Advanced SEO setup", color: "text-blue-500" },
-      {
-        icon: FaEnvelope,
-        text: "Custom contact forms",
-        color: "text-indigo-500",
-      },
-    ],
-  },
-  {
     title: "Enterprise Website Package",
     price: "$10,000+",
     features: [
@@ -222,6 +174,54 @@ const packages = [
       { icon: FaStar, text: "Priority support", color: "text-indigo-600" },
     ],
   },
+  {
+    title: "E-commerce Website Package",
+    price: "$5,000",
+    features: [
+      {
+        icon: FaShoppingCart,
+        text: "Custom e-commerce site with up to 50 products",
+        color: "text-blue-500",
+      },
+      {
+        icon: FaCogs,
+        text: "Payment gateway integration",
+        color: "text-green-500",
+      },
+      {
+        icon: FaChartBar,
+        text: "Inventory management system",
+        color: "text-purple-500",
+      },
+      {
+        icon: FaChartBar,
+        text: "Advanced analytics and reporting",
+        color: "text-red-500",
+      },
+      {
+        icon: FaEnvelope,
+        text: "Email marketing integration",
+        color: "text-orange-500",
+      },
+      {
+        icon: FaShoppingCart,
+        text: "Abandoned cart recovery",
+        color: "text-pink-500",
+      },
+      {
+        icon: FaStar,
+        text: "Customer reviews and ratings",
+        color: "text-yellow-500",
+      },
+      { icon: FaGlobe, text: "Custom website design", color: "text-teal-500" },
+      { icon: FaSearch, text: "Advanced SEO setup", color: "text-blue-500" },
+      {
+        icon: FaEnvelope,
+        text: "Custom contact forms",
+        color: "text-indigo-500",
+      },
+    ],
+  },
 ];
 
 const Pricing = () => {
@@ -254,7 +254,7 @@ const Pricing = () => {
         Website Pricing
       </h1>
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 "
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-12 "
         initial="hidden"
         animate="visible"
         variants={containerVariants}

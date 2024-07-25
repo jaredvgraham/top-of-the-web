@@ -1,4 +1,3 @@
-// components/Navbar.tsx
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
@@ -11,9 +10,9 @@ import { usePathname } from "next/navigation";
 const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const pathname = usePathname();
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const isHomePage = pathname === "/";
 
@@ -25,6 +24,7 @@ const Navbar = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
+        setOpenSubmenu(null);
       }
     };
 
@@ -37,6 +37,10 @@ const Navbar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleToggleSubmenu = (submenu: string) => {
+    setOpenSubmenu((prev) => (prev === submenu ? null : submenu));
+  };
 
   const linkVariants = {
     hidden: { opacity: 0, y: -20 },
@@ -59,8 +63,6 @@ const Navbar = () => {
           initial="hidden"
           animate="visible"
           transition={{ duration: 3, ease: "easeInOut" }}
-          onMouseEnter={() => setHoveredLink("home")}
-          onMouseLeave={() => setHoveredLink(null)}
         >
           <div className="flex items-center gap-2">
             <Link href="/" className="gradient-text flex items-center gap-2">
@@ -89,16 +91,16 @@ const Navbar = () => {
               animate="visible"
               transition={{ duration: 1, delay: 0.2, ease: "easeInOut" }}
               variants={linkVariants}
-              onMouseEnter={() => setHoveredLink("pricing")}
-              onMouseLeave={() => setHoveredLink(null)}
+              onMouseEnter={() => setOpenSubmenu("pricing")}
+              onMouseLeave={() => setOpenSubmenu(null)}
             >
               <Link href="/pricing" className="text-white text-2xl font-bold">
                 Pricing
               </Link>
               <AnimatePresence>
-                {hoveredLink === "pricing" && (
+                {openSubmenu === "pricing" && (
                   <motion.ul
-                    className="absolute bg-white shadow-lg rounded-lg mt-2"
+                    className="absolute bg-white shadow-lg rounded-lg z-30 mt-2"
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
@@ -106,10 +108,32 @@ const Navbar = () => {
                     transition={{ duration: 0.3 }}
                   >
                     <li className="p-2">
-                      <Link href="/pricing/basic">Basic Plan</Link>
+                      <Link href="/pricing">All Plans</Link>
                     </li>
                     <li className="p-2">
-                      <Link href="/pricing/premium">Premium Plan</Link>
+                      <Link href="/pricing/starter-website-package">
+                        Starter Plan
+                      </Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/pricing/standard-website-package">
+                        Standard Plan
+                      </Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/pricing/advanced-website-package">
+                        Advanced Plan
+                      </Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/pricing/enterprise-website-package">
+                        Enterprise Plan
+                      </Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/pricing/e-commerce-website-package">
+                        E-commerce Plan
+                      </Link>
                     </li>
                   </motion.ul>
                 )}
@@ -120,14 +144,14 @@ const Navbar = () => {
               animate="visible"
               transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
               variants={linkVariants}
-              onMouseEnter={() => setHoveredLink("mission")}
-              onMouseLeave={() => setHoveredLink(null)}
+              onMouseEnter={() => setOpenSubmenu("mission")}
+              onMouseLeave={() => setOpenSubmenu(null)}
             >
               <a href="/mission" className="text-white text-2xl font-bold">
                 Our Mission
               </a>
               <AnimatePresence>
-                {hoveredLink === "mission" && (
+                {openSubmenu === "mission" && (
                   <motion.ul
                     className="absolute bg-white shadow-lg rounded-lg mt-2"
                     initial="hidden"
@@ -151,14 +175,14 @@ const Navbar = () => {
               animate="visible"
               transition={{ duration: 1, delay: 0.7, ease: "easeInOut" }}
               variants={linkVariants}
-              onMouseEnter={() => setHoveredLink("contact")}
-              onMouseLeave={() => setHoveredLink(null)}
+              onMouseEnter={() => setOpenSubmenu("contact")}
+              onMouseLeave={() => setOpenSubmenu(null)}
             >
               <Link href="/contact" className="text-white text-2xl font-bold">
                 Contact
               </Link>
               <AnimatePresence>
-                {hoveredLink === "contact" && (
+                {openSubmenu === "contact" && (
                   <motion.ul
                     className="absolute bg-white shadow-lg rounded-lg mt-2"
                     initial="hidden"
@@ -193,19 +217,101 @@ const Navbar = () => {
           >
             <ul>
               <li className="p-4">
-                <Link href="/pricing" className="text-black text-2xl font-bold">
+                <button
+                  className="text-black text-2xl font-bold w-full text-left"
+                  onClick={() => handleToggleSubmenu("pricing")}
+                >
                   Pricing
-                </Link>
+                </button>
+                {openSubmenu === "pricing" && (
+                  <motion.ul
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={submenuVariants}
+                    transition={{ duration: 0.3 }}
+                    className="pl-4"
+                  >
+                    <li className="p-2">
+                      <Link href="/pricing">All Plans</Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/pricing/starter-website-package">
+                        Starter Plan
+                      </Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/pricing/standard-website-package">
+                        Standard Plan
+                      </Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/pricing/advanced-website-package">
+                        Advanced Plan
+                      </Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/pricing/enterprise-website-package">
+                        Enterprise Plan
+                      </Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/pricing/e-commerce-website-package">
+                        E-commerce Plan
+                      </Link>
+                    </li>
+                  </motion.ul>
+                )}
               </li>
               <li className="p-4">
-                <a href="/mission" className="text-black text-2xl font-bold">
+                <button
+                  className="text-black text-2xl font-bold w-full text-left"
+                  onClick={() => handleToggleSubmenu("mission")}
+                >
                   Our Mission
-                </a>
+                </button>
+                {openSubmenu === "mission" && (
+                  <motion.ul
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={submenuVariants}
+                    transition={{ duration: 0.3 }}
+                    className="pl-4"
+                  >
+                    <li className="p-2">
+                      <a href="/mission/our-vision">Our Vision</a>
+                    </li>
+                    <li className="p-2">
+                      <a href="/mission/ourTeam">Our Team</a>
+                    </li>
+                  </motion.ul>
+                )}
               </li>
               <li className="p-4">
-                <Link href="/contact" className="text-black text-2xl font-bold">
+                <button
+                  className="text-black text-2xl font-bold w-full text-left"
+                  onClick={() => handleToggleSubmenu("contact")}
+                >
                   Contact
-                </Link>
+                </button>
+                {openSubmenu === "contact" && (
+                  <motion.ul
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={submenuVariants}
+                    transition={{ duration: 0.3 }}
+                    className="pl-4"
+                  >
+                    <li className="p-2">
+                      <Link href="/contact/email">Email Us</Link>
+                    </li>
+                    <li className="p-2">
+                      <Link href="/contact/phone">Call Us</Link>
+                    </li>
+                  </motion.ul>
+                )}
               </li>
             </ul>
           </motion.div>
