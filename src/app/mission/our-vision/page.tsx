@@ -32,24 +32,6 @@ const Mission = () => {
 
       <main className="bg-white">
         {/* Hero Section */}
-        <section
-          className="relative flex items-center justify-center bg-cover bg-center text-white"
-          style={{ backgroundImage: "url('/mission-background.jpg')" }}
-        >
-          <div className="inset-0 bg-black opacity-50"></div>
-          <motion.div
-            className="relative z-10 text-center p-8"
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-          >
-            <h1 className="text-6xl font-bold mb-4">Our Mission</h1>
-            <p className="text-2xl">
-              Empowering businesses through innovative web development
-              solutions.
-            </p>
-          </motion.div>
-        </section>
 
         {/* Mission Statement */}
         <section className="py-16 bg-gray-100">
