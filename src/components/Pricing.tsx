@@ -166,7 +166,7 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-300 p-2 md:p-10">
-      <h1 className="text-6xl font-extrabold text-center mb-20 text-gray-800">
+      <h1 className=" text-4xl md:text-6xl font-extrabold text-center m-5 text-gray-800">
         Website Pricing
       </h1>
       <motion.div
