@@ -8,8 +8,8 @@ const packages = [
     title: "Starter Website Package",
     price: "$800",
     features: [
-      "Simple website with up to 5 pages",
-      "Responsive design",
+      "Beautiful website design",
+      "Up to 4 pages",
       "Basic SEO setup",
       "Contact form",
     ],
@@ -18,13 +18,14 @@ const packages = [
     title: "Standard Website Package",
     price: "$1,400",
     features: [
-      "Responsive website design",
-      "Up to 10 pages",
-      "Basic SEO setup",
+      "Custom website design",
+      "Up to 7 pages",
+      "SEO optimization",
       "Contact form",
       "Backend integration for emails and phone call notifications",
       "Blog setup",
       "Basic analytics integration",
+      "Social media integration",
       "Enhanced support and maintenance",
     ],
   },
@@ -33,7 +34,7 @@ const packages = [
     price: "$3,000",
     features: [
       "Custom website design",
-      "Up to 20 pages",
+      "Up to 15 pages",
       "Advanced SEO setup",
       "Custom contact forms",
       "Backend integration for emails and phone call notifications",
@@ -42,6 +43,7 @@ const packages = [
       "Custom CRM integration",
       "E-commerce functionality",
       "Social media integration",
+      "Monthly performance reviews",
       "Priority support",
     ],
   },
@@ -63,19 +65,23 @@ const packages = [
   },
   {
     title: "Enterprise Website Package",
-    price: "$8,000",
+    price: "$10,000+",
     features: [
+      "Custom pricing based on project scope",
       "Custom website design and development",
       "Comprehensive backend integration with multiple APIs",
       "Advanced security features",
       "Custom analytics dashboards",
       "Ongoing maintenance and support",
-      "Dedicated account manager",
       "Regular performance reviews and optimization",
       "Custom development solutions",
       "Advanced SEO setup",
       "Custom contact forms",
+      "E-commerce functionality",
+      "Social media integration",
+      "Custom solutions for specific business needs",
       "Up to 50 pages",
+      "Priority support",
     ],
   },
 ];
@@ -178,7 +184,7 @@ const Pricing = () => {
         {packages.map((pkg) => (
           <motion.div
             key={pkg.title}
-            className={`relative p-7  rounded-lg shadow-lg transform transition-transform bg-white hover:shadow-2xl ${
+            className={`relative p-7 cursor-pointer  rounded-lg shadow-lg transform transition-transform bg-white hover:shadow-2xl ${
               pkg.title === "Standard Website Package"
                 ? "border-4 gradient-border scale-105 "
                 : ""
@@ -186,7 +192,7 @@ const Pricing = () => {
             variants={itemVariants}
           >
             {pkg.title === "Standard Website Package" && (
-              <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-400 to-purple-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg">
+              <div className="absolute top-0 right-0 gradient-bg text-white text-xs font-bold px-2 py-1 rounded-bl-lg">
                 Most Popular
               </div>
             )}
