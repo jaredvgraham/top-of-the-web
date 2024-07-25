@@ -33,7 +33,7 @@ const Mission = () => {
       <main className="bg-white">
         {/* Hero Section */}
         <section
-          className="relative h-screen flex items-center justify-center bg-cover bg-center text-white"
+          className="relative  flex items-center justify-center bg-cover bg-center text-white"
           style={{ backgroundImage: "url('/mission-background.jpg')" }}
         >
           <div className="absolute inset-0 bg-black opacity-50"></div>
