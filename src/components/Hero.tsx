@@ -121,7 +121,7 @@ const Hero = () => {
             variants={textVariants}
             transition={{ delay: 1 }}
           >
-            Launch Your Online Presence
+            Build Your Website Today!
           </motion.h1>
           <motion.p
             initial="hidden"

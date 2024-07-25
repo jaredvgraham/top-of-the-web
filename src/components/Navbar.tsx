@@ -123,7 +123,7 @@ const Navbar = () => {
               onMouseEnter={() => setHoveredLink("mission")}
               onMouseLeave={() => setHoveredLink(null)}
             >
-              <a href="/#about" className="text-white text-2xl font-bold">
+              <a href="/mission" className="text-white text-2xl font-bold">
                 Our Mission
               </a>
               <AnimatePresence>
@@ -137,7 +137,7 @@ const Navbar = () => {
                     transition={{ duration: 0.3 }}
                   >
                     <li className="p-2">
-                      <a href="#about">Our Vision</a>
+                      <a href="/mission/our-vision">Our Vision</a>
                     </li>
                     <li className="p-2">
                       <a href="/mission/ourTeam">Our Team</a>
@@ -198,7 +198,7 @@ const Navbar = () => {
                 </Link>
               </li>
               <li className="p-4">
-                <a href="/#about" className="text-black text-2xl font-bold">
+                <a href="/mission" className="text-black text-2xl font-bold">
                   Our Mission
                 </a>
               </li>

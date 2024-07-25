@@ -18,7 +18,7 @@ const GettingStarted = () => {
           viewport={{ once: true }}
           transition={{ duration: 1, ease: "easeOut" }}
         >
-          Ready to Get Started?
+          Build Your Website Now
         </motion.h2>
         <motion.p
           className="text-xl mb-12"
@@ -28,7 +28,7 @@ const GettingStarted = () => {
           transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
         >
           Let us help you turn your vision into reality. Get in touch with us
-          today to discuss your project and find out how we can help you
+          today to discuss your website and find out how we can help you
           succeed.
         </motion.p>
         <motion.button
