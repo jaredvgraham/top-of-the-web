@@ -26,12 +26,6 @@
 }
 
 body {
-  background: linear-gradient(
-    45deg,
-    rgba(193, 143, 242, 0.26),
-    rgba(147, 202, 244, 0.487),
-    rgba(254, 254, 254, 0.347)
-  );
 }
 
 .lightC {

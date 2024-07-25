@@ -2,158 +2,230 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import {
+  FaGlobe,
+  FaFileAlt,
+  FaSearch,
+  FaEnvelope,
+  FaServer,
+  FaBlog,
+  FaChartBar,
+  FaShareAlt,
+  FaHandsHelping,
+  FaCogs,
+  FaStar,
+  FaShoppingCart,
+  FaShieldAlt,
+  FaSync,
+  FaCode,
+} from "react-icons/fa";
 
 const packages = [
   {
     title: "Starter Website Package",
     price: "$800",
     features: [
-      "Beautiful website design",
-      "Up to 4 pages",
-      "Basic SEO setup",
-      "Contact form",
+      {
+        icon: FaGlobe,
+        text: "Beautiful website design",
+        color: "text-blue-500",
+      },
+      { icon: FaFileAlt, text: "Up to 4 pages", color: "text-green-500" },
+      { icon: FaSearch, text: "Basic SEO setup", color: "text-purple-500" },
+      { icon: FaEnvelope, text: "Contact form", color: "text-red-500" },
     ],
-    herf: "https://buy.stripe.com/test_eVaaFA2xX1JQ0r68ww",
   },
   {
     title: "Standard Website Package",
     price: "$1,400",
     features: [
-      "Custom website design",
-      "Up to 7 pages",
-      "SEO optimization",
-      "Contact form",
-      "Backend integration for emails and phone call notifications",
-      "Blog setup",
-      "Basic analytics integration",
-      "Social media integration",
-      "Enhanced support and maintenance",
+      { icon: FaGlobe, text: "Custom website design", color: "text-blue-500" },
+      { icon: FaFileAlt, text: "Up to 7 pages", color: "text-green-500" },
+      { icon: FaSearch, text: "SEO optimization", color: "text-purple-500" },
+      { icon: FaEnvelope, text: "Contact form", color: "text-red-500" },
+      {
+        icon: FaServer,
+        text: "Backend integration for emails and phone call notifications",
+        color: "text-orange-500",
+      },
+      { icon: FaBlog, text: "Blog setup", color: "text-pink-500" },
+      {
+        icon: FaChartBar,
+        text: "Basic analytics integration",
+        color: "text-yellow-500",
+      },
+      {
+        icon: FaShareAlt,
+        text: "Social media integration",
+        color: "text-teal-500",
+      },
+      {
+        icon: FaHandsHelping,
+        text: "Enhanced support and maintenance",
+        color: "text-indigo-500",
+      },
     ],
   },
   {
     title: "Advanced Website Package",
     price: "$3,000",
     features: [
-      "Custom website design",
-      "Up to 15 pages",
-      "Advanced SEO setup",
-      "Custom contact forms",
-      "Backend integration for emails and phone call notifications",
-      "Blog setup",
-      "Advanced analytics integration",
-      "Custom CRM integration",
-      "E-commerce functionality",
-      "Social media integration",
-      "Monthly performance reviews",
-      "Priority support",
+      { icon: FaGlobe, text: "Custom website design", color: "text-blue-500" },
+      { icon: FaFileAlt, text: "Up to 15 pages", color: "text-green-500" },
+      { icon: FaSearch, text: "Advanced SEO setup", color: "text-purple-500" },
+      { icon: FaEnvelope, text: "Custom contact forms", color: "text-red-500" },
+      {
+        icon: FaServer,
+        text: "Backend integration for emails and phone call notifications",
+        color: "text-orange-500",
+      },
+      { icon: FaBlog, text: "Blog setup", color: "text-pink-500" },
+      {
+        icon: FaChartBar,
+        text: "Advanced analytics integration",
+        color: "text-yellow-500",
+      },
+      { icon: FaCogs, text: "Custom CRM integration", color: "text-teal-500" },
+      {
+        icon: FaShoppingCart,
+        text: "E-commerce functionality",
+        color: "text-blue-500",
+      },
+      {
+        icon: FaShareAlt,
+        text: "Social media integration",
+        color: "text-indigo-500",
+      },
+      {
+        icon: FaChartBar,
+        text: "Monthly performance reviews",
+        color: "text-yellow-600",
+      },
+      { icon: FaStar, text: "Priority support", color: "text-indigo-600" },
     ],
   },
   {
     title: "E-commerce Website Package",
     price: "$5,000",
     features: [
-      "Custom e-commerce site with up to 50 products",
-      "Payment gateway integration",
-      "Inventory management system",
-      "Advanced analytics and reporting",
-      "Email marketing integration",
-      "Abandoned cart recovery",
-      "Customer reviews and ratings",
-      "Custom website design",
-      "Advanced SEO setup",
-      "Custom contact forms",
+      {
+        icon: FaShoppingCart,
+        text: "Custom e-commerce site with up to 50 products",
+        color: "text-blue-500",
+      },
+      {
+        icon: FaCogs,
+        text: "Payment gateway integration",
+        color: "text-green-500",
+      },
+      {
+        icon: FaChartBar,
+        text: "Inventory management system",
+        color: "text-purple-500",
+      },
+      {
+        icon: FaChartBar,
+        text: "Advanced analytics and reporting",
+        color: "text-red-500",
+      },
+      {
+        icon: FaEnvelope,
+        text: "Email marketing integration",
+        color: "text-orange-500",
+      },
+      {
+        icon: FaShoppingCart,
+        text: "Abandoned cart recovery",
+        color: "text-pink-500",
+      },
+      {
+        icon: FaStar,
+        text: "Customer reviews and ratings",
+        color: "text-yellow-500",
+      },
+      { icon: FaGlobe, text: "Custom website design", color: "text-teal-500" },
+      { icon: FaSearch, text: "Advanced SEO setup", color: "text-blue-500" },
+      {
+        icon: FaEnvelope,
+        text: "Custom contact forms",
+        color: "text-indigo-500",
+      },
     ],
   },
   {
     title: "Enterprise Website Package",
     price: "$10,000+",
     features: [
-      "Custom pricing based on project scope",
-      "Custom website design and development",
-      "Comprehensive backend integration with multiple APIs",
-      "Advanced security features",
-      "Custom analytics dashboards",
-      "Ongoing maintenance and support",
-      "Regular performance reviews and optimization",
-      "Custom development solutions",
-      "Advanced SEO setup",
-      "Custom contact forms",
-      "E-commerce functionality",
-      "Social media integration",
-      "Custom solutions for specific business needs",
-      "Up to 50 pages",
-      "Priority support",
-    ],
-  },
-];
-
-const addOns = [
-  {
-    title: "SEO Optimization",
-    price: "$500",
-    features: [
-      "Advanced keyword research",
-      "On-page SEO optimization",
-      "Monthly performance reports",
-    ],
-  },
-  {
-    title: "Content Management System (CMS)",
-    price: "$600",
-    features: [
-      "Custom CMS setup",
-      "Training sessions for staff",
-      "Ongoing support",
-    ],
-  },
-  {
-    title: "Custom Analytics Dashboard",
-    price: "$1,200",
-    features: [
-      "Custom analytics and reporting dashboards",
-      "Integration with Google Analytics, Facebook Pixel, etc.",
-      "Monthly performance reviews",
-    ],
-  },
-  {
-    title: "Mobile App Integration",
-    price: "$2,500",
-    features: [
-      "Custom mobile app development for iOS and Android",
-      "Integration with the website backend",
-      "Push notifications and user analytics",
-    ],
-  },
-  {
-    title: "Marketing Automation",
-    price: "$1,000",
-    features: [
-      "Email marketing setup and integration",
-      "Automated workflows for lead nurturing",
-      "Monthly performance analytics",
-    ],
-  },
-  {
-    title: "Branding Package",
-    price: "$1,500",
-    features: [
-      "Custom logo design",
-      "Business card and stationery design",
-      "Social media branding and templates",
-    ],
-  },
-  {
-    title: "24/7 Support and Maintenance",
-    price: "$100/month",
-    features: [
-      "24/7 technical support",
-      "Regular website backups",
-      "Monthly updates and security checks",
+      {
+        icon: FaCogs,
+        text: "Custom pricing based on project scope",
+        color: "text-blue-500",
+      },
+      {
+        icon: FaGlobe,
+        text: "Custom website design and development",
+        color: "text-green-500",
+      },
+      {
+        icon: FaServer,
+        text: "Comprehensive backend integration with multiple APIs",
+        color: "text-purple-500",
+      },
+      {
+        icon: FaShieldAlt,
+        text: "Advanced security features",
+        color: "text-red-500",
+      },
+      {
+        icon: FaChartBar,
+        text: "Custom analytics dashboards",
+        color: "text-orange-500",
+      },
+      {
+        icon: FaSync,
+        text: "Ongoing maintenance and support",
+        color: "text-pink-500",
+      },
+      {
+        icon: FaChartBar,
+        text: "Regular performance reviews and optimization",
+        color: "text-yellow-500",
+      },
+      {
+        icon: FaCode,
+        text: "Custom development solutions",
+        color: "text-teal-500",
+      },
+      { icon: FaSearch, text: "Advanced SEO setup", color: "text-blue-500" },
+      {
+        icon: FaEnvelope,
+        text: "Custom contact forms",
+        color: "text-indigo-500",
+      },
+      {
+        icon: FaShoppingCart,
+        text: "E-commerce functionality",
+        color: "text-yellow-600",
+      },
+      {
+        icon: FaShareAlt,
+        text: "Social media integration",
+        color: "text-indigo-600",
+      },
+      {
+        icon: FaCogs,
+        text: "Custom solutions for specific business needs",
+        color: "text-blue-600",
+      },
+      { icon: FaFileAlt, text: "Up to 50 pages", color: "text-green-600" },
+      { icon: FaStar, text: "Priority support", color: "text-indigo-600" },
     ],
   },
 ];
 
 const Pricing = () => {
+  const Router = useRouter();
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -171,20 +243,25 @@ const Pricing = () => {
     visible: { opacity: 1, y: 0 },
   };
 
+  const route = (name: string | undefined) => {
+    if (!name) return "";
+    return name.split(" ").join("-").toLowerCase();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-300 p-2 md:p-10">
       <h1 className=" text-4xl md:text-6xl font-extrabold text-center m-5 text-gray-800">
         Website Pricing
       </h1>
       <motion.div
-        className="grid grid-cols-1 lg:grid-cols-3 gap-12 "
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 "
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
         {packages.map((pkg) => (
           <motion.div
-            onClick={() => window.open(pkg.herf)}
+            onClick={() => Router.push(`/pricing/${route(pkg.title)}`)}
             key={pkg.title}
             className={`relative p-7 cursor-pointer  rounded-lg shadow-lg transform transition-transform bg-white hover:shadow-2xl ${
               pkg.title === "Standard Website Package"
@@ -206,40 +283,12 @@ const Pricing = () => {
                 {pkg.price}
               </p>
             </div>
-            <ul className="list-disc pl-12 space-y-3 p-4 text-gray-700">
+            <ul className="list-none pl-1 space-y-3 p-4 text-gray-700">
               {pkg.features.map((feature) => (
-                <li key={feature}>{feature}</li>
-              ))}
-            </ul>
-          </motion.div>
-        ))}
-      </motion.div>
-      <h2 className="text-5xl font-extrabold text-center my-20 text-gray-800">
-        Add-On Services
-      </h2>
-      <motion.div
-        className="grid grid-cols-1 lg:grid-cols-3 gap-12"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
-        {addOns.map((addon) => (
-          <motion.div
-            key={addon.title}
-            className="p-6 rounded-lg shadow-lg transform transition-transform bg-white hover:shadow-2xl"
-            variants={itemVariants}
-          >
-            <div className="bg-gradient-to-r from-gray-400 to-gray-600 p-4 rounded-t-lg">
-              <h2 className="text-4xl font-bold mb-4 text-white text-center">
-                {addon.title}
-              </h2>
-              <p className="text-3xl font-semibold mb-6 text-white text-center">
-                {addon.price}
-              </p>
-            </div>
-            <ul className="list-disc pl-12 space-y-3 p-4 text-gray-700">
-              {addon.features.map((feature) => (
-                <li key={feature}>{feature}</li>
+                <li key={feature.text} className="flex items-center">
+                  <feature.icon className={`${feature.color} mr-2`} />
+                  {feature.text}
+                </li>
               ))}
             </ul>
           </motion.div>
