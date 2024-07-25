@@ -1,3 +1,4 @@
+// pages/vision.tsx
 "use client";
 
 import React from "react";
@@ -162,8 +163,8 @@ const Vision = () => {
             with our clients, offering ongoing support and maintenance to ensure
             your website remains up-to-date and performs optimally as your
             business evolves. At Bsites.io, we are passionate about helping
-            businesses thrive in the digital age by delivering innovative, high-
-            quality web development services that make a real impact.
+            businesses thrive in the digital age by delivering innovative,
+            high-quality web development services that make a real impact.
           </p>
         </div>
       </main>
