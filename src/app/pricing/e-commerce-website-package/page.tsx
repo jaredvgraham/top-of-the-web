@@ -45,7 +45,7 @@ const Page = () => {
         </div>
         <div className="bg-gray-50 rounded-lg p-6 mb-8 shadow-inner">
           <h3 className="text-xl font-semibold mb-4 text-gray-700">
-            What's Included:
+            What&apos;s Included:
           </h3>
           <ul className="list-none space-y-4 text-gray-600">
             <li className="flex items-center">

@@ -26,7 +26,7 @@ const OurTeam = () => {
     visible: {
       opacity: 1,
       scale: 1,
-      transition: { duration: 3, ease: "easeOut" },
+      transition: { duration: 1, ease: "easeOut" },
     },
   };
 
@@ -35,7 +35,7 @@ const OurTeam = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 2, ease: "easeOut" },
+      transition: { duration: 1, ease: "easeOut" },
     },
   };
 
