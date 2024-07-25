@@ -1,10 +1,10 @@
 // src/pages/api/test-connection.ts
-import { NextApiRequest, NextApiResponse } from "next";
+
 import dbConnect from "@/lib/db";
 import Test from "@/models/Test";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextApiRequest, res: NextApiResponse) {
+export async function POST(req: NextRequest, res: NextResponse) {
   await dbConnect();
 
   try {
