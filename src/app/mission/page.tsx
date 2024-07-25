@@ -144,7 +144,7 @@ const Mission = () => {
               <p className="text-lg text-gray-600 leading-relaxed mb-4">
                 At Bsites.io, our mission is to empower businesses by providing
                 innovative, high-quality web development solutions. We are
-                committed to understanding our clients' unique needs and
+                committed to understanding our clients&apos; unique needs and
                 delivering services that drive success and growth. Our team is
                 dedicated to continuous improvement and staying ahead of
                 industry trends to offer the best solutions to our clients.
@@ -219,7 +219,7 @@ const Mission = () => {
                     {testimonial.name}
                   </h3>
                   <p className="text-gray-600 text-center">
-                    "{testimonial.feedback}"
+                    {testimonial.feedback}
                   </p>
                 </motion.div>
               ))}
