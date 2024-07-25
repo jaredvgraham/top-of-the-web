@@ -13,6 +13,7 @@ const packages = [
       "Basic SEO setup",
       "Contact form",
     ],
+    herf: "https://buy.stripe.com/test_eVaaFA2xX1JQ0r68ww",
   },
   {
     title: "Standard Website Package",
@@ -183,6 +184,7 @@ const Pricing = () => {
       >
         {packages.map((pkg) => (
           <motion.div
+            onClick={() => window.open(pkg.herf)}
             key={pkg.title}
             className={`relative p-7 cursor-pointer  rounded-lg shadow-lg transform transition-transform bg-white hover:shadow-2xl ${
               pkg.title === "Standard Website Package"
