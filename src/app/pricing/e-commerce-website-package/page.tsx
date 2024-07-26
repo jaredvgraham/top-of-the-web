@@ -17,11 +17,11 @@ import {
 const pricingModels = [
   {
     label: "One-Time Payment",
-    url: "https://buy.stripe.com/test_4gwcQxcWJ1lggKsaEE",
+    url: "https://buy.stripe.com/eVa9DvdC4gTVdEY6ox",
   },
   {
     label: "Monthly Payment",
-    url: "https://buy.stripe.com/test_5kA03L5uh8NIdyg7st",
+    url: "https://buy.stripe.com/3csbLD1Tm1Z17gA6oy",
   },
 ];
 
