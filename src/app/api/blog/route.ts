@@ -26,10 +26,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
 
   try {
     const blogs = await Blog.find();
-    return NextResponse.json(
-      { success: true, data: BiLogoSlackOld },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, data: blogs }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message },
