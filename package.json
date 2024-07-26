@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@heroicons/react": "^1.0.6",
+    "axios": "^1.7.2",
     "framer-motion": "^11.3.12",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.1",
     "next": "14.2.5",
     "nodemailer": "^6.9.14",
@@ -21,6 +23,7 @@
     "stripe": "^16.4.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.15",
