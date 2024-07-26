@@ -39,7 +39,10 @@ export async function POST(req: NextRequest) {
     };
     const accessToken = createAccessToken(userPayload);
 
-    return NextResponse.json({ accessToken });
+    return NextResponse.json(
+      { accessToken, role: decoded.role },
+      { status: 200 }
+    );
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message },
