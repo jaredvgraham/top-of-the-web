@@ -2,17 +2,21 @@
 
 import React, { useState } from "react";
 import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 
 const BlogForm: React.FC = () => {
+  const { logout } = useAuth();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [success, setSuccess] = useState("");
+  const axiosPrivate = useAxiosPrivate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent default form submission behavior
 
     try {
-      const response = await axios.post("/api/blog", {
+      const response = await axiosPrivate.post("/blog", {
         title,
         content,
       });
@@ -75,6 +79,9 @@ const BlogForm: React.FC = () => {
           </button>
         </div>
       </form>
+      <button onClick={logout} className="text-red-500">
+        Logout
+      </button>
       {success && <p className="text-green-500 text-center mt-5">{success}</p>}
     </div>
   );

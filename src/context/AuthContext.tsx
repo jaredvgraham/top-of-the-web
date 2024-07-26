@@ -6,13 +6,15 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import jwt_decode from "jwt-decode";
+
 import { axiosPublic } from "@/utils/axios";
 import { usePathname, useRouter } from "next/navigation";
 
 interface AuthContextProps {
   isAuthenticated: boolean;
   role: string | null;
+  setRole: (role: string) => void;
+  loading: boolean;
   accessToken: string | null;
   setAccessToken: (accessToken: string | null) => void;
   login: (email: string, password: string) => Promise<void>;
@@ -84,6 +86,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       value={{
         isAuthenticated,
         role,
+        setRole,
+        loading,
         accessToken,
         setAccessToken,
         login,
@@ -91,7 +95,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         refreshSession,
       }}
     >
-      {children}
+      {loading ? <div>Loading...</div> : children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

@@ -47,7 +47,11 @@ export async function POST(req: NextRequest) {
     });
     await addSession(session);
 
-    const response = NextResponse.json({ success: true, accessToken });
+    const response = NextResponse.json({
+      success: true,
+      accessToken,
+      userPayload,
+    });
     response.cookies.set("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV !== "development",

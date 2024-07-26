@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken, verifyRefreshToken } from "@/utils/jwt";
+import { verifyAccessToken } from "@/utils/jwt";
 
-const authMiddleware = async (handler: Function) => {
-  console.log("authMiddleware hit");
-
+const authMiddleware = (handler: Function) => {
   return async (req: NextRequest, res: NextResponse) => {
+    console.log("authMiddleware hit");
+
     const authHeader = req.headers.get("authorization");
 
     if (!authHeader) {
-      return NextResponse.json(
-        { message: "no token provided" },
-        { status: 401 }
+      return new NextResponse(
+        JSON.stringify({ message: "No token provided" }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -22,8 +22,12 @@ const authMiddleware = async (handler: Function) => {
       return handler(req, res);
     } catch (error) {
       console.log("error", error);
-      return NextResponse.json({ message: "invalid token" }, { status: 401 });
+      return new NextResponse(JSON.stringify({ message: "Invalid token" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
   };
 };
+
 export default authMiddleware;

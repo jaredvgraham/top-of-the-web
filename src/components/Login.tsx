@@ -3,11 +3,17 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { axiosPublic } from "@/utils/axios";
+import { useAuth } from "@/context/AuthContext";
+import { set } from "mongoose";
+import { useRouter } from "next/navigation";
 
 const Login: React.FC = () => {
+  const Router = useRouter();
   const [email, setEmail] = useState<string>("");
+
   const [password, setPassword] = useState<string>("");
   const [message, setMessage] = useState<string>("");
+  const { setAccessToken, setRole } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -17,12 +23,15 @@ const Login: React.FC = () => {
         email,
         password,
       });
+      console.log(response.data);
 
-      if (response.data.success) {
-        setMessage("Login successful!");
-        // Optionally, redirect to another page or handle success
-      } else {
-        setMessage("Login failed: " + response.data.error);
+      setAccessToken(response.data.accessToken);
+
+      setRole(response.data.userPayload.role);
+      if (response.data.userPayload.role === "admin") {
+        Router.push("/admin/blogform");
+      } else if (response.data.userPayload.role === "user") {
+        Router.push("/user/dashboard");
       }
     } catch (error) {
       setMessage("An error occurred during login.");
