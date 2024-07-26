@@ -4,8 +4,13 @@ import { NextRequest, NextResponse } from "next/server";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 export async function POST(req: NextRequest) {
+  console.log("Received a webhook event");
+
   const payload = await req.text();
+  console.log("Payload received:", payload);
+
   const sig = req.headers.get("Stripe-Signature") as string;
+  console.log("Signature received:", sig);
 
   try {
     const event = stripe.webhooks.constructEvent(
@@ -13,9 +18,11 @@ export async function POST(req: NextRequest) {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET as string
     );
+    console.log("Event constructed:", event);
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+      console.log("Checkout session completed:", session);
 
       // Fetch line items for the session
       const lineItems = await stripe.checkout.sessions.listLineItems(
@@ -24,6 +31,7 @@ export async function POST(req: NextRequest) {
           limit: 100,
         }
       );
+      console.log("Line items fetched:", lineItems);
 
       for (const item of lineItems.data) {
         if (!item.price) return;
@@ -45,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ status: "success", event: event.type });
   } catch (err: any) {
-    console.log(`Webhook Error: ${err.message}`);
+    console.error(`Webhook Error: ${err.message}`);
     return NextResponse.json({ status: "error", message: err.message });
   }
 }
