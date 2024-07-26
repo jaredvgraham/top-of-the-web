@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     let event = stripe.webhooks.constructEvent(
       payload,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET as string
+      process.env.STRIPE_WEBHOOK_SECRET!
     );
     console.log("email", response.data.object.billilng_details.email);
 
