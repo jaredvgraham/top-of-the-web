@@ -5,11 +5,11 @@ import { FaGlobe, FaFileAlt, FaSearch, FaEnvelope } from "react-icons/fa";
 const pricingModels = [
   {
     label: "One-Time Payment",
-    url: "https://buy.stripe.com/test_4gwcQxcWJ1lggKsaEE",
+    url: "https://buy.stripe.com/28odTL2XqgTV0ScbII",
   },
   {
     label: "Monthly Payment",
-    url: "https://buy.stripe.com/test_5kA03L5uh8NIdyg7st",
+    url: "https://buy.stripe.com/8wM6rj2Xq5bd7gA5kl",
   },
 ];
 
