@@ -231,6 +231,7 @@ const Navbar = () => {
                     variants={submenuVariants}
                     transition={{ duration: 0.3 }}
                     className="pl-4"
+                    onClick={() => setIsMenuOpen(false)}
                   >
                     <li className="p-2">
                       <Link href="/pricing">All Plans</Link>
