@@ -11,20 +11,23 @@ export async function POST(req: NextRequest) {
 
   try {
     const { email, password } = await req.json();
-    const existinguser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email });
 
-    if (existinguser) {
+    if (existingUser) {
       return NextResponse.json(
         { success: false, message: "User already exists" },
         { status: 400 }
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
     let role = "user";
+
+    // Check if the provided email and password match the admin credentials
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       role = "admin";
     }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
       email,
