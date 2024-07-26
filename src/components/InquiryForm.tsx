@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import axios from "axios";
 
 const InquiryForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ const InquiryForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/inquiry", {
+      const response = await axios.post("/api/inquiry", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -33,7 +34,7 @@ const InquiryForm: React.FC = () => {
         body: JSON.stringify(formData),
       });
 
-      const result = await response.json();
+      const result = await response.data();
       if (result.status === 200) {
         setResponseMessage("Inquiry submitted successfully!");
         setFormData({
