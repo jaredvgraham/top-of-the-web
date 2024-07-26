@@ -5,6 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 //
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 console.log(process.env.STRIPE_WEBHOOK_SECRET!);
+//
 
 export async function POST(req: NextRequest) {
   console.log("Received a webhook event");
