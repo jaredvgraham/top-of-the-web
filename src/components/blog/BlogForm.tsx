@@ -10,6 +10,7 @@ const BlogForm: React.FC = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
   const axiosPrivate = useAxiosPrivate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -20,15 +21,17 @@ const BlogForm: React.FC = () => {
         title,
         content,
       });
+      console.log(response.data);
+
       if (response.data.success) {
         setSuccess("Blog created successfully");
         setTitle(""); // Clear the title input
         setContent(""); // Clear the content input
       } else {
-        setSuccess("Error creating blog");
+        setError("Error creating blog");
       }
     } catch (error) {
-      setSuccess("Error creating blog");
+      setError("An error occurred creating the blog");
     }
   };
 
@@ -83,6 +86,7 @@ const BlogForm: React.FC = () => {
         Logout
       </button>
       {success && <p className="text-green-500 text-center mt-5">{success}</p>}
+      {error && <p className="text-red-500 text-center mt-5">{error}</p>}
     </div>
   );
 };
