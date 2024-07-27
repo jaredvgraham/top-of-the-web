@@ -1,4 +1,4 @@
-import { MassEmail } from "@/components/massEmail";
+import { MassEmail } from "@/components/MassEmail";
 import React from "react";
 
 const page = () => {
