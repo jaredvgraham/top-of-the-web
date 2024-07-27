@@ -49,6 +49,8 @@ const handlerPost = async (req: NextRequest, res: NextResponse) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error: any) {
+    console.log("Error sending email:", error);
+
     return new NextResponse(
       JSON.stringify({ success: false, error: error.message }),
       {
