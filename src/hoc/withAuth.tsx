@@ -12,13 +12,16 @@ const withAuth = (
     const router = useRouter();
 
     useEffect(() => {
+      console.log("role", role);
+      console.log("useeffect from hoc");
+
       if (!loading && (!isAuthenticated || role !== requiredRole)) {
         router.push("/login");
       }
-    }, [loading, isAuthenticated, role, router]);
+    }, [loading, role, router]);
 
-    if (loading || !isAuthenticated || role !== requiredRole) {
-      return <div>Loading...</div>;
+    if (loading || role !== requiredRole) {
+      return <div className="authloading">Loading...</div>;
     }
 
     return <WrappedComponent {...props} />;

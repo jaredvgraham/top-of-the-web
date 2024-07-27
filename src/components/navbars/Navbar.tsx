@@ -14,6 +14,9 @@ const Navbar = () => {
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const isUserPage = pathname.includes("/user");
+  const isAdminPage = pathname.includes("/admin");
+
   const isHomePage = pathname === "/";
 
   useEffect(() => {
@@ -51,8 +54,9 @@ const Navbar = () => {
     hidden: { opacity: 0, y: -10 },
     visible: { opacity: 1, y: 0 },
   };
+  if (isUserPage || isAdminPage) return null;
 
-  return (
+  return !isUserPage ? (
     <nav
       className={`w-full z-20 ${
         isHomePage ? "absolute navbarColor" : "gradient-bg"
@@ -322,7 +326,7 @@ const Navbar = () => {
         )}
       </AnimatePresence>
     </nav>
-  );
+  ) : null;
 };
 
 export default Navbar;

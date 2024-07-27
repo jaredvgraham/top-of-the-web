@@ -18,7 +18,7 @@ interface AuthContextProps {
   loading: boolean;
   accessToken: string | null;
   setAccessToken: (accessToken: string | null) => void;
-  login: (email: string, password: string) => Promise<void>;
+
   logout: () => void;
   refreshSession: () => void;
 }
@@ -53,31 +53,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkAuthentication();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const logout = () => {
     try {
-      const response = await axiosPublic.post("/auth/login", {
-        email,
-        password,
-      });
-      setAccessToken(response.data.accessToken);
-      setIsAuthenticated(true);
+      axiosPublic.post("/auth/logout");
+      setAccessToken(null);
+      setIsAuthenticated(false);
+      setLoading(false);
       router.push("/");
     } catch (error) {
-      console.error(error);
+      setLoading(false);
+      console.log("error logging out", error);
     }
-  };
-
-  const logout = () => {
-    setAccessToken(null);
-    setIsAuthenticated(false);
-    router.push("/");
   };
 
   const refreshSession = async () => {
     try {
       const response = await axiosPublic.post("/auth/refresh-token");
       setAccessToken(response.data.accessToken);
+      setIsAuthenticated(true);
+      setLoading(false);
     } catch (error) {
+      setLoading(false);
       console.error(error);
     }
   };
@@ -92,7 +88,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         loading,
         accessToken,
         setAccessToken,
-        login,
+
         logout,
         refreshSession,
       }}
