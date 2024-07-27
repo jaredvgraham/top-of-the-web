@@ -13,7 +13,7 @@ const Login: React.FC = () => {
 
   const [password, setPassword] = useState<string>("");
   const [message, setMessage] = useState<string>("");
-  const { setAccessToken, setRole } = useAuth();
+  const { setAccessToken, setRole, setIsAuthenticated } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,6 +26,7 @@ const Login: React.FC = () => {
       console.log(response.data);
 
       setAccessToken(response.data.accessToken);
+      setIsAuthenticated(true);
 
       setRole(response.data.userPayload.role);
       if (response.data.userPayload.role === "admin") {

@@ -1,8 +1,13 @@
-import { MassEmail } from "@/components/MassEmail";
+"use client";
 import React from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
-const page = () => {
+import withAuth from "@/hoc/withAuth";
+import { MassEmail } from "@/components/MassEmail";
+
+const MassEmailPage = () => {
   return <MassEmail />;
 };
 
-export default page;
+export default withAuth(MassEmailPage, "admin");

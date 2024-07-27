@@ -12,6 +12,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 interface AuthContextProps {
   isAuthenticated: boolean;
+  setIsAuthenticated: (isAuthenticated: boolean) => void;
   role: string | null;
   setRole: (role: string) => void;
   loading: boolean;
@@ -85,6 +86,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     <AuthContext.Provider
       value={{
         isAuthenticated,
+        setIsAuthenticated,
         role,
         setRole,
         loading,
