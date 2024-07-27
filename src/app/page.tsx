@@ -1,13 +1,13 @@
 import React from "react";
 import Head from "next/head";
-import Hero from "../components/Hero";
-import AboutMe from "@/components/AboutMe";
-import WhyUs from "@/components/WhyUs";
-import OurWork from "@/components/OurWork";
-import Services from "@/components/Services";
-import Process from "@/components/Process";
-import GettingStarted from "@/components/GettingStarted";
-import Footer from "@/components/Footer";
+import Hero from "../components/HomePage/Hero";
+
+import WhyUs from "@/components/HomePage/WhyUs";
+import OurWork from "@/components/HomePage/OurWork";
+import Services from "@/components/HomePage/Services";
+import Process from "@/components/HomePage/Process";
+import GettingStarted from "@/components/HomePage/GettingStarted";
+import Footer from "@/components/HomePage/Footer";
 
 export default function Home() {
   return (

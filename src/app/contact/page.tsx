@@ -1,5 +1,5 @@
-import ContactCard from "@/components/ContactCard";
-import InquiryForm from "@/components/InquiryForm";
+import ContactCard from "@/components/contact/ContactCard";
+import InquiryForm from "@/components/contact/InquiryForm";
 import React from "react";
 
 const Page = () => {
