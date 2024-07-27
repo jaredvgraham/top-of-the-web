@@ -10,7 +10,8 @@ export async function POST(req: NextRequest) {
   await dbConnect();
 
   try {
-    const { email, password } = await req.json();
+    const { email, password, firstName } = await req.json();
+
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -33,16 +34,22 @@ export async function POST(req: NextRequest) {
       email,
       password: hashedPassword,
       role,
+      firstName,
       createdAt: new Date(),
     });
 
     await newUser.save();
+
+    // Log after saving to ensure it was successful
+    console.log("User saved successfully:", newUser);
 
     return NextResponse.json(
       { success: true, message: "User created" },
       { status: 201 }
     );
   } catch (error: any) {
+    console.error("Error during user creation:", error);
+
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
