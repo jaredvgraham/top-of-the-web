@@ -85,7 +85,7 @@ const Navbar = () => {
             </button>
           </div>
         ) : (
-          <div className="flex justify-around gap-4 w-1/2">
+          <div className="flex justify-around gap-4 w-3/4">
             <motion.li
               initial="hidden"
               animate="visible"
@@ -181,25 +181,27 @@ const Navbar = () => {
               <Link href="/contact" className="text-white text-2xl font-bold">
                 Contact
               </Link>
-              <AnimatePresence>
-                {openSubmenu === "contact" && (
-                  <motion.ul
-                    className="absolute bg-white shadow-lg rounded-lg mt-2"
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    variants={submenuVariants}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <li className="p-2">
-                      <Link href="/contact/email">Email Us</Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/contact/phone">Call Us</Link>
-                    </li>
-                  </motion.ul>
-                )}
-              </AnimatePresence>
+            </motion.li>
+
+            <motion.li
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 1, delay: 0.9, ease: "easeInOut" }}
+              variants={linkVariants}
+            >
+              <Link href="/blog" className="text-white text-2xl font-bold">
+                Blog
+              </Link>
+            </motion.li>
+            <motion.li
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 1, delay: 1.1, ease: "easeInOut" }}
+              variants={linkVariants}
+            >
+              <Link href="/login" className="text-white text-2xl font-bold">
+                Login
+              </Link>
             </motion.li>
           </div>
         )}
@@ -290,29 +292,30 @@ const Navbar = () => {
                 )}
               </li>
               <li className="p-4">
-                <button
+                <Link
+                  href={"/contact"}
                   className="text-black text-2xl font-bold w-full text-left"
-                  onClick={() => handleToggleSubmenu("contact")}
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   Contact
-                </button>
-                {openSubmenu === "contact" && (
-                  <motion.ul
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    variants={submenuVariants}
-                    transition={{ duration: 0.3 }}
-                    className="pl-4"
-                  >
-                    <li className="p-2">
-                      <Link href="/contact/email">Email Us</Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/contact/phone">Call Us</Link>
-                    </li>
-                  </motion.ul>
-                )}
+                </Link>
+              </li>
+              <li className="p-4" onClick={() => setIsMenuOpen(false)}>
+                <Link
+                  href="/blog"
+                  className="text-black text-2xl font-bold w-full"
+                >
+                  Blog
+                </Link>
+              </li>
+
+              <li className="p-4" onClick={() => setIsMenuOpen(false)}>
+                <Link
+                  href="/login"
+                  className="text-black text-2xl font-bold w-full"
+                >
+                  Login
+                </Link>
               </li>
             </ul>
           </motion.div>
