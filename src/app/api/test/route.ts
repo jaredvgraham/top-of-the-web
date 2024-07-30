@@ -10,6 +10,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
   try {
     // Create a test document
     console.log("test");
+    console.log("test2");
     const testDoc = await Test.create({ name: "Connection Test" });
     return NextResponse.json({ success: true, data: testDoc });
   } catch (error: any) {
