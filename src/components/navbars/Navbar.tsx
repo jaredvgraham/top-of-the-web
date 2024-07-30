@@ -338,28 +338,40 @@ const Navbar = () => {
                   Blog
                 </Link>
               </li>
-              <li className="p-4">
+              <li className="p-4" onClick={() => setOpenSubmenu("profile")}>
                 <button className="flex items-center text-black text-2xl w-full">
-                  <UserIcon className="h-8 w-8" />
+                  <UserIcon
+                    className="h-8 w-8"
+                    onClick={() => setOpenSubmenu("profile")}
+                  />
                 </button>
                 <AnimatePresence>
                   {openSubmenu === "profile" && (
-                    <motion.div
-                      className="absolute bg-white shadow-lg rounded-lg z-20 right-0 mt-2"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
+                    <motion.ul
+                      className="pl-4"
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      variants={submenuVariants}
                       transition={{ duration: 0.3 }}
                     >
-                      <ul>
-                        <li className="p-2">
-                          <Link href="/login">Login</Link>
-                        </li>
-                        <li className="p-2">
-                          <Link href="/signup">Sign Up</Link>
-                        </li>
-                      </ul>
-                    </motion.div>
+                      <li className="p-2">
+                        <Link
+                          href="/login"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          Login
+                        </Link>
+                      </li>
+                      <li className="p-2">
+                        <Link
+                          href="/signup"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          Sign Up
+                        </Link>
+                      </li>
+                    </motion.ul>
                   )}
                 </AnimatePresence>
               </li>
