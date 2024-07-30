@@ -23,6 +23,7 @@ const Navbar = () => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1008);
     };
+    //
 
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
