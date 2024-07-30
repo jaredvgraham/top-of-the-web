@@ -4,19 +4,19 @@ import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { MenuIcon, XIcon } from "@heroicons/react/solid";
+import { MenuIcon, XIcon, UserIcon } from "@heroicons/react/solid";
 import { usePathname } from "next/navigation";
 
 const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isUserPage = pathname.includes("/user");
   const isAdminPage = pathname.includes("/admin");
-
   const isHomePage = pathname === "/";
 
   useEffect(() => {
@@ -54,6 +54,7 @@ const Navbar = () => {
     hidden: { opacity: 0, y: -10 },
     visible: { opacity: 1, y: 0 },
   };
+
   if (isUserPage || isAdminPage) return null;
 
   return !isUserPage ? (
@@ -202,10 +203,33 @@ const Navbar = () => {
               animate="visible"
               transition={{ duration: 1, delay: 1.1, ease: "easeInOut" }}
               variants={linkVariants}
+              onMouseEnter={() => setOpenSubmenu("profile")}
+              onMouseLeave={() => setOpenSubmenu(null)}
+              className="relative"
             >
-              <Link href="/login" className="text-white text-2xl font-bold">
-                Login
-              </Link>
+              <button className="flex items-center text-white text-2xl">
+                <UserIcon className="h-8 w-8" />
+              </button>
+              <AnimatePresence>
+                {openSubmenu === "profile" && (
+                  <motion.div
+                    className="absolute bg-white shadow-lg rounded-lg z-30 right-0 mt-2"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ul>
+                      <li className="p-2">
+                        <Link href="/login">Login</Link>
+                      </li>
+                      <li className="p-2">
+                        <Link href="/signup">Sign Up</Link>
+                      </li>
+                    </ul>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.li>
           </div>
         )}
@@ -297,29 +321,46 @@ const Navbar = () => {
               </li>
               <li className="p-4">
                 <Link
-                  href={"/contact"}
+                  href="/contact"
                   className="text-black text-2xl font-bold w-full text-left"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Contact
                 </Link>
               </li>
-              <li className="p-4" onClick={() => setIsMenuOpen(false)}>
+              <li className="p-4">
                 <Link
                   href="/blog"
                   className="text-black text-2xl font-bold w-full"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   Blog
                 </Link>
               </li>
-
-              <li className="p-4" onClick={() => setIsMenuOpen(false)}>
-                <Link
-                  href="/login"
-                  className="text-black text-2xl font-bold w-full"
-                >
-                  Login
-                </Link>
+              <li className="p-4">
+                <button className="flex items-center text-black text-2xl w-full">
+                  <UserIcon className="h-8 w-8" />
+                </button>
+                <AnimatePresence>
+                  {openSubmenu === "profile" && (
+                    <motion.div
+                      className="absolute bg-white shadow-lg rounded-lg z-20 right-0 mt-2"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ul>
+                        <li className="p-2">
+                          <Link href="/login">Login</Link>
+                        </li>
+                        <li className="p-2">
+                          <Link href="/signup">Sign Up</Link>
+                        </li>
+                      </ul>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </li>
             </ul>
           </motion.div>
