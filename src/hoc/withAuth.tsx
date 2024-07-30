@@ -7,7 +7,7 @@ const withAuth = (
   WrappedComponent: React.ComponentType,
   requiredRole: string
 ) => {
-  return (props: any) => {
+  const ComponentWithAuth = (props: any) => {
     const { role, loading, isAuthenticated } = useAuth();
     const router = useRouter();
 
@@ -18,7 +18,7 @@ const withAuth = (
       if (!loading && (!isAuthenticated || role !== requiredRole)) {
         router.push("/login");
       }
-    }, [loading, role, router]);
+    }, [loading, role, router, isAuthenticated]); // Added isAuthenticated as a dependency
 
     if (loading || role !== requiredRole) {
       return <div className="authloading">Loading...</div>;
@@ -26,6 +26,13 @@ const withAuth = (
 
     return <WrappedComponent {...props} />;
   };
+
+  // Setting the display name
+  ComponentWithAuth.displayName = `withAuth(${
+    WrappedComponent.displayName || WrappedComponent.name || "Component"
+  })`;
+
+  return ComponentWithAuth;
 };
 
 export default withAuth;

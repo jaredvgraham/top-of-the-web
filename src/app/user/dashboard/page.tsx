@@ -3,7 +3,7 @@ import React from "react";
 import withAuth from "@/hoc/withAuth";
 import { useAuth } from "@/context/AuthContext";
 
-const page = () => {
+const Page = () => {
   const { logout } = useAuth();
   return (
     <div>
@@ -13,4 +13,4 @@ const page = () => {
   );
 };
 
-export default withAuth(page, "user");
+export default withAuth(Page, "user");
