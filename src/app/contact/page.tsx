@@ -5,8 +5,10 @@ import React from "react";
 const Page = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 space-y-8">
-      <ContactCard />
-      <InquiryForm />
+      <div className="flex flex-col items-center space-y-8 w-full max-w-4xl">
+        <ContactCard />
+        <InquiryForm />
+      </div>
     </div>
   );
 };

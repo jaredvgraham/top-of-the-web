@@ -47,7 +47,7 @@ const BlogComp: React.FC = () => {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 50 },
+    hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
 
@@ -65,15 +65,12 @@ const BlogComp: React.FC = () => {
     );
 
   return (
-    <div
-      id="blog"
-      className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-300 p-2 md:p-10"
-    >
-      <h1 className="text-4xl md:text-6xl font-extrabold text-center m-5 text-gray-800">
+    <div id="blog" className="min-h-screen bg-gray-100 p-4 md:p-8">
+      <h1 className="text-3xl md:text-5xl font-bold text-center mb-8 text-gray-900">
         Blog Posts
       </h1>
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12"
+        className="space-y-8"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -82,17 +79,13 @@ const BlogComp: React.FC = () => {
           blogs.map((blog) => (
             <motion.div
               key={blog._id}
-              className="relative p-7 cursor-pointer rounded-lg shadow-lg transform transition-transform bg-white hover:shadow-2xl"
+              className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
               variants={itemVariants}
             >
-              <div className="bg-gradient-to-r from-gray-400 to-gray-600 p-4 rounded-t-lg">
-                <h2 className="text-4xl font-bold mb-4 text-white text-center">
-                  {blog.title}
-                </h2>
-              </div>
-              <div className="list-none pl-1 space-y-3 p-4 text-gray-700">
-                <p>{blog.content}</p>
-              </div>
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+                {blog.title}
+              </h2>
+              <p className="text-gray-600 leading-relaxed">{blog.content}</p>
             </motion.div>
           ))}
       </motion.div>
