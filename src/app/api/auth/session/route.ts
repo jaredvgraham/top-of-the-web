@@ -57,6 +57,8 @@ export async function GET(req: NextRequest) {
       accessToken,
     });
   } catch (error: any) {
+    console.log("Error", error);
+
     return NextResponse.json(
       { success: false, message: error.message },
       { status: error.status || 500 }

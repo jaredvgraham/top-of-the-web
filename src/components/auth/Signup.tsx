@@ -9,6 +9,7 @@ const Signup: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [firstName, setFirstName] = useState<string>("");
   const [message, setMessage] = useState<string>("");
+  //
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
