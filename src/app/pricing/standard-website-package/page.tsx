@@ -1,4 +1,5 @@
 "use client";
+import Plans from "@/components/Plans";
 import { axiosPublic } from "@/utils/axios";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -21,13 +22,10 @@ const Page = () => {
   const [paymentModel, setPaymentModel] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState("");
+  const [plan, setPlan] = useState("");
   const pricingModels = [
     {
       label: "One-Time Payment",
-      package: "Standard Website Package",
-    },
-    {
-      label: "Monthly Payment",
       package: "Standard Website Package",
     },
   ];
@@ -52,17 +50,7 @@ const Page = () => {
         const response = await axiosPublic.post("/stripe/one-time", {
           email,
           pack: websitePackage,
-        });
-        console.log(response.data.url);
-        Router.push(response.data.url);
-      } catch (error) {
-        console.log(error);
-      }
-    } else {
-      try {
-        const response = await axiosPublic.post("/stripe/subscription", {
-          email,
-          pack: websitePackage,
+          plan,
         });
         console.log(response.data.url);
         Router.push(response.data.url);
@@ -178,8 +166,9 @@ const Page = () => {
           </ul>
         </div>
         <p className="text-xl font-semibold mb-8 text-center text-gray-700">
-          Price: $1,400
+          Website Price: $1,400
         </p>
+        <Plans setPlan={setPlan} />
         <p className="text-base mb-10 text-gray-600 text-center">
           Choose the payment option that best suits your needs and get started
           on creating an impactful website today!
@@ -191,7 +180,7 @@ const Page = () => {
               className="bg-black text-gray-200 rounded-lg shadow-md px-8 py-4 text-center transform transition-transform hover:shadow-lg hover:scale-105"
               onClick={() => handleForm(model.package, model.label)}
             >
-              <h2 className="text-xl font-bold mb-1">{model.label}</h2>
+              {/* <h2 className="text-xl font-bold mb-1">{model.label}</h2> */}
               <p className="text-base flex items-center justify-center gap-2">
                 <BiDollar className="text-2xl text-yellow-400" />
                 Click to Pay

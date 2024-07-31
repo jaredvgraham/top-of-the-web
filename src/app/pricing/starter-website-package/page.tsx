@@ -1,7 +1,8 @@
 "use client";
+import Plans from "@/components/Plans";
 import { axiosPublic } from "@/utils/axios";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { BiDollar } from "react-icons/bi";
 import { FaGlobe, FaFileAlt, FaSearch, FaEnvelope } from "react-icons/fa";
 
@@ -10,7 +11,12 @@ const Page = () => {
   const [paymentModel, setPaymentModel] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState("");
+  const [plan, setPlan] = useState("");
   const Router = useRouter();
+
+  useEffect(() => {
+    console.log("Plan", plan);
+  }, [plan]);
 
   const handlePayment = async (
     websitePackage: string,
@@ -26,17 +32,7 @@ const Page = () => {
         const response = await axiosPublic.post("/stripe/one-time", {
           email,
           pack: websitePackage,
-        });
-        console.log(response.data.url);
-        Router.push(response.data.url);
-      } catch (error) {
-        console.log(error);
-      }
-    } else {
-      try {
-        const response = await axiosPublic.post("/stripe/subscription", {
-          email,
-          pack: websitePackage,
+          plan,
         });
         console.log(response.data.url);
         Router.push(response.data.url);
@@ -56,10 +52,6 @@ const Page = () => {
     {
       package: "Starter Website Package",
       label: "One-Time Payment",
-    },
-    {
-      package: "Starter Website Package",
-      label: "Monthly Payment",
     },
   ];
 
@@ -150,8 +142,9 @@ const Page = () => {
             </li>
           </ul>
         </div>
+        <Plans setPlan={setPlan} />
         <p className="text-xl font-semibold mb-8 text-center text-gray-700">
-          Price: $800
+          Website Price: $800
         </p>
         <p className="text-base mb-10 text-gray-600 text-center">
           Choose the payment option that best suits your needs and get started
@@ -164,7 +157,7 @@ const Page = () => {
               className="bg-black text-gray-300 rounded-lg shadow-md px-8 py-4 text-center transform transition-transform hover:shadow-lg hover:scale-105"
               onClick={() => handleForm(model.package, model.label)}
             >
-              <h2 className="text-xl font-bold mb-1">{model.label}</h2>
+              {/* <h2 className="text-xl font-bold mb-1">{model.label}</h2> */}
               <p className="text-base flex items-center justify-center mr-3">
                 <BiDollar className="text-2xl text-yellow-400" />
                 Click to Pay
