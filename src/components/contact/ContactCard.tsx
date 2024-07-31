@@ -21,7 +21,7 @@ const ContactCard = () => {
       <div className="p-8">
         <div className="flex items-center mb-6">
           <FaPhone className="text-blue-500 text-2xl mr-4" />
-          <p className="text-gray-700 text-lg">(123) 456-7890</p>
+          <p className="text-gray-700 text-lg">(781)-264-7670</p>
         </div>
         <div className="flex items-center mb-6">
           <FaEnvelope className="text-green-500 text-2xl mr-4" />
@@ -35,7 +35,7 @@ const ContactCard = () => {
         <div className="flex items-center mb-6">
           <FaMapMarkerAlt className="text-red-500 text-2xl mr-4" />
           <p className="text-gray-700 text-lg">
-            123 Web Dev Lane, Code City, DevState
+            21 Tananger Road, Plymouth, Massachusetts
           </p>
         </div>
       </div>
