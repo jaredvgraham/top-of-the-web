@@ -35,7 +35,7 @@ async function getOrCreateCustomerId(email: string) {
 
   return customerId;
 }
-
+//
 async function createPrice(pack: string) {
   let price: number;
   switch (pack) {
