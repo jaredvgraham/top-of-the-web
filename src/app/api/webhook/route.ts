@@ -63,9 +63,12 @@ export async function POST(req: NextRequest) {
       }
 
       const email = session.customer_details?.email;
-      const phone = session.customer_details?.phone;
-      console.log("Customer phone: ", phone);
+      const phoneCustomField = session.custom_fields?.find(
+        (field) => field.key === "phone_number"
+      );
+      const phone = phoneCustomField?.text?.value;
 
+      console.log("Customer phone: ", phone);
       console.log("Customer email: ", email);
 
       const purchase = new Purchase({

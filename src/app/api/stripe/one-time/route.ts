@@ -148,6 +148,18 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: "subscription",
+
+      custom_fields: [
+        {
+          key: "phone_number",
+          label: {
+            type: "custom",
+            custom: "Phone Number",
+          },
+          type: "text",
+        },
+      ],
+
       success_url: `http://localhost:3000/schedule`,
       cancel_url: `http://localhost:3000/pricing`,
     });
