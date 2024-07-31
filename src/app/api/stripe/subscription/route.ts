@@ -97,8 +97,8 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: "subscription",
-      success_url: `${process.env.NEXT_PUBLIC_DOMAIN}/success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_DOMAIN}/cancel`,
+      success_url: `http://localhost:3000/schedule`,
+      cancel_url: `http://localhost:3000/cancel`,
     });
 
     return NextResponse.json({ url: session.url });

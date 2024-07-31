@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@heroicons/react": "^1.0.6",
+    "@types/react-big-calendar": "^1.8.9",
     "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
     "cookie": "^0.6.0",
+    "date-fns": "^3.6.0",
     "framer-motion": "^11.3.12",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
@@ -20,10 +22,13 @@
     "next": "14.2.5",
     "nodemailer": "^6.9.14",
     "react": "^18",
+    "react-big-calendar": "^1.13.1",
+    "react-datepicker": "^7.3.0",
     "react-dom": "^18",
     "react-icons": "^5.2.1",
     "react-intersection-observer": "^9.13.0",
-    "stripe": "^16.4.0"
+    "stripe": "^16.4.0",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -34,6 +39,7 @@
     "@types/nodemailer": "^6.4.15",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/uuid": "^10.0.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "postcss": "^8",
