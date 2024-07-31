@@ -106,7 +106,7 @@ const Mission = () => {
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
               <Image
-                src="/our-approach.jpg"
+                src="/shutterstock_2380355019_edited.jpeg"
                 alt="Our Approach"
                 width={600}
                 height={400}
