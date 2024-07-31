@@ -36,19 +36,19 @@ async function getOrCreateCustomerId(email: string) {
 async function createPrice(pack: string) {
   let price: number;
   switch (pack) {
-    case "starter":
+    case "Starter Website Package":
       price = 80000;
       break;
-    case "standard":
+    case "Standard Website Package":
       price = 140000;
       break;
-    case "advanced":
+    case "Advanced Website Package":
       price = 300000;
       break;
-    case "enterprise":
+    case "Enterprise Website Package":
       price = 1000000;
       break;
-    case "ecommerce":
+    case "E-commerce Website Package":
       price = 500000;
       break;
     default:
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       ],
       mode: "payment",
       success_url: `http://localhost:3000/schedule`,
-      cancel_url: `http://localhost:3000/cancel`,
+      cancel_url: `http://localhost:3000/pricing`,
     });
 
     return NextResponse.json({ url: session.url });

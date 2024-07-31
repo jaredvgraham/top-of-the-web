@@ -36,16 +36,16 @@ async function getOrCreateCustomerId(email: string) {
 async function createPrice(pack: string) {
   let price: number;
   switch (pack) {
-    case "basic":
+    case "Starter Website Package":
       price = 3000;
       break;
-    case "standard":
+    case "Standard Website Package":
       price = 15000;
       break;
-    case "premium":
+    case "Advanced Website Package":
       price = 50000;
       break;
-    case "enterprise":
+    case "Enterprise Website Package":
       price = 100000;
       break;
     case "super":
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       ],
       mode: "subscription",
       success_url: `http://localhost:3000/schedule`,
-      cancel_url: `http://localhost:3000/cancel`,
+      cancel_url: `http://localhost:3000/pricing`,
     });
 
     return NextResponse.json({ url: session.url });
