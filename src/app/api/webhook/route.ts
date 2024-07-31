@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       customer.phone = phone as string;
       await customer.save();
     }
-
+    //
     return NextResponse.json({ status: "success", event: event.type });
   } catch (err: any) {
     console.log("Webhook Error", err.message);
