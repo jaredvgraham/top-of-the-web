@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 export interface IPurchase extends mongoose.Document {
   _id: mongoose.Types.ObjectId;
   email: string;
-  phoneNumber?: string;
+  phone?: string;
   pack: string;
   price: number;
 }
@@ -15,7 +15,7 @@ const PurchaseSchema = new mongoose.Schema<IPurchase>(
       required: true,
       unique: true,
     },
-    phoneNumber: {
+    phone: {
       type: String,
     },
     pack: {
