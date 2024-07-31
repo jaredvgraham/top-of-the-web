@@ -1,10 +1,12 @@
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import Customer from "@/models/Customer";
+import dbConnect from "@/lib/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 async function getCustomerIdByEmail(email: string) {
+  await dbConnect();
   const customer = await Customer.findOne({ email });
   if (!customer) {
     return null;
@@ -13,6 +15,7 @@ async function getCustomerIdByEmail(email: string) {
 }
 
 async function saveCustomerId(customerId: string, email: string) {
+  await dbConnect();
   const customer = new Customer({
     email,
     customerId,
@@ -51,6 +54,9 @@ async function createPrice(pack: string) {
     case "E-commerce Website Package":
       price = 500000;
       break;
+    case "test":
+      price = 100;
+      break;
     default:
       price = 0;
       break;
@@ -58,22 +64,69 @@ async function createPrice(pack: string) {
   return price;
 }
 
+async function createRecurringPrice(plan: string) {
+  let price: number;
+  switch (plan) {
+    case "hosting":
+      price = 3000;
+      break;
+    case "hosting seo":
+      price = 6000;
+      break;
+    case "basic ad":
+      price = 50000;
+      break;
+    case "standard ad":
+      price = 120000;
+      break;
+    case "advanced ad":
+      price = 300000;
+      break;
+    case "rapid growth ad":
+      price = 500000;
+      break;
+    case "test":
+      price = 100;
+      break;
+    default:
+      price = 0;
+  }
+  return price;
+}
+
 export async function POST(req: NextRequest) {
-  const { email, pack } = await req.json();
+  const { email, pack, plan } = await req.json();
   try {
     // create price
-    const price = await createPrice(pack);
-    if (price === 0) {
+    const oneTimePrice = await createPrice(pack);
+    if (oneTimePrice === 0) {
       return NextResponse.json({ message: "Invalid pack" }, { status: 400 });
     }
 
-    console.log("price created: ", price);
+    const recurringPrice = await createRecurringPrice(plan);
+    if (recurringPrice === 0) {
+      return NextResponse.json({ message: "Invalid plan" }, { status: 400 });
+    }
+
+    console.log("one time price created: ", oneTimePrice);
+    console.log("recurring price created: ", recurringPrice);
 
     const stripePrice = await stripe.prices.create({
-      unit_amount: price,
+      unit_amount: oneTimePrice,
       currency: "usd",
       product_data: {
         name: pack,
+      },
+    });
+
+    const recurringStripePrice = await stripe.prices.create({
+      unit_amount: recurringPrice,
+      currency: "usd",
+      recurring: {
+        interval: "month",
+      },
+      product_data: {
+        name: plan,
       },
     });
 
@@ -89,8 +142,12 @@ export async function POST(req: NextRequest) {
           price: stripePrice.id,
           quantity: 1,
         },
+        {
+          price: recurringStripePrice.id,
+          quantity: 1,
+        },
       ],
-      mode: "payment",
+      mode: "subscription",
       success_url: `http://localhost:3000/schedule`,
       cancel_url: `http://localhost:3000/pricing`,
     });
