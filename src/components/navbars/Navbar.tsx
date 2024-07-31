@@ -159,7 +159,7 @@ const Navbar = () => {
               <AnimatePresence>
                 {openSubmenu === "mission" && (
                   <motion.ul
-                    className="absolute bg-white shadow-lg rounded-lg mt-2"
+                    className="absolute bg-white shadow-lg rounded-lg mt-2 z-10"
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
