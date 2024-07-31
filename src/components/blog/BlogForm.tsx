@@ -34,7 +34,7 @@ const BlogForm: React.FC = () => {
       setError("An error occurred creating the blog");
     }
   };
-
+  //
   return (
     <div id="blogform" className="max-w-md mx-auto mt-10">
       <h1 className="text-2xl font-bold mb-5">Create a New Blog Post</h1>
