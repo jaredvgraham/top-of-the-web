@@ -22,19 +22,27 @@ const Page = () => {
       return;
     }
     if (paymentModel === "One-Time Payment") {
-      const response = await axiosPublic.post("/stripe/one-time", {
-        email,
-        pack: websitePackage,
-      });
-      console.log(response.data.url);
-      Router.push(response.data.url);
+      try {
+        const response = await axiosPublic.post("/stripe/one-time", {
+          email,
+          pack: websitePackage,
+        });
+        console.log(response.data.url);
+        Router.push(response.data.url);
+      } catch (error) {
+        console.log(error);
+      }
     } else {
-      const response = await axiosPublic.post("/stripe/subscription", {
-        email,
-        pack: websitePackage,
-      });
-      console.log(response.data.url);
-      Router.push(response.data.url);
+      try {
+        const response = await axiosPublic.post("/stripe/subscription", {
+          email,
+          pack: websitePackage,
+        });
+        console.log(response.data.url);
+        Router.push(response.data.url);
+      } catch (error) {
+        console.log(error);
+      }
     }
   };
 
