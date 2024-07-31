@@ -53,11 +53,13 @@
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import Purchase from "@/models/Purchase";
+import dbConnect from "@/lib/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(req: NextRequest) {
+  await dbConnect();
   const payload = await req.text();
   const sig = req.headers.get("Stripe-Signature") as string;
 
