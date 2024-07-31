@@ -52,6 +52,7 @@
 
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
+import Purchase from "@/models/Purchase";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -74,14 +75,16 @@ export async function POST(req: NextRequest) {
         }
       );
 
+      let productName = "";
+      let amount = 0;
       for (const item of lineItems.data) {
         if (!item.price) return;
         const product = await stripe.products.retrieve(
           item.price.product as string
         );
-        const productName = product.name;
+        productName = product.name;
         const quantity = item.quantity;
-        const amount = item.amount_total;
+        amount = item.amount_total;
 
         console.log("Product Name", productName);
         console.log("Quantity", quantity);
@@ -93,6 +96,14 @@ export async function POST(req: NextRequest) {
       console.log("Customer phone: ", phone);
 
       console.log("Customer email: ", email);
+
+      const purchase = new Purchase({
+        email,
+        phone,
+        pack: productName,
+        price: amount,
+      });
+      await purchase.save();
     }
 
     return NextResponse.json({ status: "success", event: event.type });
