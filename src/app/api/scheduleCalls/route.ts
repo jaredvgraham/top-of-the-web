@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   await dbConnect();
 
-  const { start, end, title } = await req.json();
+  const { start, end, title, email } = await req.json();
 
   const scheduledCall = new ScheduledCall({
     start: new Date(start),

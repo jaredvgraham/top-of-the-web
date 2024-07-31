@@ -31,7 +31,11 @@ interface Event {
   title: string;
 }
 
-const ScheduleCall: React.FC = () => {
+type Props = {
+  email: string;
+};
+
+const ScheduleCall = ({ email }: Props) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<SlotInfo | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -93,9 +97,13 @@ const ScheduleCall: React.FC = () => {
       };
 
       try {
-        const response = await axios.post("/api/scheduleCalls", newEvent, {
-          headers: { "Content-Type": "application/json" },
-        });
+        const response = await axios.post(
+          "/api/scheduleCalls",
+          { ...newEvent, email },
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
 
         setEvents((prevEvents) =>
           prevEvents.filter((event) => event.title !== "Selected Slot")

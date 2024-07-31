@@ -1,8 +1,20 @@
 import ScheduleCall from "@/components/payment/ScheduleCall";
-import React from "react";
+import { useSearchParams } from "next/navigation";
+
+import React, { use, useEffect, useState } from "react";
 
 const page = () => {
-  return <ScheduleCall />;
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [searchParams]);
+
+  return <ScheduleCall email={email} />;
 };
 
 export default page;

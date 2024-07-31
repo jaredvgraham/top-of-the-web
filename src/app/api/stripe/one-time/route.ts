@@ -160,7 +160,9 @@ export async function POST(req: NextRequest) {
         },
       ],
 
-      success_url: `http://localhost:3000/schedule`,
+      success_url: `http://localhost:3000/schedule?email=${encodeURIComponent(
+        email
+      )}`,
       cancel_url: `http://localhost:3000/pricing`,
     });
 
