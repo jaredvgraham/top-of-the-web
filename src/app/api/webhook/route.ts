@@ -1,7 +1,9 @@
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import Purchase from "@/models/Purchase";
+import Customer from "@/models/Customer";
 import dbConnect from "@/lib/db";
+import { findCustomerByEmail } from "@/models/Customer";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -78,6 +80,15 @@ export async function POST(req: NextRequest) {
         price: amount,
       });
       await purchase.save();
+      const customer = await findCustomerByEmail(email as string);
+      if (!customer) {
+        return NextResponse.json({
+          status: "error",
+          message: "Customer not found",
+        });
+      }
+      customer.phone = phone as string;
+      customer.save();
     }
 
     return NextResponse.json({ status: "success", event: event.type });
