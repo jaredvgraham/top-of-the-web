@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         });
       }
       customer.phone = phone as string;
-      customer.save();
+      await customer.save();
     }
 
     return NextResponse.json({ status: "success", event: event.type });
