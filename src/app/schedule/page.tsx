@@ -1,3 +1,4 @@
+"use client";
 import ScheduleCall from "@/components/payment/ScheduleCall";
 import { useSearchParams } from "next/navigation";
 
