@@ -74,7 +74,7 @@ async function getPlanPrice(plan: string) {
       price = 3000;
       break;
     case "hosting seo":
-      price = 6000;
+      price = 100;
       break;
     case "basic ad":
       price = 50000;

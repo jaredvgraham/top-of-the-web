@@ -42,7 +42,7 @@ const Page = () => {
   const handleChangePlan = async () => {
     console.log("Plan changed to:", selectedPlan);
     try {
-      const res = await axiosPrivate.post("/stripe/upgrade/plan", {
+      const res = await axiosPrivate.post("/stripe/upgradePlan", {
         plan: selectedPlan,
       });
       console.log(res.data);
