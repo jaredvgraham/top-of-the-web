@@ -38,7 +38,7 @@ const Navbar = () => {
       }
     };
     callEndpoint();
-  }, [role]);
+  }, [role, logout]);
 
   useEffect(() => {
     const handleResize = () => {
