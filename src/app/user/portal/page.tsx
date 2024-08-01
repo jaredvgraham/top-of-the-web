@@ -1,3 +1,4 @@
+"use client";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import Link from "next/link";
 import React, { use, useEffect, useState } from "react";
