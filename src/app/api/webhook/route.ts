@@ -5,6 +5,7 @@ import Customer from "@/models/Customer";
 import Order from "@/models/Order";
 import dbConnect from "@/lib/db";
 import { findCustomerByEmail } from "@/models/Customer";
+import Website from "@/models/WebsiteModel";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -81,6 +82,15 @@ export async function POST(req: NextRequest) {
         price: amount,
       });
       await purchase.save();
+
+      const website = new Website({
+        email,
+        name: "",
+        description: "",
+        url: "",
+      });
+      await website.save();
+
       const customer = await findCustomerByEmail(email as string);
       if (!customer) {
         return NextResponse.json({
@@ -101,6 +111,7 @@ export async function POST(req: NextRequest) {
       order.phone = phone as string;
       await order.save();
     }
+
     //
     return NextResponse.json({ status: "success", event: event.type });
   } catch (err: any) {
