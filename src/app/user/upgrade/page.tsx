@@ -30,7 +30,6 @@ const Page = () => {
         setSelectedPlan(response.data.plan);
         console.log(response.data.plan);
       } catch (error) {
-        setError("Failed to fetch order details.");
         console.error(error);
       } finally {
         setLoading(false);

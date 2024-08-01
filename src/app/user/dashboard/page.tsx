@@ -182,6 +182,7 @@ const Page = () => {
                       {error && <p className="text-red-500 text-sm">{error}</p>}
                     </div>
                   )}
+
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-700">
                       Website URL:
@@ -248,7 +249,8 @@ const Page = () => {
           </>
         )}
       </div>
-      <WebsiteChange />
+      {website && <WebsiteChange />}
+      {!website && <div className="text-center mt-4">No website yet.</div>}
     </div>
   );
 };
