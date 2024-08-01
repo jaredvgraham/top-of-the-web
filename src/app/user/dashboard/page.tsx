@@ -62,14 +62,20 @@ const Page = () => {
   }, []);
 
   const handleSave = async () => {
+    console.log(editedWebsite);
+
     try {
       if (editedWebsite) {
-        await axiosPrivate.put("/user/website", { name: editedWebsite.name });
+        await axiosPrivate.put("/user/website", {
+          name: editedWebsite.name,
+          description: editedWebsite.description,
+        });
         setWebsite((prev) => {
           if (!prev) return null;
           return {
             ...prev,
             name: editedWebsite.name,
+            description: editedWebsite.description,
           };
         });
         setEditing(false);
@@ -135,7 +141,7 @@ const Page = () => {
                 </h2>
                 <div className="space-y-4">
                   {!isEditing ? (
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between ">
                       <h3 className="text-lg font-semibold text-gray-700">
                         Website Name:
                       </h3>
@@ -174,13 +180,41 @@ const Page = () => {
                     </h3>
                     <p className="text-lg text-gray-600">{website.url}</p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-700">
-                      Website Description:
-                    </h3>
-                    <p className="text-lg text-gray-600">
-                      {website.description}
-                    </p>
+                  <div className="flex items-center flex-col">
+                    {!isEditing ? (
+                      <>
+                        <div className="flex items-center">
+                          <h3 className="text-lg font-semibold text-gray-700 pr-2">
+                            Website Description:
+                          </h3>
+                          <FaEdit
+                            className="text-blue-500 cursor-pointer"
+                            onClick={() => setEditing(true)}
+                          />
+                        </div>
+                        <div className="flex items-center">
+                          <p className="text-lg text-gray-600 pr-2">
+                            {website.description}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="text-lg font-semibold text-gray-700">
+                          Website Description:
+                        </h3>
+                        <textarea
+                          value={editedWebsite?.description || ""}
+                          onChange={(e) =>
+                            setEditedWebsite({
+                              ...(editedWebsite as Website),
+                              description: e.target.value,
+                            })
+                          }
+                          className="w-full p-2 border border-gray-300 rounded-lg"
+                        />
+                      </>
+                    )}
                   </div>
                   {isEditing && (
                     <div className="flex justify-end mt-4">

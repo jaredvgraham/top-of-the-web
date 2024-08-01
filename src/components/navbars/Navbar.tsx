@@ -270,6 +270,9 @@ const Navbar = () => {
                         <motion.li className="p-2">
                           <a href={url}>Billing</a>
                         </motion.li>
+                        <motion.li className="p-2">
+                          <Link href="/user/dashboard">User Dashboard</Link>
+                        </motion.li>
                       </motion.ul>
                     )}
                   </motion.div>
@@ -390,33 +393,53 @@ const Navbar = () => {
                   />
                 </button>
                 <AnimatePresence>
-                  {openSubmenu === "profile" && (
-                    <motion.ul
-                      className="pl-4"
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden"
-                      variants={submenuVariants}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <li className="p-2">
-                        <Link
-                          href="/login"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Login
-                        </Link>
-                      </li>
-                      <li className="p-2">
-                        <Link
-                          href="/signup"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Sign Up
-                        </Link>
-                      </li>
-                    </motion.ul>
-                  )}
+                  {openSubmenu === "profile" &&
+                    (!role ? (
+                      <motion.ul
+                        className="pl-4"
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        variants={submenuVariants}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <li className="p-2">
+                          <Link
+                            href="/login"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Login
+                          </Link>
+                        </li>
+                        <li className="p-2">
+                          <Link
+                            href="/signup"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Sign Up
+                          </Link>
+                        </li>
+                      </motion.ul>
+                    ) : (
+                      <motion.ul
+                        className="pl-4"
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        variants={submenuVariants}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <motion.li className="p-2">
+                          <button onClick={logout}>Logout</button>
+                        </motion.li>
+                        <motion.li className="p-2">
+                          <a href={url}>Billing</a>
+                        </motion.li>
+                        <motion.li className="p-2">
+                          <Link href="/user/dashboard">User Dashboard</Link>
+                        </motion.li>
+                      </motion.ul>
+                    ))}
                 </AnimatePresence>
               </li>
             </ul>

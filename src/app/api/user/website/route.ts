@@ -48,8 +48,9 @@ async function handlerPut(req: NextRequest) {
     await dbConnect();
     const user = (req as any).user;
     if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 404 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
+
     const website = await Website.findOne({ email: user.email });
     if (!website) {
       return NextResponse.json(
@@ -57,23 +58,28 @@ async function handlerPut(req: NextRequest) {
         { status: 404 }
       );
     }
-    const { name } = (await req.json()) as IWebsite;
 
-    const status = getDomainStatus(name as string);
-    if ((await status) === "AVAILABLE") {
-      website.name = name;
+    const { name, description } = (await req.json()) as Partial<IWebsite>;
 
-      await website.save();
-      return NextResponse.json(website, { status: 200 });
-    } else {
-      return NextResponse.json(
-        { message: "Domain not available" },
-        { status: 400 }
-      );
+    // Always update the description
+    website.description = description;
+
+    if (name && name !== website.name) {
+      const status = await getDomainStatus(name);
+      if (status === "AVAILABLE") {
+        website.name = name;
+      } else {
+        return NextResponse.json(
+          { message: "Domain not available" },
+          { status: 400 }
+        );
+      }
     }
+
+    await website.save();
+    return NextResponse.json(website, { status: 200 });
   } catch (error: any) {
     console.log(error);
-
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
