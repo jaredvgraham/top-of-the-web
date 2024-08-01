@@ -6,6 +6,7 @@ import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FaBox, FaClipboardCheck, FaChartLine, FaEdit } from "react-icons/fa";
 import { IWebsite } from "@/models/WebsiteModel";
+import { useRouter } from "next/navigation";
 
 type Order = {
   id: number;
@@ -30,6 +31,7 @@ const Page = () => {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setEditing] = useState(false);
   const [editedWebsite, setEditedWebsite] = useState<Website | null>(null);
+  const Router = useRouter();
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -112,8 +114,11 @@ const Page = () => {
                 </div>
                 <p className="text-gray-600">{order?.pack}</p>
               </div>
-              <div className="bg-white p-6 rounded-lg shadow-lg">
-                <div className="flex items-center mb-4">
+              <div
+                onClick={() => Router.push("/user/upgrade")}
+                className="bg-white p-6 rounded-lg shadow-lg hover:bg-gray-100"
+              >
+                <div className="flex items-center mb-4  ">
                   <FaClipboardCheck className="text-2xl text-green-600 mr-2" />
                   <h2 className="text-xl font-bold text-gray-800">Plan</h2>
                 </div>
