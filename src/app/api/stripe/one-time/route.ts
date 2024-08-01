@@ -23,7 +23,7 @@ async function saveCustomerId(customerId: string, email: string) {
   });
   await customer.save();
 }
-
+//
 async function getOrCreateCustomerId(email: string) {
   let customerId = await getCustomerIdByEmail(email);
   if (!customerId) {
