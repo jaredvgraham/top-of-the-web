@@ -7,12 +7,15 @@ import Image from "next/image";
 import { MenuIcon, XIcon, UserIcon } from "@heroicons/react/solid";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 
 const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const { role, logout } = useAuth();
+  const [url, setUrl] = useState("");
+  const axiosPrivate = useAxiosPrivate();
 
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -20,6 +23,22 @@ const Navbar = () => {
   const isUserPage = pathname.includes("/user");
   const isAdminPage = pathname.includes("/admin");
   const isHomePage = pathname === "/";
+
+  //
+
+  useEffect(() => {
+    const callEndpoint = async () => {
+      console.log("Calling ednpoint");
+      try {
+        const res = await axiosPrivate.post("/stripe/portal");
+        console.log(res.data.url);
+        setUrl(res.data.url);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    callEndpoint();
+  }, [role]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -223,20 +242,35 @@ const Navbar = () => {
                     transition={{ duration: 0.3 }}
                   >
                     {!role ? (
-                      <ul>
-                        <li className="p-2">
+                      <motion.ul
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        variants={submenuVariants}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <motion.li className="p-2">
                           <Link href="/login">Login</Link>
-                        </li>
-                        <li className="p-2">
+                        </motion.li>
+                        <motion.li className="p-2">
                           <Link href="/signup">Sign Up</Link>
-                        </li>
-                      </ul>
+                        </motion.li>
+                      </motion.ul>
                     ) : (
-                      <ul>
-                        <li>
-                          <button onClick={() => logout()}>Logout</button>
-                        </li>
-                      </ul>
+                      <motion.ul
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        variants={submenuVariants}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <motion.li className="p-2">
+                          <button onClick={logout}>Logout</button>
+                        </motion.li>
+                        <motion.li className="p-2">
+                          <a href={url}>Billing</a>
+                        </motion.li>
+                      </motion.ul>
                     )}
                   </motion.div>
                 )}
