@@ -8,6 +8,9 @@ async function handler(req: NextRequest) {
   await dbConnect();
   try {
     const user = (req as any).user;
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
     const order = await findOrderByEmail(user.email);
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
