@@ -39,3 +39,14 @@ export const findSessionByToken = async (refreshToken: string) => {
 export const deleteSessionByToken = async (refreshToken: string) => {
   await Session.deleteOne({ refreshToken });
 };
+
+export const updateSessionToken = async (
+  oldToken: string,
+  newToken: string
+) => {
+  return await Session.findOneAndUpdate(
+    { refreshToken: oldToken },
+    { refreshToken: newToken },
+    { new: true }
+  );
+};

@@ -48,7 +48,7 @@ async function handlerPut(req: NextRequest) {
     await dbConnect();
     const user = (req as any).user;
     if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 404 });
     }
     const website = await Website.findOne({ email: user.email });
     if (!website) {

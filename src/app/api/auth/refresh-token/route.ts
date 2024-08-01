@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createAccessToken,
+  createRefreshToken,
   verifyRefreshToken,
   UserTokenPayload,
 } from "@/utils/jwt";
 import cookie from "cookie";
 import dbConnect from "@/lib/db";
-import { findSessionByToken } from "@/models/SessionModel";
+import { findSessionByToken, updateSessionToken } from "@/models/SessionModel";
 
 export async function POST(req: NextRequest) {
   await dbConnect();
 
   try {
     const cookies = cookie.parse(req.headers.get("cookie") || "");
-    console.log("cookies", cookies);
     if (!cookies.refreshToken) {
       return NextResponse.json(
         { success: false, message: "No refresh token" },
@@ -21,8 +21,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const decoded = verifyRefreshToken(cookies.refreshToken);
-    console.log("decoded", decoded);
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(cookies.refreshToken);
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, message: "Invalid refresh token" },
+        { status: 401 }
+      );
+    }
+
     const session = await findSessionByToken(cookies.refreshToken);
 
     if (!session) {
@@ -38,11 +46,26 @@ export async function POST(req: NextRequest) {
       role: decoded.role,
     };
     const accessToken = createAccessToken(userPayload);
+    const newRefreshToken = createRefreshToken(userPayload);
 
-    return NextResponse.json(
+    await updateSessionToken(session.id, newRefreshToken);
+
+    const response = NextResponse.json(
       { accessToken, role: decoded.role },
       { status: 200 }
     );
+
+    response.headers.set(
+      "Set-Cookie",
+      cookie.serialize("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+      })
+    );
+
+    return response;
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message },
