@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import Purchase from "@/models/Purchase";
 import Customer from "@/models/Customer";
+import Order from "@/models/Order";
 import dbConnect from "@/lib/db";
 import { findCustomerByEmail } from "@/models/Customer";
 
@@ -89,6 +90,16 @@ export async function POST(req: NextRequest) {
       }
       customer.phone = phone as string;
       await customer.save();
+
+      const order = await Order.findOne({ email });
+      if (!order) {
+        return NextResponse.json({
+          status: "error",
+          message: "Order not found",
+        });
+      }
+      order.phone = phone as string;
+      await order.save();
     }
     //
     return NextResponse.json({ status: "success", event: event.type });

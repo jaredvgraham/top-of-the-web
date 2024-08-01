@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import Customer from "@/models/Customer";
+import Order from "@/models/Order";
 import dbConnect from "@/lib/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
@@ -94,6 +95,17 @@ async function createRecurringPrice(plan: string) {
   return price;
 }
 
+async function createOrder(email: string, pack: string, plan: string) {
+  await dbConnect();
+  const order = new Order({
+    email,
+    pack,
+    plan,
+    progress: 0,
+  });
+  await order.save();
+}
+
 export async function POST(req: NextRequest) {
   const { email, pack, plan } = await req.json();
   try {
@@ -132,6 +144,7 @@ export async function POST(req: NextRequest) {
 
     // get or create customer Id
     const customerId = await getOrCreateCustomerId(email);
+    await createOrder(email, pack, plan);
 
     // Create a checkout session for the purchase
     const session = await stripe.checkout.sessions.create({
