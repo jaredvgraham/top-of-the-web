@@ -23,11 +23,8 @@ const Navbar = () => {
   const isAdminPage = pathname.includes("/admin");
   const isHomePage = pathname === "/";
 
-  //
-
   useEffect(() => {
     const callEndpoint = async () => {
-      console.log("Calling ednpoint");
       try {
         const res = await axiosPrivate.post("/stripe/portal");
         console.log(res.data.url);
