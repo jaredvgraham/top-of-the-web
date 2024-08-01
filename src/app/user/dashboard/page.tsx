@@ -143,14 +143,14 @@ const Page = () => {
               </div>
             </div>
             {website && (
-              <div className="mt-10 bg-white p-8 rounded-lg shadow-lg">
+              <div className="mt-10 bg-white p-8 rounded-lg shadow-lg w-full md:w-2/3 mx-auto">
                 <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
                   Website Overview
                 </h2>
                 <div className="space-y-4">
                   {!isEditing ? (
-                    <div className="flex items-center justify-between ">
-                      <h3 className="text-lg font-semibold text-gray-700">
+                    <div className="flex items-center  ">
+                      <h3 className="text-lg font-semibold text-gray-700 mr-3">
                         Website Name:
                       </h3>
                       <div className="flex items-center">
@@ -183,18 +183,18 @@ const Page = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-700">
+                  <div className="flex items-center ">
+                    <h3 className="text-lg font-semibold text-gray-700 mr-3">
                       Website URL:
                     </h3>
                     <p className="text-lg text-gray-600 pr-2">
                       {website.url ? website.url : "No url yet."}
                     </p>
                   </div>
-                  <div className="flex items-center flex-col">
+                  <div className="flex  flex-col">
                     {!isEditing ? (
                       <>
-                        <div className="flex items-center">
+                        <div className="flex items-center ">
                           <h3 className="text-lg font-semibold text-gray-700 pr-2">
                             Website Description:
                           </h3>
@@ -203,7 +203,7 @@ const Page = () => {
                             onClick={() => setEditing(true)}
                           />
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex ">
                           <p className="text-lg text-gray-600 pr-2">
                             {website.description}
                           </p>

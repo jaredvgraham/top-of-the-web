@@ -144,7 +144,7 @@ const Mission = () => {
         </section>
 
         {/* Customer Testimonials */}
-        <section className="py-16 bg-gray-100">
+        {/* <section className="py-16 bg-gray-100">
           <div className="container mx-auto text-center px-4">
             <motion.h2
               className="text-5xl font-extrabold mb-16 text-gray-800"
@@ -207,7 +207,7 @@ const Mission = () => {
               ))}
             </div>
           </div>
-        </section>
+        </section> */}
       </main>
     </>
   );
