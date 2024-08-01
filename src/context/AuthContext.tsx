@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     };
     checkAuthentication();
-  }, []);
+  }, [router]);
 
   const logout = () => {
     try {
