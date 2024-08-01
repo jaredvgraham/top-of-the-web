@@ -27,10 +27,10 @@ async function handler(req: NextRequest) {
       );
     }
     const phone = customer.phone;
-    const textMessage = `Email: ${user.email}\n Name: ${user.name}\nPhone: ${phone}\nSection: ${section}\nWhat to Change: ${change}`;
+    const textMessage = `Email: ${user.email}\n Name: ${user.firstName}\nPhone: ${phone}\nSection: ${section}\nWhat to Change: ${change}`;
     const mailOptions = {
-      from: process.env.EMAIL,
-      to: process.env.EMAIL,
+      from: process.env.Email,
+      to: process.env.Email,
       subject: "CHANGE REQUESTED",
       text: textMessage,
       html: `<p>${textMessage.replace(/\n/g, "<br>")}</p>`,
