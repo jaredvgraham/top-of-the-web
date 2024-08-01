@@ -66,10 +66,11 @@ const Page = () => {
 
     try {
       if (editedWebsite) {
-        await axiosPrivate.put("/user/website", {
+        const res = await axiosPrivate.put("/user/website", {
           name: editedWebsite.name,
           description: editedWebsite.description,
         });
+
         setWebsite((prev) => {
           if (!prev) return null;
           return {
@@ -80,9 +81,10 @@ const Page = () => {
         });
         setEditing(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       setError(
-        "Failed to check domain was it in the right format? example.com ."
+        error.response?.data?.message ||
+          "Failed to check domain. Was it in the right format? example.com."
       );
       console.error(error);
     }
@@ -178,7 +180,9 @@ const Page = () => {
                     <h3 className="text-lg font-semibold text-gray-700">
                       Website URL:
                     </h3>
-                    <p className="text-lg text-gray-600">{website.url}</p>
+                    <p className="text-lg text-gray-600 pr-2">
+                      {website.url ? website.url : "No url yet."}
+                    </p>
                   </div>
                   <div className="flex items-center flex-col">
                     {!isEditing ? (

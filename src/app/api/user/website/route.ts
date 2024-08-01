@@ -61,13 +61,17 @@ async function handlerPut(req: NextRequest) {
 
     const { name, description } = (await req.json()) as Partial<IWebsite>;
 
-    // Always update the description
     website.description = description;
 
     if (name && name !== website.name) {
       const status = await getDomainStatus(name);
       if (status === "AVAILABLE") {
         website.name = name;
+      } else if (status === "UNAVAILABLE") {
+        return NextResponse.json(
+          { message: "Domain not available" },
+          { status: 405 }
+        );
       } else {
         return NextResponse.json(
           { message: "Domain not available" },
