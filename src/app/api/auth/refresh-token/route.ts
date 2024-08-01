@@ -25,18 +25,20 @@ export async function POST(req: NextRequest) {
     try {
       decoded = verifyRefreshToken(cookies.refreshToken);
     } catch (error) {
+      console.log("Invalid refresh token:", error);
       return NextResponse.json(
         { success: false, message: "Invalid refresh token" },
-        { status: 401 }
+        { status: 400 }
       );
     }
 
     const session = await findSessionByToken(cookies.refreshToken);
 
     if (!session) {
+      console.log("Session not found for token:", cookies.refreshToken);
       return NextResponse.json(
         { success: false, message: "Session not found" },
-        { status: 401 }
+        { status: 404 }
       );
     }
 
@@ -48,7 +50,21 @@ export async function POST(req: NextRequest) {
     const accessToken = createAccessToken(userPayload);
     const newRefreshToken = createRefreshToken(userPayload);
 
-    await updateSessionToken(session.id, newRefreshToken);
+    const updatedSession = await updateSessionToken(
+      cookies.refreshToken,
+      newRefreshToken
+    );
+
+    if (!updatedSession) {
+      console.log(
+        "Failed to update session token. Session not found for:",
+        cookies.refreshToken
+      );
+      return NextResponse.json(
+        { success: false, message: "Failed to update session token" },
+        { status: 404 }
+      );
+    }
 
     const response = NextResponse.json(
       { accessToken, role: decoded.role },
@@ -65,8 +81,11 @@ export async function POST(req: NextRequest) {
       })
     );
 
+    console.log("Session updated with new refresh token:", newRefreshToken);
+
     return response;
   } catch (error: any) {
+    console.log("Error processing token refresh:", error.message);
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

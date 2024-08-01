@@ -44,9 +44,25 @@ export const updateSessionToken = async (
   oldToken: string,
   newToken: string
 ) => {
-  return await Session.findOneAndUpdate(
+  const session = await Session.findOneAndUpdate(
     { refreshToken: oldToken },
     { refreshToken: newToken },
     { new: true }
   );
+
+  if (!session) {
+    console.log(
+      "Failed to update session token. Session not found for:",
+      oldToken
+    );
+  } else {
+    console.log(
+      "Successfully updated session token from:",
+      oldToken,
+      "to:",
+      newToken
+    );
+  }
+
+  return session;
 };

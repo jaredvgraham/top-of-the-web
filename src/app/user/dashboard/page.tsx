@@ -75,7 +75,9 @@ const Page = () => {
         setEditing(false);
       }
     } catch (error) {
-      setError("Failed to save website name.");
+      setError(
+        "Failed to check domain was it in the right format? example.com ."
+      );
       console.error(error);
     }
   };
@@ -90,8 +92,6 @@ const Page = () => {
           <div className="flex items-center justify-center">
             <AiOutlineLoading3Quarters className="animate-spin text-4xl text-gray-600" />
           </div>
-        ) : error ? (
-          <p className="text-lg text-red-500 text-center">{error}</p>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -141,7 +141,7 @@ const Page = () => {
                       </h3>
                       <div className="flex items-center">
                         <p className="text-lg text-gray-600 pr-2">
-                          {website.name ? website.name : "No Name yet"}
+                          {website.name ? website.name : "example.com"}
                         </p>
                         <FaEdit
                           className="text-blue-500 cursor-pointer"
@@ -165,6 +165,7 @@ const Page = () => {
                         }
                         className="w-1/2 p-2 border border-gray-300 rounded-lg"
                       />
+                      {error && <p className="text-red-500 text-sm">{error}</p>}
                     </div>
                   )}
                   <div className="flex items-center justify-between">
