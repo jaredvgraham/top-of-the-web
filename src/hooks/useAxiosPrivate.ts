@@ -9,7 +9,7 @@ const axiosPrivate = axios.create({
 });
 
 const useAxiosPrivate = () => {
-  const { accessToken, setAccessToken, logout } = useAuth();
+  const { accessToken, setAccessToken } = useAuth();
 
   useEffect(() => {
     const requestIntercept = axiosPrivate.interceptors.request.use(
@@ -46,7 +46,6 @@ const useAxiosPrivate = () => {
             ] = `Bearer ${newAccessToken}`;
             return axiosPrivate(originalRequest);
           } catch (refreshError) {
-            logout();
             return Promise.reject(refreshError);
           }
         }
@@ -58,7 +57,7 @@ const useAxiosPrivate = () => {
       axiosPrivate.interceptors.request.eject(requestIntercept);
       axiosPrivate.interceptors.response.eject(responseIntercept);
     };
-  }, [accessToken, setAccessToken, logout]);
+  }, [accessToken, setAccessToken]);
 
   return axiosPrivate;
 };

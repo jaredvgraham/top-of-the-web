@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     if (!cookies.refreshToken) {
       return NextResponse.json(
         { success: false, message: "No refresh token" },
-        { status: 401 }
+        { status: 400 }
       );
     }
 
