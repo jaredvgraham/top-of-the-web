@@ -6,12 +6,11 @@ type PlanProps = {
 
 const planOptions = [
   { name: "Hosting / Domain", value: "hosting", price: 30 },
-  { name: "All + SEO Updates", value: "hosting seo", price: 200 },
+  { name: "Hosting / Domain / SEO Updates", value: "hosting seo", price: 200 },
   { name: "All + Basic Ads", value: "basic ad", price: 500 },
   { name: "All + Standard Ads", value: "standard ad", price: 1200 },
   { name: "All + Advanced Ads", value: "advanced ad", price: 3000 },
   { name: "All + Rapid Growth Ads", value: "rapid growth ad", price: 5000 },
-  { name: "Test", value: "test" },
 ];
 
 const Plans = ({ setPlan }: PlanProps) => {
