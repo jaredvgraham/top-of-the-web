@@ -40,7 +40,7 @@ async function createPrice(pack: string) {
   let price: number;
   switch (pack) {
     case "Starter Website Package":
-      price = 80000;
+      price = 100;
       break;
     case "Standard Website Package":
       price = 140000;
@@ -68,7 +68,7 @@ async function createRecurringPrice(plan: string) {
   let price: number;
   switch (plan) {
     case "hosting":
-      price = 3000;
+      price = 100;
       break;
     case "hosting seo":
       price = 6000;
@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
         },
       ],
 
-      success_url: `http://localhost:3000/schedule?email=${encodeURIComponent(
+      success_url: `https://www.bsites.io/schedule?email=${encodeURIComponent(
         email
       )}`,
       cancel_url: `http://localhost:3000/pricing`,
