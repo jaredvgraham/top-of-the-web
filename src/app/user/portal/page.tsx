@@ -6,6 +6,7 @@ import React, { use, useEffect, useState } from "react";
 const Page = () => {
   const [url, setUrl] = useState("");
   const axiosPrivate = useAxiosPrivate();
+  //
 
   useEffect(() => {
     const callEndpoint = async () => {
