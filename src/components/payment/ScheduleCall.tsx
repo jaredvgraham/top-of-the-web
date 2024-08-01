@@ -11,6 +11,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { format, parse, startOfWeek, getDay, add, sub } from "date-fns";
 import enUS from "date-fns/locale/en-US";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const locales = {
   "en-US": enUS,
@@ -39,6 +40,8 @@ const ScheduleCall = ({ email }: Props) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<SlotInfo | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [callScheduled, setCallScheduled] = useState(false);
+  const Router = useRouter();
 
   useEffect(() => {
     fetchScheduledCalls(currentDate);
@@ -116,8 +119,8 @@ const ScheduleCall = ({ email }: Props) => {
             end: new Date(response.data.end),
           },
         ]);
+        setCallScheduled(true);
         setSelectedSlot(null);
-        alert(`Scheduled call on ${format(start, "PPpp")}`);
       } catch (error) {
         alert("Failed to schedule the call");
         console.error("Failed to schedule the call", error);
@@ -145,6 +148,28 @@ const ScheduleCall = ({ email }: Props) => {
   const handleNavigate = (date: Date) => {
     setCurrentDate(date);
   };
+
+  if (callScheduled) {
+    return (
+      <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-md w-full h-screen">
+        <h2 className="text-2xl font-bold mb-4">Call Scheduled</h2>
+        <p className="text-lg text-gray-700">
+          Your call has been scheduled. We will contact you at the selected
+          time.
+        </p>
+        <p>
+          Sign up to track your orders, manage payment information, and upload
+          content for your site.{" "}
+        </p>
+        <button
+          onClick={() => Router.push("/signup")}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 mt-4"
+        >
+          Sign Up
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-md w-full h-screen">
