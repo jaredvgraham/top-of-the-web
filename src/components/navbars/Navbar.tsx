@@ -20,7 +20,6 @@ const Navbar = () => {
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const isUserPage = pathname.includes("/user");
   const isAdminPage = pathname.includes("/admin");
   const isHomePage = pathname === "/";
 
@@ -77,9 +76,9 @@ const Navbar = () => {
     visible: { opacity: 1, y: 0 },
   };
 
-  if (isUserPage || isAdminPage) return null;
+  if (isAdminPage) return null;
 
-  return !isUserPage ? (
+  return (
     <nav
       className={`w-full z-20 ${
         isHomePage ? "absolute navbarColor" : "gradient-bg"
@@ -436,7 +435,12 @@ const Navbar = () => {
                           <a href={url}>Billing</a>
                         </motion.li>
                         <motion.li className="p-2">
-                          <Link href="/user/dashboard">User Dashboard</Link>
+                          <Link
+                            onClick={() => setIsMenuOpen(false)}
+                            href="/user/dashboard"
+                          >
+                            User Dashboard
+                          </Link>
                         </motion.li>
                       </motion.ul>
                     ))}
@@ -447,7 +451,7 @@ const Navbar = () => {
         )}
       </AnimatePresence>
     </nav>
-  ) : null;
+  );
 };
 
 export default Navbar;
