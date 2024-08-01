@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import Customer from "@/models/Customer";
 import Order from "@/models/Order";
 import Stripe from "stripe";
+import authMiddleware from "@/middleware/auth";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
-async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   try {
     const { plan } = await req.json();
     const price = await getPlanPrice(plan);
@@ -107,3 +108,5 @@ async function updateOrderDoc(email: string, plan: string) {
     return false;
   }
 }
+
+export const POST = authMiddleware(handler);
