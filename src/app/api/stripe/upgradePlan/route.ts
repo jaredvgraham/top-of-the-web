@@ -31,6 +31,8 @@ async function handler(req: NextRequest) {
       customer: customerId,
     });
     if (subscriptions.data.length === 0) {
+      console.log(subscriptions.data.length);
+
       return NextResponse.json(
         { error: "Customer has no subscription" },
         { status: 400 }
@@ -41,7 +43,7 @@ async function handler(req: NextRequest) {
 
     // Update the subscription
     const updatedSubscription = await stripe.subscriptions.update(
-      subscriptionId,
+      subscription.id,
       {
         items: [
           {
@@ -64,6 +66,8 @@ async function handler(req: NextRequest) {
     }
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: any) {
+    console.log(error);
+
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
