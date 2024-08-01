@@ -51,13 +51,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     };
     checkAuthentication();
-  }, [router]);
+  }, []);
 
   const logout = () => {
     try {
       axiosPublic.post("/auth/logout");
       setAccessToken(null);
       setIsAuthenticated(false);
+      setRole("");
       setLoading(false);
       router.push("/");
     } catch (error) {
