@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 
 import React, { use, useEffect, useState } from "react";
 
-const page = () => {
+const Page = () => {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
 
@@ -18,4 +18,4 @@ const page = () => {
   return <ScheduleCall email={email} />;
 };
 
-export default page;
+export default Page;
