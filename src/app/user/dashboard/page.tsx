@@ -4,7 +4,7 @@ import withAuth from "@/hoc/withAuth";
 import { useAuth } from "@/context/AuthContext";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { FaBox, FaClipboardCheck, FaChartLine } from "react-icons/fa";
+import { FaBox, FaClipboardCheck, FaChartLine, FaEdit } from "react-icons/fa";
 import { IWebsite } from "@/models/WebsiteModel";
 
 type Order = {
@@ -15,13 +15,21 @@ type Order = {
   progress: number;
 };
 
+type Website = {
+  name: string;
+  url: string;
+  description: string;
+};
+
 const Page = () => {
   const { logout } = useAuth();
   const axiosPrivate = useAxiosPrivate();
   const [order, setOrder] = useState<Order | null>(null);
-  const [website, setWebsite] = useState<IWebsite | null>(null);
+  const [website, setWebsite] = useState<Website | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setEditing] = useState(false);
+  const [editedWebsite, setEditedWebsite] = useState<Website | null>(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -40,6 +48,7 @@ const Page = () => {
       try {
         const response = await axiosPrivate.get("/user/website");
         setWebsite(response.data);
+        setEditedWebsite(response.data); // Initialize editedWebsite with fetched website data
       } catch (error) {
         setError("Failed to fetch website details.");
         console.error(error);
@@ -51,6 +60,25 @@ const Page = () => {
     fetchOrder();
     fetchWebsite();
   }, []);
+
+  const handleSave = async () => {
+    try {
+      if (editedWebsite) {
+        await axiosPrivate.put("/user/website", { name: editedWebsite.name });
+        setWebsite((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            name: editedWebsite.name,
+          };
+        });
+        setEditing(false);
+      }
+    } catch (error) {
+      setError("Failed to save website name.");
+      console.error(error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -81,7 +109,10 @@ const Page = () => {
                   <FaClipboardCheck className="text-2xl text-green-600 mr-2" />
                   <h2 className="text-xl font-bold text-gray-800">Plan</h2>
                 </div>
-                <p className="text-gray-600">{order?.plan}</p>
+                <p className="text-gray-600">
+                  {order &&
+                    order?.plan.charAt(0).toUpperCase() + order?.plan.slice(1)}
+                </p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-lg">
                 <div className="flex items-center mb-4">
@@ -103,14 +134,39 @@ const Page = () => {
                   Website Overview
                 </h2>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-700">
-                      Website Name:
-                    </h3>
-                    <p className="text-lg text-gray-600">
-                      {website.name ? website.name : "No Name yet"}
-                    </p>
-                  </div>
+                  {!isEditing ? (
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-700">
+                        Website Name:
+                      </h3>
+                      <div className="flex items-center">
+                        <p className="text-lg text-gray-600 pr-2">
+                          {website.name ? website.name : "No Name yet"}
+                        </p>
+                        <FaEdit
+                          className="text-blue-500 cursor-pointer"
+                          onClick={() => setEditing(true)}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-700">
+                        Website Name:
+                      </h3>
+                      <input
+                        type="text"
+                        value={editedWebsite?.name || ""}
+                        onChange={(e) =>
+                          setEditedWebsite({
+                            ...(editedWebsite as Website),
+                            name: e.target.value,
+                          })
+                        }
+                        className="w-1/2 p-2 border border-gray-300 rounded-lg"
+                      />
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-700">
                       Website URL:
@@ -125,6 +181,22 @@ const Page = () => {
                       {website.description}
                     </p>
                   </div>
+                  {isEditing && (
+                    <div className="flex justify-end mt-4">
+                      <button
+                        onClick={handleSave}
+                        className="bg-blue-600 text-white px-4 py-2 rounded"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditing(false)}
+                        className="bg-gray-600 text-white px-4 py-2 rounded ml-2"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -2,10 +2,10 @@ import mongoose, { Schema, model, Document } from "mongoose";
 
 export interface IWebsite extends Document {
   _id: mongoose.Types.ObjectId;
-  name: string;
+  name?: string;
   email: string;
-  url: string;
-  description: string;
+  url?: string;
+  description?: string;
   createdAt: Date;
 }
 

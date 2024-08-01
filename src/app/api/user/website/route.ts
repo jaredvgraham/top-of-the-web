@@ -56,11 +56,9 @@ async function handlerPut(req: NextRequest) {
         { status: 404 }
       );
     }
-    const { name, email, url, description } = (await req.json()) as IWebsite;
+    const { name } = (await req.json()) as IWebsite;
     website.name = name;
-    website.email = email;
-    website.url = url;
-    website.description = description;
+
     await website.save();
     return NextResponse.json(website, { status: 200 });
   } catch (error: any) {
