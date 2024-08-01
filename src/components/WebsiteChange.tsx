@@ -4,6 +4,9 @@ import React, { useState } from "react";
 
 const WebsiteChange = () => {
   const axiosPrivate = useAxiosPrivate();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
   const [formData, setFormData] = useState({
     section: "",
     change: "",
@@ -11,11 +14,16 @@ const WebsiteChange = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
     console.log(formData);
     try {
-      const res = await axiosPrivate.post("/user/website/change", formData);
+      const res = await axiosPrivate.post("/user/website-change", formData);
       console.log(res.data);
+      setSuccess("Website change submitted successfully!");
+      setLoading(false);
     } catch (error) {
+      setError("Error submitting website change. Please try again.");
+      setLoading(false);
       console.log(error);
     }
   };
@@ -66,6 +74,9 @@ const WebsiteChange = () => {
         >
           Submit
         </button>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {success && <p className="text-green-500 text-sm">{success}</p>}
+        {loading && <p className="text-gray-500 text-sm">Loading...</p>}
       </form>
     </div>
   );
