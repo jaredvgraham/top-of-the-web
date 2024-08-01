@@ -5,8 +5,9 @@ import { useAuth } from "@/context/AuthContext";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FaBox, FaClipboardCheck, FaChartLine, FaEdit } from "react-icons/fa";
-import { IWebsite } from "@/models/WebsiteModel";
+import Website, { IWebsite } from "@/models/WebsiteModel";
 import { useRouter } from "next/navigation";
+import WebsiteChange from "@/components/WebsiteChange";
 
 type Order = {
   id: number;
@@ -247,6 +248,7 @@ const Page = () => {
           </>
         )}
       </div>
+      <WebsiteChange />
     </div>
   );
 };
