@@ -5,6 +5,7 @@ import Website from "@/models/WebsiteModel";
 import dbConnect from "@/lib/db";
 import { IWebsite } from "@/models/WebsiteModel";
 import authMiddleware from "@/middleware/auth";
+import { getDomainStatus } from "@/services/DomainService";
 
 async function handlerPost(req: NextRequest) {
   try {
@@ -57,10 +58,19 @@ async function handlerPut(req: NextRequest) {
       );
     }
     const { name } = (await req.json()) as IWebsite;
-    website.name = name;
 
-    await website.save();
-    return NextResponse.json(website, { status: 200 });
+    const status = getDomainStatus(name as string);
+    if ((await status) === "AVAILABLE") {
+      website.name = name;
+
+      await website.save();
+      return NextResponse.json(website, { status: 200 });
+    } else {
+      return NextResponse.json(
+        { message: "Domain not available" },
+        { status: 400 }
+      );
+    }
   } catch (error: any) {
     console.log(error);
 
