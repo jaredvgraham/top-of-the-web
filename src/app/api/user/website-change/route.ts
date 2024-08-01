@@ -27,7 +27,7 @@ async function handler(req: NextRequest) {
       );
     }
     const phone = customer.phone;
-    const textMessage = `Email: ${user.email}\n Name: ${user.name}\nPhone: ${phone} \nDescription: ${description}`;
+    const textMessage = `Email: ${user.email}\n Name: ${user.name}\nPhone: ${phone}\nSection: ${section}\nWhat to Change: ${change}`;
     const mailOptions = {
       from: process.env.Email,
       to: process.env.Email,
