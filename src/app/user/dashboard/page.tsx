@@ -9,7 +9,7 @@ type Order = {
   pack: string;
   plan: string;
   price: number;
-  progress: number; // Progress as a number from 1 to 5
+  progress: number;
 };
 
 const Page = () => {
@@ -33,7 +33,7 @@ const Page = () => {
     };
     fetchOrder();
   }, []);
-
+  //
   return (
     <div className="w-full h-screen flex flex-col items-center justify-center p-4 bg-gray-100">
       <h1 className="text-2xl font-bold mb-5">Your Order</h1>
