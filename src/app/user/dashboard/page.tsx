@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FaBox, FaClipboardCheck, FaChartLine } from "react-icons/fa";
+import { IWebsite } from "@/models/WebsiteModel";
 
 type Order = {
   id: number;
@@ -18,6 +19,7 @@ const Page = () => {
   const { logout } = useAuth();
   const axiosPrivate = useAxiosPrivate();
   const [order, setOrder] = useState<Order | null>(null);
+  const [website, setWebsite] = useState<IWebsite | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +35,21 @@ const Page = () => {
         setLoading(false);
       }
     };
+
+    const fetchWebsite = async () => {
+      try {
+        const response = await axiosPrivate.get("/user/website");
+        setWebsite(response.data);
+      } catch (error) {
+        setError("Failed to fetch website details.");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchOrder();
+    fetchWebsite();
   }, []);
 
   return (
@@ -48,8 +64,8 @@ const Page = () => {
           </div>
         ) : error ? (
           <p className="text-lg text-red-500 text-center">{error}</p>
-        ) : order ? (
-          <div>
+        ) : (
+          <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-lg shadow-lg">
                 <div className="flex items-center mb-4">
@@ -58,14 +74,14 @@ const Page = () => {
                     Website Package
                   </h2>
                 </div>
-                <p className="text-gray-600">{order.pack}</p>
+                <p className="text-gray-600">{order?.pack}</p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-lg">
                 <div className="flex items-center mb-4">
                   <FaClipboardCheck className="text-2xl text-green-600 mr-2" />
                   <h2 className="text-xl font-bold text-gray-800">Plan</h2>
                 </div>
-                <p className="text-gray-600">{order.plan}</p>
+                <p className="text-gray-600">{order?.plan}</p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-lg">
                 <div className="flex items-center mb-4">
@@ -75,20 +91,44 @@ const Page = () => {
                 <div className="w-full bg-gray-200 rounded-full h-6">
                   <div
                     className="bg-blue-600 h-6 rounded-full"
-                    style={{ width: `${(order.progress / 5) * 100}%` }}
+                    style={{ width: `${(order?.progress ?? 0 / 5) * 100}%` }}
                   ></div>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">{`Progress: ${order.progress} / 5`}</p>
+                <p className="text-sm text-gray-600 mt-1">{`Progress: ${order?.progress} / 5`}</p>
               </div>
             </div>
-            <div className=" w-4/6 bg-white mx-auto mt-4 ">
-              <h1 className="text-center">OverView</h1>
-            </div>
-          </div>
-        ) : (
-          <p className="text-lg text-gray-600 text-center">
-            No order details available.
-          </p>
+            {website && (
+              <div className="mt-10 bg-white p-8 rounded-lg shadow-lg">
+                <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+                  Website Overview
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-700">
+                      Website Name:
+                    </h3>
+                    <p className="text-lg text-gray-600">
+                      {website.name ? website.name : "No Name yet"}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-700">
+                      Website URL:
+                    </h3>
+                    <p className="text-lg text-gray-600">{website.url}</p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-700">
+                      Website Description:
+                    </h3>
+                    <p className="text-lg text-gray-600">
+                      {website.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
