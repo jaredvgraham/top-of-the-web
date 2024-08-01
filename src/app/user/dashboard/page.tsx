@@ -33,7 +33,7 @@ const Page = () => {
     };
     fetchOrder();
   }, []);
-  //
+
   return (
     <div className="w-full h-screen flex flex-col items-center justify-center p-4 bg-gray-100">
       <h1 className="text-2xl font-bold mb-5">Your Order</h1>
@@ -54,11 +54,12 @@ const Page = () => {
           </div>
           <div className="mb-2">
             <p className="font-semibold">Status:</p>
-            <progress
-              className="w-full h-4"
-              value={order.progress}
-              max="5"
-            ></progress>
+            <div className="w-full bg-gray-200 rounded-full h-6">
+              <div
+                className="bg-blue-600 h-6 rounded-full"
+                style={{ width: `${(order.progress / 5) * 100}%` }}
+              ></div>
+            </div>
             <p className="text-sm mt-1">{`Progress: ${order.progress} / 5`}</p>
           </div>
         </div>
