@@ -4,11 +4,12 @@ import React, { useState } from "react";
 import { axiosPublic } from "@/utils/axios";
 import Link from "next/link";
 
-const Signup: React.FC = () => {
+const Signup = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [firstName, setFirstName] = useState<string>("");
   const [message, setMessage] = useState<string>("");
+  const [success, setSuccess] = useState("");
   //
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -22,7 +23,7 @@ const Signup: React.FC = () => {
       });
 
       if (response.data.success) {
-        setMessage("Signup successful!");
+        setSuccess("Signup successful. Please login.");
         // Optionally, redirect to another page or handle success
       } else {
         setMessage("Signup failed: " + response.data.error);
@@ -106,6 +107,7 @@ const Signup: React.FC = () => {
         </div>
       </form>
       {message && <p className="text-center mt-5 text-red-500">{message}</p>}
+      {success && <p className="text-center mt-5 text-green-500">{success}</p>}
     </div>
   );
 };

@@ -6,11 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { MenuIcon, XIcon, UserIcon } from "@heroicons/react/solid";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  const { role, logout } = useAuth();
 
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -220,14 +222,22 @@ const Navbar = () => {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <ul>
-                      <li className="p-2">
-                        <Link href="/login">Login</Link>
-                      </li>
-                      <li className="p-2">
-                        <Link href="/signup">Sign Up</Link>
-                      </li>
-                    </ul>
+                    {!role ? (
+                      <ul>
+                        <li className="p-2">
+                          <Link href="/login">Login</Link>
+                        </li>
+                        <li className="p-2">
+                          <Link href="/signup">Sign Up</Link>
+                        </li>
+                      </ul>
+                    ) : (
+                      <ul>
+                        <li>
+                          <button onClick={() => logout()}>Logout</button>
+                        </li>
+                      </ul>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
