@@ -9,8 +9,10 @@ const Page = () => {
 
   useEffect(() => {
     const callEndpoint = async () => {
+      console.log("Calling ednpoint");
       try {
         const res = await axiosPrivate.post("/stripe/portal");
+        console.log(res.data.url);
         setUrl(res.data.url);
       } catch (error) {
         console.log(error);
