@@ -41,7 +41,7 @@ async function createPrice(pack: string) {
   let price: number;
   switch (pack) {
     case "Starter Website Package":
-      price = 100;
+      price = 80000;
       break;
     case "Standard Website Package":
       price = 140000;
