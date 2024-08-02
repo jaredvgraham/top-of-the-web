@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
       success_url: `https://www.bsites.io/schedule?email=${encodeURIComponent(
         email
       )}`,
-      cancel_url: `http://localhost:3000/pricing`,
+      cancel_url: `https://www.bsites.io/pricing`,
     });
 
     return NextResponse.json({ url: session.url });
