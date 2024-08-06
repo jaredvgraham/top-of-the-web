@@ -68,6 +68,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const refreshSession = async () => {
+    console.log("refreshing session");
+
     try {
       const response = await axiosPublic.post("/auth/refresh-token");
       setAccessToken(response.data.accessToken);

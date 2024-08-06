@@ -50,7 +50,7 @@ const OurWork = () => {
             </h2>
           </a>
         </motion.section>
-        <motion.section
+        {/* <motion.section
           className="mb-16"
           ref={ref2}
           initial="hidden"
@@ -76,7 +76,7 @@ const OurWork = () => {
               JakeCleansCars.com
             </h2>
           </a>
-        </motion.section>
+        </motion.section> */}
       </div>
     </div>
   );
