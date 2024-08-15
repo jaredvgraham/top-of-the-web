@@ -167,10 +167,9 @@ const OurTeam = () => {
           We are always looking for talented and passionate individuals to join
           our team. If you are interested in working with us, please contact us
           at{" "}
-          <a href="mailto:info@yourcompany.com" className="text-blue-500">
-            info@yourcompany.com
+          <a href="mailto:bsitesioteam@gmail.com" className="text-blue-500">
+            bsitesioteam@gmail.com
           </a>
-          .
         </motion.p>
       </section>
 
