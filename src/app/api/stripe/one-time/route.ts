@@ -137,9 +137,7 @@ export async function POST(req: NextRequest) {
         },
       ],
 
-      success_url: `https://www.bsites.io/schedule?email=${encodeURIComponent(
-        email
-      )}`,
+      success_url: `https://www.bsites.io/thank-you`,
       cancel_url: `https://www.bsites.io/pricing`,
     });
 
