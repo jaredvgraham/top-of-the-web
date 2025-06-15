@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import Customer from "@/models/Customer";
 import Order from "@/models/Order";
 import Stripe from "stripe";
-import authMiddleware from "@/middleware/auth";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
@@ -113,4 +112,4 @@ async function updateOrderDoc(email: string, plan: string) {
   }
 }
 
-export const POST = authMiddleware(handler);
+export const POST = handler;

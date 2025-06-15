@@ -34,7 +34,7 @@ const ContactCard = () => {
       <div className="text-center mb-8">
         <h2 className="text-4xl font-extrabold text-gray-800">Get in Touch</h2>
         <p className="text-gray-500 mt-2">
-          We're here to help and answer any question you might have.
+          We&apos;re here to help and answer any question you might have.
         </p>
       </div>
       <div className="space-y-6">

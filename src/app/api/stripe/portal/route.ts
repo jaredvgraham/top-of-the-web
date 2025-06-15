@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import Customer from "@/models/Customer";
 import dbConnect from "@/lib/db";
-import authMiddleware from "@/middleware/auth";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
@@ -37,4 +36,4 @@ async function handler(req: NextRequest) {
   }
 }
 
-export const POST = authMiddleware(handler);
+export const POST = handler;

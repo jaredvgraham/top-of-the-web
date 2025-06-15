@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import User from "@/models/UserModel";
-import authMiddleware from "@/middleware/auth";
+
 import nodemailer from "nodemailer";
 
 const sendEmail = async (to: string, subject: string, text: string) => {
@@ -61,4 +61,4 @@ const handlerPost = async (req: NextRequest, res: NextResponse) => {
   }
 };
 
-export const POST = authMiddleware(handlerPost);
+export const POST = handlerPost;
