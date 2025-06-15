@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+.dark-shadow {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.box:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+body {
+}
+
+.lightC {
+  background-color: rgb(217, 221, 225);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+.hero-height {
+  height: 100vh;
+}
+
+.navbarColor {
+  background-color: transparent;
+}
+
+.gradient-text {
+  font-weight: 900;
+
+  background: linear-gradient(45deg, #ca98fb, #73c2ff, #379cc1);
+
+  -webkit-background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradient-bg {
+  background: linear-gradient(45deg, #ca98fb, #73c2ff, #379cc1);
+}
+
+.gradient-button:hover {
+  background: linear-gradient(45deg, #379cc1, #73c2ff, #ca98fb);
+}
+
+.imageOverlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.iframe-container {
+  width: 100%;
+  height: 0;
+  padding-bottom: 75%; /* Aspect ratio: 4:3 for larger display */
+  position: relative;
+}
+
+.iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.iframe-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  background: transparent;
+}
+
+.gradient-border {
+  border-image-source: linear-gradient(45deg, #ca98fb, #73c2ff, #379cc1);
+  border-image-slice: 1;
+}
+
+.gradient-tag {
+  background: linear-gradient(45deg, #ca98fb, #73c2ff, #379cc1);
+}
