@@ -46,7 +46,7 @@ const packages = [
       { icon: FaEnvelope, text: "Contact form", color: "text-red-500" },
       {
         icon: FaServer,
-        text: "Backend integration for emails and phone call notifications",
+        text: "Backend integration for email marketing, review campaigns, and more",
         color: "text-orange-500",
       },
       { icon: FaBlog, text: "Blog setup", color: "text-pink-500" },
@@ -77,7 +77,7 @@ const packages = [
       { icon: FaEnvelope, text: "Custom contact forms", color: "text-red-500" },
       {
         icon: FaServer,
-        text: "Backend integration for emails and phone call notifications",
+        text: "Backend integration for customer collection, email marketing, review campaigns, and more",
         color: "text-orange-500",
       },
       { icon: FaBlog, text: "Blog setup", color: "text-pink-500" },

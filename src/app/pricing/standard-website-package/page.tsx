@@ -147,7 +147,7 @@ const Page = () => {
             <li className="flex items-center">
               <FaServer className="text-orange-500 mr-2" /> Backend integration
               for customer collection, email marketing, review campaigns, and
-              more
+              more.
             </li>
             <li className="flex items-center">
               <FaBlog className="text-pink-500 mr-2" /> Blog setup
