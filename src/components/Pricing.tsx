@@ -55,11 +55,7 @@ const packages = [
         text: "Basic analytics integration",
         color: "text-yellow-500",
       },
-      {
-        icon: FaShareAlt,
-        text: "Social media integration",
-        color: "text-teal-500",
-      },
+
       {
         icon: FaHandsHelping,
         text: "Enhanced support and maintenance",
@@ -92,11 +88,7 @@ const packages = [
         text: "E-commerce functionality",
         color: "text-blue-500",
       },
-      {
-        icon: FaShareAlt,
-        text: "Social media integration",
-        color: "text-indigo-500",
-      },
+
       {
         icon: FaChartBar,
         text: "Monthly performance reviews",
