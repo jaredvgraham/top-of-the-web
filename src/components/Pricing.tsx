@@ -241,7 +241,7 @@ const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 md:p-16">
+    <div className="min-h-screen bg-gray-50 p-8 md:p-16 overflow-hidden">
       <h1 className="text-5xl md:text-7xl font-extrabold text-center mb-20 text-gray-800">
         Flexible Pricing for Every Need
       </h1>
