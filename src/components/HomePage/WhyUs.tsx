@@ -75,8 +75,8 @@ const WhyUs = () => {
           <p className="text-gray-600">
             One of the biggest challenges businesses face when developing a
             website is balancing quality with cost. At Bsites.io, we offer a
-            range of price packages starting from just $800 and going up to
-            $3,500. This makes our services accessible to a wide range of
+            range of price packages starting from just $300 and going up to
+            $2,999. This makes our services accessible to a wide range of
             businesses without compromising on quality. Compared to the industry
             average, where custom websites can range from $5,000 to $30,000, our
             pricing is significantly more affordable. We believe in transparent
