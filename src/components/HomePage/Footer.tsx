@@ -53,6 +53,11 @@ const Footer = () => {
                 Contact
               </Link>
             </li>
+            <li>
+              <Link href="/privacy" className="hover:underline">
+                Privacy Policy
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -115,7 +120,12 @@ const Footer = () => {
       </div>
 
       {/* Copyright Notice */}
-      <div className="mt-8 text-center border-t border-gray-700 pt-4">
+      <div className="mt-8 text-center border-t border-gray-700 pt-4 space-y-2">
+        <p className="text-sm">
+          <Link href="/privacy" className="hover:underline">
+            Privacy Policy
+          </Link>
+        </p>
         <p className="text-sm">
           &copy; {new Date().getFullYear()} Bsites.io. All rights reserved.
         </p>
