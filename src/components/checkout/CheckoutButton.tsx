@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -14,10 +14,33 @@ type CheckoutButtonProps = {
 
 const CheckoutButton = ({ label, className, children }: CheckoutButtonProps) => {
   const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const prefersFinePointer = window.matchMedia("(pointer: fine)").matches;
+    if (prefersFinePointer) {
+      inputRef.current?.focus({ preventScroll: true });
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  const scrollInputIntoView = () => {
+    window.requestAnimationFrame(() => {
+      inputRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  };
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,17 +84,18 @@ const CheckoutButton = ({ label, className, children }: CheckoutButtonProps) => 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-5 backdrop-blur-sm"
+            className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-ink/60 px-5 backdrop-blur-sm"
             onClick={() => !loading && setOpen(false)}
           >
-            <motion.div
-              initial={{ opacity: 0, y: 24, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.98 }}
-              transition={{ duration: 0.3, ease }}
-              className="relative w-full max-w-md rounded-3xl border border-ink/15 bg-paper p-8 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="flex min-h-[100dvh] items-start justify-center py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] sm:items-center sm:py-10">
+              <motion.div
+                initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 16, scale: 0.98 }}
+                transition={{ duration: 0.3, ease }}
+                className="relative my-auto w-full max-w-md shrink-0 rounded-3xl border border-ink/15 bg-paper p-6 shadow-2xl sm:p-8"
+                onClick={(e) => e.stopPropagation()}
+              >
               <button
                 type="button"
                 onClick={() => !loading && setOpen(false)}
@@ -82,13 +106,13 @@ const CheckoutButton = ({ label, className, children }: CheckoutButtonProps) => 
               </button>
 
               <p className="mb-2 text-[13px] font-medium uppercase tracking-[0.24em] text-ink/50">
-                Start checkout
+                Secure checkout
               </p>
               <h2 className="font-display mb-2 text-3xl font-medium tracking-tight text-ink">
-                Claim your free website
+                Subscribe to the plan
               </h2>
               <p className="mb-8 text-[15px] leading-7 text-ink/60">
-                Enter your email to continue to secure checkout. $0 build today,
+                Enter your email to continue to Stripe checkout. $0 build today,
                 then $84/mo for hosting and care.
               </p>
 
@@ -101,14 +125,22 @@ const CheckoutButton = ({ label, className, children }: CheckoutButtonProps) => 
                     Email address
                   </label>
                   <input
+                    ref={inputRef}
                     type="email"
                     id="checkout-email"
+                    name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onFocus={scrollInputIntoView}
                     required
-                    autoFocus
+                    inputMode="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="go"
                     placeholder="you@business.com"
-                    className="w-full rounded-xl border border-ink/15 bg-paper px-4 py-3 text-ink outline-none transition-colors focus:border-accent"
+                    className="w-full rounded-xl border border-ink/15 bg-paper px-4 py-3 text-base text-ink outline-none transition-colors focus:border-accent"
                   />
                 </div>
 
@@ -129,7 +161,8 @@ const CheckoutButton = ({ label, className, children }: CheckoutButtonProps) => 
                   </span>
                 </button>
               </form>
-            </motion.div>
+              </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

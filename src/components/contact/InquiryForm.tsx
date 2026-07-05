@@ -68,7 +68,7 @@ const InquiryForm: React.FC = () => {
       className="rounded-3xl border border-ink/15 bg-paper p-8 sm:p-12"
     >
       <p className="mb-10 text-[12px] font-semibold uppercase tracking-[0.24em] text-ink/50">
-        Tell us what you need
+        Send us a message
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -153,7 +153,7 @@ const InquiryForm: React.FC = () => {
         >
           <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
           <span className="relative">
-            {submitting ? "Sending..." : "Request My Free Website"}
+            {submitting ? "Sending..." : "Send Message"}
           </span>
         </button>
         {responseMessage && (

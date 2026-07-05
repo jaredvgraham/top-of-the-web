@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import Footer from "@/components/HomePage/Footer";
 import CheckoutButton from "@/components/checkout/CheckoutButton";
 
@@ -84,9 +85,15 @@ const Pricing = () => {
                 <CheckoutButton className="group relative mt-10 w-full overflow-hidden rounded-full bg-paper px-8 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-ink">
                   <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
                   <span className="relative transition-colors duration-300 group-hover:text-paper">
-                    Claim Your Free Website
+                    Start Checkout — $84/mo
                   </span>
                 </CheckoutButton>
+                <Link
+                  href="/contact"
+                  className="mt-4 block w-full rounded-full border border-paper/25 px-8 py-5 text-center text-sm font-semibold uppercase tracking-[0.14em] text-paper/80 transition-colors hover:border-paper/50 hover:text-paper"
+                >
+                  Questions? Contact us
+                </Link>
               </div>
             </div>
 
@@ -129,10 +136,16 @@ const Pricing = () => {
             </p>
             <p className="max-w-2xl text-lg leading-8 text-ink/70">
               If you need ecommerce, dashboards, booking systems, or custom app
-              functionality, Bsites can scope that separately. The core offer
-              stays simple:{" "}
+              functionality, Bsites can scope that separately.{" "}
+              <Link
+                href="/contact"
+                className="font-semibold text-ink underline decoration-accent/50 underline-offset-4 transition-colors hover:text-accent"
+              >
+                Contact us
+              </Link>{" "}
+              to discuss a custom build, or{" "}
               <span className="font-semibold text-ink">
-                free build plus $84/month hosting and care.
+                start checkout for the standard $84/month plan.
               </span>
             </p>
           </motion.div>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import CheckoutButton from "@/components/checkout/CheckoutButton";
 
 const Footer = () => {
   return (
@@ -47,7 +48,7 @@ const Footer = () => {
 
           <div>
             <h3 className="mb-5 text-[12px] font-semibold uppercase tracking-[0.24em] text-paper/40">
-              Start a build
+              Get started
             </h3>
             <p className="text-[15px] text-paper/60">Plymouth, Massachusetts</p>
             <a
@@ -62,12 +63,18 @@ const Footer = () => {
             >
               +1 (781) 336-7274
             </a>
-            <Link
-              href="/contact"
-              className="mt-8 inline-block rounded-full border border-paper/30 px-7 py-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-paper transition-colors duration-300 hover:border-accent hover:bg-accent"
-            >
-              Claim the Free Website
-            </Link>
+            <div className="mt-8 space-y-3">
+              <CheckoutButton
+                label="Start Checkout — $84/mo"
+                className="block w-full rounded-full bg-accent px-7 py-4 text-center text-[12px] font-semibold uppercase tracking-[0.18em] text-paper transition-colors hover:bg-accent/90"
+              />
+              <Link
+                href="/contact"
+                className="block w-full rounded-full border border-paper/30 px-7 py-4 text-center text-[12px] font-semibold uppercase tracking-[0.18em] text-paper transition-colors duration-300 hover:border-paper hover:bg-paper/10"
+              >
+                Contact Us
+              </Link>
+            </div>
           </div>
         </div>
 

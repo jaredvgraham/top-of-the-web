@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import CheckoutButton from "@/components/checkout/CheckoutButton";
 
 const navLinks = [
   { href: "/#offer", label: "Offer" },
@@ -70,13 +71,10 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/contact"
-              className="group relative overflow-hidden rounded-full bg-ink px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.14em] text-paper"
-            >
+            <CheckoutButton className="group relative overflow-hidden rounded-full bg-ink px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.14em] text-paper">
               <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
-              <span className="relative">Free Website</span>
-            </Link>
+              <span className="relative">Start Checkout</span>
+            </CheckoutButton>
           </div>
 
           <button
@@ -135,16 +133,21 @@ const Navbar = () => {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45, duration: 0.4 }}
+              className="space-y-4"
             >
+              <CheckoutButton
+                label="Start Checkout — $84/mo"
+                className="block w-full rounded-full bg-accent px-6 py-5 text-center text-sm font-semibold uppercase tracking-[0.18em] text-paper"
+              />
               <Link
                 href="/contact"
                 onClick={() => setIsMenuOpen(false)}
-                className="block rounded-full bg-accent px-6 py-5 text-center text-sm font-semibold uppercase tracking-[0.18em] text-paper"
+                className="block rounded-full border border-paper/40 px-6 py-5 text-center text-sm font-semibold uppercase tracking-[0.18em] text-paper transition-colors hover:bg-paper hover:text-ink"
               >
-                Claim the Free Website
+                Contact Us
               </Link>
-              <p className="mt-6 text-center text-xs uppercase tracking-[0.2em] text-paper/50">
-                Free build · $84/mo hosting and care
+              <p className="text-center text-xs uppercase tracking-[0.2em] text-paper/50">
+                Checkout to subscribe · Contact for questions
               </p>
             </motion.div>
           </motion.div>

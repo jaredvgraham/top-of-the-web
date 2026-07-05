@@ -83,13 +83,13 @@ const Hero = () => {
           >
             <CheckoutButton className="group relative overflow-hidden rounded-full bg-ink px-9 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-paper">
               <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
-              <span className="relative">Claim Your Free Website</span>
+              <span className="relative">Start Checkout — $84/mo</span>
             </CheckoutButton>
             <button
-              onClick={() => Router.push("/pricing")}
+              onClick={() => Router.push("/contact")}
               className="rounded-full border border-ink/20 px-9 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-ink transition-colors duration-300 hover:border-ink hover:bg-ink hover:text-paper"
             >
-              The $84/mo Plan
+              Contact Us
             </button>
           </motion.div>
         </div>

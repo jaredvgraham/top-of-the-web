@@ -53,14 +53,14 @@ const GettingStarted = () => {
           className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row"
         >
           <CheckoutButton
-            label="Start My Free Build"
+            label="Start Checkout — $84/mo"
             className="rounded-full bg-paper px-10 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-ink transition-transform duration-300 hover:-translate-y-1"
           />
           <button
-            onClick={() => Router.push("/pricing")}
+            onClick={() => Router.push("/contact")}
             className="rounded-full border border-paper/40 px-10 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-paper transition-colors duration-300 hover:bg-paper hover:text-ink"
           >
-            See What&apos;s Included
+            Contact Us
           </button>
         </motion.div>
       </div>
