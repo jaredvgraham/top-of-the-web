@@ -10,7 +10,7 @@ export default function ThankYou() {
         <title>Thank You - Bsites.io</title>
         <meta name="robots" content="noindex" />
       </Head>
-      <main className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-center px-4">
+      <main className="flex flex-col items-center justify-center min-h-screen bg-paper text-center px-4 pt-24">
         <div className="max-w-2xl">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-4">
             Thank You for Your Purchase!

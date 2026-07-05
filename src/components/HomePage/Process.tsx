@@ -2,93 +2,90 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import {
-  FaLightbulb,
-  FaDraftingCompass,
-  FaCode,
-  FaCogs,
-  FaRocket,
-} from "react-icons/fa";
+
+const ease = [0.65, 0, 0.35, 1] as const;
 
 const steps = [
   {
-    icon: <FaLightbulb />,
-    color: "text-yellow-500",
-    title: "Ideation",
+    title: "Kickoff",
     description:
-      "We brainstorm and gather requirements to understand your needs and vision. This includes market research, competitor analysis, and outlining the project scope.",
+      "Tell us what you sell, who you serve, and what action you want visitors to take.",
+    duration: "Day 1",
   },
   {
-    icon: <FaDraftingCompass />,
-    color: "text-gray-700",
-    title: "Planning",
+    title: "Direction",
     description:
-      "We create a detailed plan and wireframes to visualize the project structure. This step involves defining the sitemap, user flow, and initial design sketches.",
+      "We shape the page flow, positioning, and content so the site has one clear job.",
+    duration: "Days 1–2",
   },
   {
-    icon: <FaCode />,
-    color: "text-blue-500",
-    title: "Development",
+    title: "Build",
     description:
-      "We start coding and bringing your project to life with best practices. Our development process includes both frontend and backend work, ensuring a seamless user experience.",
+      "Your site is designed, built, optimized for mobile, and wired with lead capture.",
+    duration: "Days 2–5",
   },
   {
-    icon: <FaCogs />,
-    color: "text-orange-500",
-    title: "Testing",
+    title: "Polish",
     description:
-      "We rigorously test the project to ensure it meets all requirements and is bug-free. This phase includes unit testing, integration testing, and user acceptance testing.",
+      "We review speed, responsiveness, forms, copy, and final details before launch.",
+    duration: "Day 6",
   },
   {
-    icon: <FaRocket />,
-    color: "text-green-500",
     title: "Launch",
     description:
-      "We deploy the project and make it live for the world to see. Post-launch, we offer support and maintenance to ensure your website runs smoothly.",
+      "The site goes live on managed hosting and stays maintained under the $84/month plan.",
+    duration: "Day 7",
   },
 ];
 
 const Process = () => {
   return (
-    <div className="relative py-16 bg-gray-50 ">
-      <div className="absolute top-0 left-0 w-full h-full bg-pattern opacity-10 pointer-events-none"></div>
-      <div className="container mx-auto text-center relative z-10">
-        <h2 className="text-5xl font-extrabold mb-16 text-gray-800">
-          Our Process
-        </h2>
-        <div className="relative">
-          <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-            <div className="w-full h-1 bg-gray-300"></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
-            {steps.map((step, index) => (
-              <motion.div
-                key={index}
-                className="relative p-8 bg-white rounded-lg shadow-lg flex flex-col items-center transition-transform duration-500 hover:scale-105"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{
-                  duration: 0.8,
-                  ease: "easeOut",
-                  delay: index * 0.2,
-                }}
-              >
-                <div
-                  className={`absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md ${step.color}`}
-                >
-                  <div className="text-3xl">{step.icon}</div>
-                </div>
-                <h3 className="text-2xl font-bold mt-8 mb-4 text-gray-800">
+    <section
+      id="process"
+      className="w-full bg-paper px-5 py-24 sm:px-8 sm:py-32"
+    >
+      <div className="mx-auto max-w-[1400px]">
+        <div className="mb-16 grid gap-6 lg:grid-cols-[auto_1fr] lg:items-end lg:gap-16">
+          <p className="text-[13px] font-medium uppercase tracking-[0.24em] text-ink/50">
+            (03) — How it works
+          </p>
+          <h2 className="font-display display-tight max-w-3xl text-5xl font-medium text-ink sm:text-6xl lg:text-7xl">
+            Idea to live site, without the{" "}
+            <em className="font-light italic text-accent">agency circus</em>.
+          </h2>
+        </div>
+
+        <div className="grid gap-px overflow-hidden rounded-3xl border border-ink/15 bg-ink/15 lg:grid-cols-5">
+          {steps.map((step, index) => (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.7, ease, delay: index * 0.08 }}
+              className="group flex min-h-[280px] flex-col justify-between bg-paper p-7 transition-colors duration-300 hover:bg-ink lg:min-h-[340px]"
+            >
+              <div className="flex items-start justify-between">
+                <span className="font-display text-5xl font-light text-ink/25 transition-colors duration-300 group-hover:text-accent">
+                  {index + 1}
+                </span>
+                <span className="rounded-full border border-ink/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/50 transition-colors duration-300 group-hover:border-paper/25 group-hover:text-paper/60">
+                  {step.duration}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-display mb-3 text-2xl font-medium tracking-tight text-ink transition-colors duration-300 group-hover:text-paper">
                   {step.title}
                 </h3>
-                <p className="text-gray-600">{step.description}</p>
-              </motion.div>
-            ))}
-          </div>
+                <p className="text-[15px] leading-6 text-ink/60 transition-colors duration-300 group-hover:text-paper/60">
+                  {step.description}
+                </p>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

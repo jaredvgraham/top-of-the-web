@@ -1,134 +1,90 @@
-// components/Footer.tsx
 "use client";
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white py-12">
-      <div className="container mx-auto flex flex-col md:flex-row justify-between items-center px-4">
-        {/* Brand Section */}
-        <div className="mb-8 md:mb-0 text-center md:text-left">
-          <Link
-            href="/"
-            className="flex items-center justify-center md:justify-start"
-          >
-            <Image
-              src="/white-logo.png"
-              width={120}
-              height={120}
-              alt="Bsites.io"
-            />
-          </Link>
-          <p className="mt-4 text-sm">
-            Bsites.io provides innovative web development solutions tailored to
-            your business needs. Empowering your digital presence.
-          </p>
-        </div>
+    <footer className="grain relative w-full overflow-hidden bg-ink px-5 pb-10 pt-20 text-paper sm:px-8">
+      <div className="relative mx-auto max-w-[1400px]">
+        <div className="grid gap-12 pb-20 md:grid-cols-[1.2fr_0.6fr_0.8fr]">
+          <div>
+            <Link
+              href="/"
+              className="font-display text-3xl font-semibold tracking-tight"
+            >
+              Bsites<span className="text-accent">.io</span>
+            </Link>
+            <p className="mt-5 max-w-sm leading-7 text-paper/60">
+              Free custom website builds with managed hosting, security,
+              maintenance, and basic updates for $84/month.
+            </p>
+          </div>
 
-        {/* Navigation Links */}
-        <div className="mb-8 md:mb-0">
-          <h3 className="text-lg font-bold mb-4">Quick Links</h3>
-          <ul className="space-y-2 text-center md:text-left">
-            <li>
-              <Link href="/" className="hover:underline">
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link href="/services" className="hover:underline">
-                Services
-              </Link>
-            </li>
-            <li>
-              <Link href="/about" className="hover:underline">
-                About Us
-              </Link>
-            </li>
-            <li>
-              <Link href="/contact" className="hover:underline">
-                Contact
-              </Link>
-            </li>
-            <li>
-              <Link href="/privacy" className="hover:underline">
-                Privacy Policy
-              </Link>
-            </li>
-          </ul>
-        </div>
+          <div>
+            <h3 className="mb-5 text-[12px] font-semibold uppercase tracking-[0.24em] text-paper/40">
+              Site
+            </h3>
+            <ul className="space-y-3 text-[15px] font-medium">
+              {[
+                ["Home", "/"],
+                ["Offer", "/#offer"],
+                ["Pricing", "/pricing"],
+                ["Contact", "/contact"],
+                ["Privacy Policy", "/privacy"],
+              ].map(([label, href]) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="link-underline text-paper/80 transition-colors hover:text-paper"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-        {/* Contact Information */}
-        <div className="mb-8 md:mb-0 text-center md:text-left">
-          <h3 className="text-lg font-bold mb-4">Contact Us</h3>
-          <p className="text-sm">75 Raymond Road, Plymouth, Massachusetts</p>
-          <p className="text-sm mt-2">
-            Email:{" "}
-            <a href="mailto:bsitesio@gmail.com" className="hover:underline">
+          <div>
+            <h3 className="mb-5 text-[12px] font-semibold uppercase tracking-[0.24em] text-paper/40">
+              Start a build
+            </h3>
+            <p className="text-[15px] text-paper/60">Plymouth, Massachusetts</p>
+            <a
+              href="mailto:bsitesioteam@gmail.com"
+              className="link-underline mt-3 block w-fit text-[15px] font-medium text-paper/80 hover:text-paper"
+            >
               bsitesioteam@gmail.com
             </a>
-          </p>
-          <p className="text-sm mt-2">
-            Phone:{" "}
-            <a href="tel:+17813367274" className="hover:underline">
-              +1 781 336 7274
+            <a
+              href="tel:+17813367274"
+              className="link-underline mt-3 block w-fit text-[15px] font-medium text-paper/80 hover:text-paper"
+            >
+              +1 (781) 336-7274
             </a>
-          </p>
+            <Link
+              href="/contact"
+              className="mt-8 inline-block rounded-full border border-paper/30 px-7 py-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-paper transition-colors duration-300 hover:border-accent hover:bg-accent"
+            >
+              Claim the Free Website
+            </Link>
+          </div>
         </div>
 
-        {/* Social Media Links */}
-        {/* <div className="text-center md:text-left">
-          <h3 className="text-lg font-bold mb-4">Follow Us</h3>
-          <div className="flex justify-center md:justify-start space-x-4">
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xl hover:text-gray-400"
-            >
-              <FaFacebook />
-            </a>
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xl hover:text-gray-400"
-            >
-              <FaTwitter />
-            </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xl hover:text-gray-400"
-            >
-              <FaInstagram />
-            </a>
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xl hover:text-gray-400"
-            >
-              <FaLinkedin />
-            </a>
-          </div>
-        </div> */}
-      </div>
+        {/* Oversized wordmark */}
+        <div
+          aria-hidden
+          className="font-display display-tight pointer-events-none select-none whitespace-nowrap text-center text-[19vw] font-medium leading-[0.8] text-paper/[0.07]"
+        >
+          Bsites.io
+        </div>
 
-      {/* Copyright Notice */}
-      <div className="mt-8 text-center border-t border-gray-700 pt-4 space-y-2">
-        <p className="text-sm">
-          <Link href="/privacy" className="hover:underline">
-            Privacy Policy
-          </Link>
-        </p>
-        <p className="text-sm">
-          &copy; {new Date().getFullYear()} Bsites.io. All rights reserved.
-        </p>
+        <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-paper/15 pt-6 text-[13px] text-paper/40 sm:flex-row">
+          <p>&copy; {new Date().getFullYear()} Bsites.io — All rights reserved.</p>
+          <p className="uppercase tracking-[0.2em]">
+            Free build · $84/mo care
+          </p>
+        </div>
       </div>
     </footer>
   );

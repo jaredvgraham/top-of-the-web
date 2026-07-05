@@ -2,107 +2,95 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
-import {
-  FaCode,
-  FaPaintBrush,
-  FaSearch,
-  FaMobileAlt,
-  FaBullhorn,
-  FaShieldAlt,
-} from "react-icons/fa";
 
-type Service = {
-  icon: JSX.Element;
-  title: string;
-  description: string;
-  color: string;
-  index: number;
-};
+const ease = [0.65, 0, 0.35, 1] as const;
 
 const services = [
   {
-    icon: <FaCode />,
-    title: "Web Development",
+    title: "Custom Design",
     description:
-      "High-quality, responsive websites tailored to your business needs.",
-    color: "bg-blue-500",
+      "A sharp, modern site designed around your brand, your offer, and the customer you actually want.",
+    tag: "No templates",
   },
   {
-    icon: <FaPaintBrush />,
-    title: "Web Design",
-    description: "Beautiful, user-friendly designs that enhance your brand.",
-    color: "bg-green-500",
+    title: "Mobile-First Build",
+    description:
+      "Pages look clean and load fast on the phones your customers are actually holding.",
+    tag: "Every screen",
   },
   {
-    icon: <FaSearch />,
-    title: "SEO Optimization",
+    title: "Conversion Copy",
     description:
-      "Optimize your website to rank higher in search engine results.",
-    color: "bg-purple-500",
+      "Clear headlines, benefit-driven sections, and calls to action built to turn visits into leads.",
+    tag: "Words that sell",
   },
   {
-    icon: <FaMobileAlt />,
-    title: "Mobile Development",
+    title: "Fast Launch",
     description:
-      "Cross-platform mobile applications to reach a wider audience.",
-    color: "bg-pink-500",
+      "Most sites go from kickoff to live in about a week once your content is ready.",
+    tag: "~7 days",
   },
   {
-    icon: <FaBullhorn />,
-    title: "Digital Marketing",
+    title: "Hosting & Security",
     description:
-      "Effective online marketing strategies to boost your business.",
-    color: "bg-yellow-500",
+      "Hosting, SSL, updates, backups, and technical upkeep — handled for you, permanently.",
+    tag: "Fully managed",
   },
   {
-    icon: <FaShieldAlt />,
-    title: "Cyber Security",
+    title: "Simple Monthly Care",
     description:
-      "Protect your online presence with advanced security solutions.",
-    color: "bg-red-500",
+      "No big upfront invoice. One predictable $84/month plan keeps the site online and current.",
+    tag: "$84/mo",
   },
 ];
 
-const ServiceItem = ({ icon, title, description, color, index }: Service) => {
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
-
-  return (
-    <motion.div
-      ref={ref}
-      className={`p-8 m-4 rounded-lg shadow-lg ${color} text-white`}
-      initial={{ opacity: 0, x: index % 2 === 0 ? -100 : 100 }}
-      animate={inView ? { opacity: 1, x: 0 } : {}}
-      transition={{ duration: 0.8, ease: "easeOut", delay: index * 0.2 }}
-    >
-      <div className="text-5xl mb-4">{icon}</div>
-      <h3 className="text-2xl font-bold mb-4">{title}</h3>
-      <p className="text-white">{description}</p>
-    </motion.div>
-  );
-};
-
 const Services = () => {
   return (
-    <div className="py-16 bg-gray-50">
-      <div className="container mx-auto text-center">
-        <h2 className="text-5xl font-extrabold mb-12 text-gray-800">
-          Web Services
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service, index) => (
-            <ServiceItem
-              key={index}
-              icon={service.icon}
-              title={service.title}
-              description={service.description}
-              color={service.color}
-              index={index}
-            />
-          ))}
+    <section id="offer" className="w-full bg-paper px-5 py-24 sm:px-8 sm:py-32">
+      <div className="mx-auto max-w-[1400px]">
+        <div className="mb-16 grid gap-6 lg:grid-cols-[auto_1fr] lg:items-end lg:gap-16">
+          <p className="text-[13px] font-medium uppercase tracking-[0.24em] text-ink/50">
+            (01) — What you get
+          </p>
+          <h2 className="font-display display-tight max-w-3xl text-5xl font-medium text-ink sm:text-6xl lg:text-7xl">
+            A real website, not a rented{" "}
+            <em className="font-light italic text-accent">template</em>.
+          </h2>
         </div>
+
+        <div className="rule" />
+        {services.map((service, index) => (
+          <motion.div
+            key={service.title}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.7, ease, delay: (index % 2) * 0.08 }}
+            className="group border-b border-ink/15"
+          >
+            <div className="grid items-baseline gap-3 py-8 transition-colors duration-300 sm:grid-cols-[80px_1fr_1.2fr_auto] sm:gap-8 sm:py-10">
+              <span className="font-display text-lg text-ink/40 transition-colors duration-300 group-hover:text-accent">
+                0{index + 1}
+              </span>
+              <h3 className="font-display text-3xl font-medium tracking-tight text-ink transition-transform duration-300 group-hover:translate-x-2 sm:text-4xl">
+                {service.title}
+              </h3>
+              <p className="max-w-md leading-7 text-ink/60">
+                {service.description}
+              </p>
+              <span className="hidden rounded-full border border-ink/20 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/60 transition-colors duration-300 group-hover:border-accent group-hover:bg-accent group-hover:text-paper lg:inline-block">
+                {service.tag}
+              </span>
+            </div>
+          </motion.div>
+        ))}
+
+        <p className="mt-10 max-w-2xl text-lg leading-8 text-ink/60">
+          The build is free because the relationship is ongoing — you get the
+          launch, the tech stack, and the upkeep in one clean offer.
+        </p>
       </div>
-    </div>
+    </section>
   );
 };
 

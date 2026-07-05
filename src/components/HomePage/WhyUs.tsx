@@ -2,90 +2,96 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { FaRocket, FaRegGem, FaHeadset, FaDollarSign } from "react-icons/fa";
-import { useInView } from "react-intersection-observer";
+
+const ease = [0.65, 0, 0.35, 1] as const;
+
+const benefits = [
+  {
+    number: "01",
+    title: "No upfront build cost",
+    copy: "Skip the $3k–$10k agency bill. Your custom site is designed and built for $0, supported by one flat monthly plan.",
+  },
+  {
+    number: "02",
+    title: "Built to look premium",
+    copy: "Modern layout, confident type, and content that makes your business feel established from the first scroll.",
+  },
+  {
+    number: "03",
+    title: "Launch without drag",
+    copy: "A focused process keeps the project moving: offer, content, design, build, launch. No bloated agency timeline.",
+  },
+  {
+    number: "04",
+    title: "Never left alone",
+    copy: "Hosting, SSL, content updates, security patches, and support stay with Bsites long after the site goes live.",
+  },
+];
 
 const WhyUs = () => {
-  const [ref1, inView1] = useInView({ triggerOnce: true, threshold: 0.1 });
-  const [ref2, inView2] = useInView({ triggerOnce: true, threshold: 0.1 });
-  const [ref3, inView3] = useInView({ triggerOnce: true, threshold: 0.1 });
-
   return (
-    <div className="w-full py-16 bg-gray-50  ">
-      <h1 className="text-5xl font-extrabold bg-gray-50 text-center mb-12 text-gray-800">
-        Why Bsites.io?
-      </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gray-50">
-        <motion.div
-          ref={ref1}
-          className="p-8 m-4 rounded-lg shadow-2xl bg-white"
-          initial={{ opacity: 0, x: -200 }}
-          animate={inView1 ? { opacity: 1, x: 0 } : { opacity: 0, x: -200 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-        >
-          <FaRocket className="text-4xl text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-center mb-4 text-gray-800">
-            Fast Delivery
-          </h2>
-          <p className="text-gray-600">
-            Time is of the essence in today&#39;s fast-paced business
-            environment, and we pride ourselves on delivering high-quality
-            websites within an impressive timeframe of 1 to 5 days. Unlike many
-            competitors who may take weeks or even months to complete a project,
-            our efficient workflow and experienced team enable us to deliver
-            rapid results without compromising on quality. This quick turnaround
-            time allows you to launch your website sooner, helping you to start
-            attracting customers and generating revenue almost immediately.
+    <section className="grain relative w-full overflow-hidden bg-ink px-5 py-24 text-paper sm:px-8 sm:py-32">
+      <div className="relative mx-auto max-w-[1400px]">
+        <div className="mb-20 grid gap-6 lg:grid-cols-[auto_1fr] lg:items-end lg:gap-16">
+          <p className="text-[13px] font-medium uppercase tracking-[0.24em] text-paper/50">
+            (02) — Why it works
           </p>
-        </motion.div>
-        <motion.div
-          ref={ref2}
-          className="p-8 bg-white m-4 rounded-lg shadow-2xl"
-          initial={{ opacity: 0, y: 200 }}
-          animate={inView2 ? { opacity: 1, y: 0 } : { opacity: 0, y: 200 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-        >
-          <FaRegGem className="text-4xl text-cyan-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-center mb-4 text-gray-800">
-            Quality Products
+          <h2 className="font-display display-tight max-w-3xl text-5xl font-medium sm:text-6xl lg:text-7xl">
+            The offer removes the{" "}
+            <em className="font-light italic text-accent">hard part</em>.
           </h2>
-          <p className="text-gray-600">
-            At Bsites.io, we understand that every business, whether big or
-            small, has unique needs and goals. Our web development services are
-            tailored to accommodate businesses of any size, ensuring that you
-            receive a website that perfectly aligns with your brand and
-            objectives. From startups to established enterprises, we create
-            customized, scalable solutions that help you stand out in a
-            competitive market. Our dedicated team works closely with you to
-            understand your vision and deliver a product that not only meets but
-            exceeds your expectations.
-          </p>
-        </motion.div>
-        <motion.div
-          ref={ref3}
-          className="p-8  m-4 rounded-lg shadow-2xl bg-white "
-          initial={{ opacity: 0, x: 200 }}
-          animate={inView3 ? { opacity: 1, x: 0 } : { opacity: 0, x: 200 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-        >
-          <FaDollarSign className="text-4xl text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-center mb-4 text-gray-800">
-            Affordable Pricing
-          </h2>
-          <p className="text-gray-600">
-            One of the biggest challenges businesses face when developing a
-            website is balancing quality with cost. At Bsites.io, we offer a
-            range of price packages starting from just $300 and going up to
-            $2,999. This makes our services accessible to a wide range of
-            businesses without compromising on quality. Compared to the industry
-            average, where custom websites can range from $5,000 to $30,000, our
-            pricing is significantly more affordable. We believe in transparent
-            pricing with no hidden fees, ensuring you get the best value for
-            your investment.
-          </p>
-        </motion.div>
+        </div>
+
+        <div className="grid gap-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-24">
+          <motion.div
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.8, ease }}
+          >
+            <p className="max-w-md text-lg leading-8 text-paper/70">
+              Most businesses delay their website because the quote is too
+              high, the process is too vague, or no one wants to maintain it
+              afterward. Bsites fixes all three.
+            </p>
+
+            <div className="mt-12 border-t border-paper/20 pt-10">
+              <p className="font-display text-[6rem] font-medium leading-none tracking-tight text-paper sm:text-[8rem]">
+                $84
+                <span className="font-light italic text-accent">/mo</span>
+              </p>
+              <p className="mt-6 max-w-sm text-[13px] uppercase leading-6 tracking-[0.18em] text-paper/60">
+                Hosting · maintenance · SSL · uptime · basic updates — all
+                included
+              </p>
+            </div>
+          </motion.div>
+
+          <div>
+            {benefits.map((benefit, index) => (
+              <motion.div
+                key={benefit.number}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.7, ease, delay: index * 0.06 }}
+                className={`grid gap-3 py-8 sm:grid-cols-[64px_220px_1fr] sm:gap-8 ${
+                  index > 0 ? "border-t border-paper/15" : ""
+                }`}
+              >
+                <span className="font-display text-lg text-accent">
+                  {benefit.number}
+                </span>
+                <h3 className="font-display text-2xl font-medium tracking-tight">
+                  {benefit.title}
+                </h3>
+                <p className="leading-7 text-paper/60">{benefit.copy}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

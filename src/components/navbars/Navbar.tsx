@@ -1,332 +1,156 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
-import { MenuIcon, XIcon, UserIcon } from "@heroicons/react/solid";
 import { usePathname } from "next/navigation";
 
+const navLinks = [
+  { href: "/#offer", label: "Offer" },
+  { href: "/#process", label: "Process" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/contact", label: "Contact" },
+];
+
 const Navbar = () => {
-  const [isMobile, setIsMobile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
-
-  const [url, setUrl] = useState("");
-
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const menuRef = useRef<HTMLDivElement>(null);
 
   const isAdminPage = pathname.includes("/admin");
-  const isHomePage = pathname === "/";
-
-  // useEffect(() => {
-  //   const callEndpoint = async () => {
-  //     try {
-  //       const res = await fetch("/stripe/portal");
-  //       const data = await res.json();
-  //       console.log(data.url);
-  //       setUrl(data.url);
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   };
-  //   callEndpoint();
-  // }, []);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1008);
-    };
-    //
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-        setOpenSubmenu(null);
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 12);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleToggleSubmenu = (submenu: string) => {
-    setOpenSubmenu((prev) => (prev === submenu ? null : submenu));
-  };
+  useEffect(() => {
+    document.body.style.overflow = isMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMenuOpen]);
 
-  const linkVariants = {
-    hidden: { opacity: 0, y: -20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
-  const submenuVariants = {
-    hidden: { opacity: 0, y: -10 },
-    visible: { opacity: 1, y: 0 },
-  };
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
 
   if (isAdminPage) return null;
 
   return (
-    <nav
-      className={`w-full z-20 ${
-        isHomePage ? "absolute navbarColor" : "gradient-bg"
-      }`}
-    >
-      <ul className="flex justify-between items-center p-2">
-        <motion.li
-          initial="hidden"
-          animate="visible"
-          transition={{ duration: 3, ease: "easeInOut" }}
-        >
-          <div className="flex items-center gap-2">
-            <Link href="/" className="gradient-text flex items-center gap-2">
-              <Image src="/white-logo.png" width={120} height={120} alt={""} />
+    <>
+      <header
+        className={`fixed inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
+          isMenuOpen
+            ? "border-transparent bg-transparent"
+            : scrolled
+            ? "border-ink/10 bg-paper/90 backdrop-blur-md"
+            : "border-transparent bg-transparent"
+        }`}
+      >
+        <nav className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 sm:px-8">
+          <Link
+            href="/"
+            className={`font-display text-2xl font-semibold tracking-tight transition-colors ${
+              isMenuOpen ? "text-paper" : "text-ink"
+            }`}
+          >
+            Bsites<span className="text-accent">.io</span>
+          </Link>
+
+          <div className="hidden items-center gap-8 lg:flex">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="link-underline text-[13px] font-medium uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink"
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              href="/contact"
+              className="group relative overflow-hidden rounded-full bg-ink px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.14em] text-paper"
+            >
+              <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
+              <span className="relative">Free Website</span>
             </Link>
           </div>
-        </motion.li>
 
-        {isMobile ? (
-          <div className="flex items-center">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white"
-            >
-              {isMenuOpen ? (
-                <XIcon className="h-8 w-8" />
-              ) : (
-                <MenuIcon className="h-16 w-16" />
-              )}
-            </button>
-          </div>
-        ) : (
-          <div className="flex justify-around gap-4 w-3/4">
-            <motion.li
-              initial="hidden"
-              animate="visible"
-              transition={{ duration: 1, delay: 0.2, ease: "easeInOut" }}
-              variants={linkVariants}
-              onMouseEnter={() => setOpenSubmenu("pricing")}
-              onMouseLeave={() => setOpenSubmenu(null)}
-            >
-              <Link href="/pricing" className="text-white text-2xl font-bold">
-                Pricing
-              </Link>
-              <AnimatePresence>
-                {openSubmenu === "pricing" && (
-                  <motion.ul
-                    className="absolute bg-white shadow-lg rounded-lg z-30 mt-2"
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    variants={submenuVariants}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <li className="p-2">
-                      <Link href="/pricing">All Plans</Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/pricing/starter-website-package">
-                        Starter Plan
-                      </Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/pricing/standard-website-package">
-                        Standard Plan
-                      </Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/pricing/advanced-website-package">
-                        Advanced Plan
-                      </Link>
-                    </li>
-                    {/* <li className="p-2">
-                      <Link href="/pricing/enterprise-website-package">
-                        Enterprise Plan
-                      </Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/pricing/e-commerce-website-package">
-                        E-commerce Plan
-                      </Link>
-                    </li> */}
-                  </motion.ul>
-                )}
-              </AnimatePresence>
-            </motion.li>
-            <motion.li
-              initial="hidden"
-              animate="visible"
-              transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
-              variants={linkVariants}
-              onMouseEnter={() => setOpenSubmenu("mission")}
-              onMouseLeave={() => setOpenSubmenu(null)}
-            >
-              <a href="/mission" className="text-white text-2xl font-bold">
-                Our Mission
-              </a>
-              <AnimatePresence>
-                {openSubmenu === "mission" && (
-                  <motion.ul
-                    className="absolute bg-white shadow-lg rounded-lg mt-2 z-10"
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    variants={submenuVariants}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <li className="p-2">
-                      <a href="/mission/ourTeam">Our Team</a>
-                    </li>
-                  </motion.ul>
-                )}
-              </AnimatePresence>
-            </motion.li>
-            <motion.li
-              initial="hidden"
-              animate="visible"
-              transition={{ duration: 1, delay: 0.7, ease: "easeInOut" }}
-              variants={linkVariants}
-              onMouseEnter={() => setOpenSubmenu("contact")}
-              onMouseLeave={() => setOpenSubmenu(null)}
-            >
-              <Link href="/contact" className="text-white text-2xl font-bold">
-                Contact
-              </Link>
-            </motion.li>
-
-            <motion.li
-              initial="hidden"
-              animate="visible"
-              transition={{ duration: 1, delay: 0.9, ease: "easeInOut" }}
-              variants={linkVariants}
-            >
-              {/* <Link href="/blog" className="text-white text-2xl font-bold">
-                Blog
-              </Link> */}
-            </motion.li>
-          </div>
-        )}
-      </ul>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={`flex h-11 w-11 flex-col items-center justify-center gap-[5px] rounded-full border transition-colors lg:hidden ${
+              isMenuOpen ? "border-paper/25" : "border-ink/15"
+            }`}
+            aria-label="Toggle navigation menu"
+          >
+            <span
+              className={`h-[1.5px] w-5 transition-all duration-300 ${
+                isMenuOpen
+                  ? "translate-y-[3.25px] rotate-45 bg-paper"
+                  : "bg-ink"
+              }`}
+            />
+            <span
+              className={`h-[1.5px] w-5 transition-all duration-300 ${
+                isMenuOpen
+                  ? "-translate-y-[3.25px] -rotate-45 bg-paper"
+                  : "bg-ink"
+              }`}
+            />
+          </button>
+        </nav>
+      </header>
 
       <AnimatePresence>
-        {isMobile && isMenuOpen && (
+        {isMenuOpen && (
           <motion.div
-            ref={menuRef}
-            className="absolute top-0 left-0 w-full bg-white shadow-lg rounded-lg z-10"
-            initial={{ opacity: 0, y: -50 }}
+            className="fixed inset-0 z-40 flex flex-col justify-between bg-ink px-6 pb-10 pt-28 text-paper lg:hidden"
+            initial={{ opacity: 0, y: "-4%" }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: "-4%" }}
+            transition={{ duration: 0.35, ease: [0.65, 0, 0.35, 1] }}
           >
-            <ul>
-              <li className="p-4">
-                <button
-                  className="text-black text-2xl font-bold w-full text-left"
-                  onClick={() => handleToggleSubmenu("pricing")}
+            <ul className="space-y-2">
+              {navLinks.map((link, index) => (
+                <motion.li
+                  key={link.href}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.08 * index + 0.1, duration: 0.4 }}
                 >
-                  Pricing
-                </button>
-                {openSubmenu === "pricing" && (
-                  <motion.ul
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    variants={submenuVariants}
-                    transition={{ duration: 0.3 }}
-                    className="pl-4"
+                  <Link
+                    href={link.href}
                     onClick={() => setIsMenuOpen(false)}
+                    className="font-display block py-3 text-5xl font-medium tracking-tight transition-colors hover:text-accent"
                   >
-                    <li className="p-2">
-                      <Link href="/pricing">All Plans</Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/pricing/starter-website-package">
-                        Starter Plan
-                      </Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/pricing/standard-website-package">
-                        Standard Plan
-                      </Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/pricing/advanced-website-package">
-                        Advanced Plan
-                      </Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/pricing/enterprise-website-package">
-                        Enterprise Plan
-                      </Link>
-                    </li>
-                    <li className="p-2">
-                      <Link href="/pricing/e-commerce-website-package">
-                        E-commerce Plan
-                      </Link>
-                    </li>
-                  </motion.ul>
-                )}
-              </li>
-              <li className="p-4">
-                <button
-                  className="text-black text-2xl font-bold w-full text-left"
-                  onClick={() => handleToggleSubmenu("mission")}
-                >
-                  Our Mission
-                </button>
-                {openSubmenu === "mission" && (
-                  <motion.ul
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    variants={submenuVariants}
-                    transition={{ duration: 0.3 }}
-                    className="pl-4"
-                  >
-                    <li className="p-2">
-                      <a href="/mission/ourTeam">Our Team</a>
-                    </li>
-                  </motion.ul>
-                )}
-              </li>
-              <li className="p-4">
-                <Link
-                  href="/contact"
-                  className="text-black text-2xl font-bold w-full text-left"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Contact
-                </Link>
-              </li>
-              {/* <li className="p-4">
-                <Link
-                  href="/blog"
-                  className="text-black text-2xl font-bold w-full"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Blog
-                </Link>
-              </li> */}
-              {/* <li className="p-4" onClick={() => setOpenSubmenu("profile")}>
-                <button className="flex items-center text-black text-2xl w-full">
-                  <UserIcon
-                    className="h-8 w-8"
-                    onClick={() => setOpenSubmenu("profile")}
-                  />
-                </button>
-              </li> */}
+                    {link.label}
+                  </Link>
+                </motion.li>
+              ))}
             </ul>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45, duration: 0.4 }}
+            >
+              <Link
+                href="/contact"
+                onClick={() => setIsMenuOpen(false)}
+                className="block rounded-full bg-accent px-6 py-5 text-center text-sm font-semibold uppercase tracking-[0.18em] text-paper"
+              >
+                Claim the Free Website
+              </Link>
+              <p className="mt-6 text-center text-xs uppercase tracking-[0.2em] text-paper/50">
+                Free build · $84/mo hosting and care
+              </p>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </>
   );
 };
 

@@ -4,6 +4,11 @@ import React, { useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 
+const ease = [0.65, 0, 0.35, 1] as const;
+
+const inputClasses =
+  "w-full border-0 border-b border-ink/20 bg-transparent px-0 py-4 text-lg text-ink placeholder:text-ink/30 outline-none transition-colors focus:border-accent focus:ring-0";
+
 const InquiryForm: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -14,6 +19,7 @@ const InquiryForm: React.FC = () => {
 
   const [responseMessage, setResponseMessage] = useState("");
   const [error, setError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -29,10 +35,13 @@ const InquiryForm: React.FC = () => {
     e.preventDefault();
     setResponseMessage("");
     setError(false);
+    setSubmitting(true);
     try {
       const response = await axios.post("/api/inquiry", formData);
       if (response.status === 200) {
-        setResponseMessage("Inquiry submitted successfully!");
+        setResponseMessage(
+          "Inquiry received — we'll be in touch within one business day."
+        );
         setFormData({
           name: "",
           email: "",
@@ -46,33 +55,26 @@ const InquiryForm: React.FC = () => {
     } catch (error) {
       setResponseMessage("Error submitting inquiry. Please try again.");
       setError(true);
+    } finally {
+      setSubmitting(false);
     }
-  };
-
-  const formVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
   };
 
   return (
     <motion.div
-      className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg"
-      variants={formVariants}
-      initial="hidden"
-      animate="visible"
+      initial={{ opacity: 0, y: 32 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease, delay: 0.2 }}
+      className="rounded-3xl border border-ink/15 bg-paper p-8 sm:p-12"
     >
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-        Send Us a Message
-      </h2>
+      <p className="mb-10 text-[12px] font-semibold uppercase tracking-[0.24em] text-ink/50">
+        Tell us what you need
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         <div>
           <label
-            className="block text-gray-600 text-sm font-semibold mb-2"
+            className="mb-1 block text-[13px] font-medium uppercase tracking-[0.16em] text-ink/50"
             htmlFor="name"
           >
             Full Name
@@ -80,74 +82,84 @@ const InquiryForm: React.FC = () => {
           <input
             type="text"
             name="name"
+            id="name"
             value={formData.name}
             onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow"
+            className={inputClasses}
             required
-            placeholder="John Doe"
+            placeholder="Jane Doe"
           />
+        </div>
+        <div className="grid gap-8 sm:grid-cols-2">
+          <div>
+            <label
+              className="mb-1 block text-[13px] font-medium uppercase tracking-[0.16em] text-ink/50"
+              htmlFor="email"
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              id="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={inputClasses}
+              required
+              placeholder="you@example.com"
+            />
+          </div>
+          <div>
+            <label
+              className="mb-1 block text-[13px] font-medium uppercase tracking-[0.16em] text-ink/50"
+              htmlFor="phone"
+            >
+              Phone
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              id="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className={inputClasses}
+              required
+              placeholder="(123) 456-7890"
+            />
+          </div>
         </div>
         <div>
           <label
-            className="block text-gray-600 text-sm font-semibold mb-2"
-            htmlFor="email"
-          >
-            Email Address
-          </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow"
-            required
-            placeholder="you@example.com"
-          />
-        </div>
-        <div>
-          <label
-            className="block text-gray-600 text-sm font-semibold mb-2"
-            htmlFor="phone"
-          >
-            Phone Number
-          </label>
-          <input
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow"
-            required
-            placeholder="(123) 456-7890"
-          />
-        </div>
-        <div>
-          <label
-            className="block text-gray-600 text-sm font-semibold mb-2"
+            className="mb-1 block text-[13px] font-medium uppercase tracking-[0.16em] text-ink/50"
             htmlFor="inquiry"
           >
-            How can we help?
+            What should your website help you sell?
           </label>
           <textarea
             name="inquiry"
+            id="inquiry"
             value={formData.inquiry}
             onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow"
+            className={`${inputClasses} resize-none`}
             required
             rows={4}
-            placeholder="Tell us about your project or question..."
+            placeholder="Tell us about your business, current website, and ideal customers..."
           ></textarea>
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          disabled={submitting}
+          className="group relative w-full overflow-hidden rounded-full bg-ink px-8 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-paper disabled:opacity-60"
         >
-          Send Inquiry
+          <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
+          <span className="relative">
+            {submitting ? "Sending..." : "Request My Free Website"}
+          </span>
         </button>
         {responseMessage && (
           <p
-            className={`mt-4 text-center text-sm ${
-              error ? "text-red-500" : "text-green-500"
+            className={`text-center text-sm font-medium ${
+              error ? "text-red-600" : "text-accent"
             }`}
           >
             {responseMessage}

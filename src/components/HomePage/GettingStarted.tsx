@@ -1,50 +1,70 @@
-// components/GettingStarted.tsx
 "use client";
 
 import React from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import CheckoutButton from "@/components/checkout/CheckoutButton";
+
+const ease = [0.65, 0, 0.35, 1] as const;
 
 const GettingStarted = () => {
   const Router = useRouter();
 
   return (
-    <div className="py-16 bg-gradient-to-r from-gray-50 to-gray-200 text-gray-800 relative">
-      <div className="container mx-auto text-center p-8">
-        <motion.h2
-          className="text-4xl font-extrabold mb-6"
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, ease: "easeOut" }}
-        >
-          Build Your Website Now
-        </motion.h2>
+    <section className="grain relative w-full overflow-hidden bg-accent px-5 py-28 text-paper sm:px-8 sm:py-40">
+      <div className="relative mx-auto max-w-[1400px] text-center">
         <motion.p
-          className="text-xl mb-12"
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+          transition={{ duration: 0.7, ease }}
+          className="mb-8 text-[13px] font-medium uppercase tracking-[0.24em] text-paper/70"
         >
-          Let us help you turn your vision into reality. Get in touch with us
-          today to discuss your website and find out how we can help you
-          succeed.
+          (04) — Start your build
         </motion.p>
-        <motion.button
-          className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold text-lg rounded-full shadow-lg"
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+
+        <motion.h2
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
-          whileHover={{ scale: 1.1 }}
-          onClick={() => Router.push("/pricing")}
+          transition={{ duration: 0.9, ease, delay: 0.1 }}
+          className="font-display display-tight mx-auto max-w-5xl text-6xl font-medium sm:text-7xl lg:text-[7rem]"
         >
-          Get Started
-        </motion.button>
+          Get the site you should{" "}
+          <em className="font-light italic">already have</em>.
+        </motion.h2>
+
+        <motion.p
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease, delay: 0.25 }}
+          className="mx-auto mt-8 max-w-2xl text-lg leading-8 text-paper/80"
+        >
+          No upfront build fee. No confusing package ladder. A clean, custom
+          website with managed hosting and care for $84/month.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease, delay: 0.35 }}
+          className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row"
+        >
+          <CheckoutButton
+            label="Start My Free Build"
+            className="rounded-full bg-paper px-10 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-ink transition-transform duration-300 hover:-translate-y-1"
+          />
+          <button
+            onClick={() => Router.push("/pricing")}
+            className="rounded-full border border-paper/40 px-10 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-paper transition-colors duration-300 hover:bg-paper hover:text-ink"
+          >
+            See What&apos;s Included
+          </button>
+        </motion.div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-16 bg-white" />
-    </div>
+    </section>
   );
 };
 

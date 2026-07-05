@@ -46,6 +46,7 @@ function getPackPriceId(pack: string): string | null {
     "Advanced Website Package": process.env.ADVANCED_PRICE_ID as string,
     "Enterprise Website Package": process.env.ENTERPRISE_PRICE_ID as string,
     "E-commerce Website Package": process.env.ECOMMERCE_PRICE_ID as string,
+    "Managed Website Plan": process.env.FREE_PRICE_ID as string,
     test: process.env.TEST_PRICE_ID as string, // For testing purposes
   };
   return packPriceIds[pack] || null;

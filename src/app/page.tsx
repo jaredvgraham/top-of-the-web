@@ -3,30 +3,29 @@ import type { Metadata } from "next";
 import Hero from "../components/HomePage/Hero";
 
 import WhyUs from "@/components/HomePage/WhyUs";
-import OurWork from "@/components/HomePage/OurWork";
 import Services from "@/components/HomePage/Services";
 import Process from "@/components/HomePage/Process";
 import GettingStarted from "@/components/HomePage/GettingStarted";
 import Footer from "@/components/HomePage/Footer";
 
 export const metadata: Metadata = {
-  title: "Bsites.io - Professional Web Development Services",
+  title: "Bsites.io - Free Website Build + $84/mo Hosting",
   description:
-    "Bsites.io offers professional web development services tailored to your unique business needs. Get started with our high-quality, responsive websites.",
+    "Get a custom business website built for free with managed hosting, maintenance, security, and basic updates for $84/month.",
   keywords:
-    "web development, web design, SEO, digital marketing, cyber security, business solutions",
+    "free website, website hosting, web design, small business website, managed website, local business website",
   openGraph: {
-    title: "Bsites.io - Professional Web Development Services",
+    title: "Bsites.io - Free Website Build + $84/mo Hosting",
     description:
-      "Bsites.io offers professional web development services tailored to your unique business needs. Get started with our high-quality, responsive websites.",
+      "Custom website builds with managed hosting, care, and basic updates for one simple monthly price.",
     images: ["/og-image.jpg"],
     url: "https://www.bsites.io/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bsites.io - Professional Web Development Services",
+    title: "Bsites.io - Free Website Build + $84/mo Hosting",
     description:
-      "Bsites.io offers professional web development services tailored to your unique business needs. Get started with our high-quality, responsive websites.",
+      "Get a custom website built for free and hosted for $84/month.",
     images: ["/twitter-og-image.jpg"],
   },
   alternates: {
@@ -53,14 +52,13 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between overflow-x-hidden">
+    <main className="flex min-h-screen flex-col overflow-x-hidden bg-paper">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Hero />
       <Services />
-      {/* <OurWork /> */}
       <WhyUs />
       <Process />
       <GettingStarted />

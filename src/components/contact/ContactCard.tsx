@@ -2,64 +2,76 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { FaPhone, FaEnvelope } from "react-icons/fa";
+
+const ease = [0.65, 0, 0.35, 1] as const;
+
+const steps = [
+  {
+    title: "We review your business",
+    copy: "Your offer, your customers, and what the site needs to accomplish.",
+  },
+  {
+    title: "We confirm the scope",
+    copy: "Pages, content, and lead capture — mapped before anything is built.",
+  },
+  {
+    title: "We launch in about a week",
+    copy: "Design, build, polish, and go live on managed hosting.",
+  },
+];
 
 const ContactCard = () => {
-  const cardVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-  };
-
   return (
     <motion.div
       id="contact"
-      className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg"
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
+      initial={{ opacity: 0, y: 32 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease, delay: 0.1 }}
     >
-      <div className="text-center mb-8">
-        <h2 className="text-4xl font-extrabold text-gray-800">Get in Touch</h2>
-        <p className="text-gray-500 mt-2">
-          We&apos;re here to help and answer any question you might have.
-        </p>
+      <h2 className="font-display text-3xl font-medium tracking-tight text-ink sm:text-4xl">
+        What happens next?
+      </h2>
+
+      <div className="mt-10">
+        {steps.map((step, index) => (
+          <div
+            key={step.title}
+            className={`grid grid-cols-[48px_1fr] gap-4 py-6 ${
+              index > 0 ? "border-t border-ink/10" : ""
+            }`}
+          >
+            <span className="font-display text-lg text-accent">
+              0{index + 1}
+            </span>
+            <div>
+              <h3 className="font-display text-xl font-medium tracking-tight text-ink">
+                {step.title}
+              </h3>
+              <p className="mt-2 leading-7 text-ink/60">{step.copy}</p>
+            </div>
+          </div>
+        ))}
       </div>
-      <div className="space-y-6">
-        <motion.div className="flex items-center" variants={itemVariants}>
-          <div className="bg-blue-100 p-3 rounded-full">
-            <FaPhone className="text-blue-600 text-xl" />
-          </div>
-          <a
-            href="tel:+17813367274"
-            className="ml-4 text-gray-700 text-lg hover:text-blue-600 transition-colors"
-          >
-            (781) 336-7274
-          </a>
-        </motion.div>
-        <motion.div className="flex items-center" variants={itemVariants}>
-          <div className="bg-green-100 p-3 rounded-full">
-            <FaEnvelope className="text-green-600 text-xl" />
-          </div>
-          <a
-            href="mailto:bsitesioteam@gmail.com"
-            className="ml-4 text-gray-700 text-lg hover:text-green-600 transition-colors"
-          >
-            bsitesioteam@gmail.com
-          </a>
-        </motion.div>
+
+      <div className="mt-10 rounded-3xl bg-ink p-8 text-paper">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-paper/50">
+          Prefer to talk first?
+        </p>
+        <a
+          href="tel:+17813367274"
+          className="link-underline mt-5 block w-fit font-display text-2xl font-medium tracking-tight hover:text-accent"
+        >
+          (781) 336-7274
+        </a>
+        <a
+          href="mailto:bsitesioteam@gmail.com"
+          className="link-underline mt-3 block w-fit text-lg text-paper/80 hover:text-paper"
+        >
+          bsitesioteam@gmail.com
+        </a>
+        <p className="mt-6 border-t border-paper/15 pt-5 text-sm text-paper/50">
+          Plymouth, Massachusetts — replies usually within one business day.
+        </p>
       </div>
     </motion.div>
   );
