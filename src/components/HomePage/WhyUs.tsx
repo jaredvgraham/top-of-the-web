@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 const ease = [0.65, 0, 0.35, 1] as const;
@@ -63,6 +64,20 @@ const WhyUs = () => {
               <p className="mt-6 max-w-sm text-[13px] uppercase leading-6 tracking-[0.18em] text-paper/60">
                 Hosting · maintenance · SSL · uptime · basic updates — all
                 included
+              </p>
+            </div>
+
+            <div className="relative mt-12 overflow-hidden rounded-2xl">
+              <Image
+                src="/stock/working-together.jpg"
+                alt="Two developers reviewing a website build together"
+                width={1600}
+                height={1067}
+                className="h-[260px] w-full object-cover sm:h-[320px]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />
+              <p className="absolute bottom-4 left-4 text-[11px] font-medium uppercase tracking-[0.2em] text-paper/90">
+                Every build is reviewed by a real person
               </p>
             </div>
           </motion.div>

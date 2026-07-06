@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 const ease = [0.65, 0, 0.35, 1] as const;
@@ -84,6 +85,48 @@ const Process = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* Behind the scenes */}
+        <motion.div
+          initial={{ opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.8, ease }}
+          className="mt-16 grid gap-6 lg:grid-cols-[1.4fr_1fr]"
+        >
+          <div className="relative overflow-hidden rounded-3xl">
+            <Image
+              src="/stock/laptop-discussion.jpg"
+              alt="Team discussing a client project in the studio"
+              width={1600}
+              height={1200}
+              className="h-[300px] w-full object-cover sm:h-[400px]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
+            <p className="absolute bottom-5 left-5 text-[12px] font-medium uppercase tracking-[0.2em] text-paper/90 sm:bottom-7 sm:left-7">
+              Behind the scenes — every project gets talked through
+            </p>
+          </div>
+          <div className="flex flex-col justify-between rounded-3xl bg-ink p-8 text-paper sm:p-10">
+            <p className="text-[13px] font-medium uppercase tracking-[0.24em] text-paper/50">
+              Who you&apos;re working with
+            </p>
+            <div>
+              <p className="font-display mt-8 text-3xl font-medium leading-tight tracking-tight sm:text-4xl">
+                You talk to the people who actually{" "}
+                <em className="font-light italic text-accent">
+                  design and build
+                </em>{" "}
+                your site.
+              </p>
+              <p className="mt-6 leading-7 text-paper/60">
+                No account managers, no ticket queues. Questions during your
+                build get answered by the person with your project open on
+                their screen.
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

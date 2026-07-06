@@ -2,6 +2,7 @@ import ContactCard from "@/components/contact/ContactCard";
 import InquiryForm from "@/components/contact/InquiryForm";
 import Footer from "@/components/HomePage/Footer";
 import CheckoutButton from "@/components/checkout/CheckoutButton";
+import Image from "next/image";
 import React from "react";
 
 const Page = () => {
@@ -29,6 +30,20 @@ const Page = () => {
               />
               <p className="text-sm text-ink/50">
                 or send a message with the form below
+              </p>
+            </div>
+
+            <div className="relative mt-14 overflow-hidden rounded-3xl">
+              <Image
+                src="/stock/client-meeting.jpg"
+                alt="A client and designer celebrating a successful website launch"
+                width={1600}
+                height={1067}
+                className="h-[280px] w-full object-cover sm:h-[400px]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
+              <p className="absolute bottom-5 left-5 max-w-sm text-[12px] font-medium uppercase leading-5 tracking-[0.2em] text-paper/90 sm:bottom-7 sm:left-7">
+                A real conversation, not a sales funnel — we reply personally
               </p>
             </div>
           </div>

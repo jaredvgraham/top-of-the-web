@@ -3,6 +3,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import CheckoutButton from "@/components/checkout/CheckoutButton";
+import DeviceShowcase from "@/components/HomePage/DeviceShowcase";
 
 const ease = [0.65, 0, 0.35, 1] as const;
 
@@ -33,65 +34,73 @@ const Hero = () => {
           <span className="hidden sm:inline">Now taking new builds</span>
         </motion.div>
 
-        {/* Headline */}
-        <h1 className="font-display display-tight text-[13.5vw] font-medium text-ink sm:text-[11vw] lg:text-[8.6rem]">
-          <motion.span
-            className="block"
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease, delay: 0.05 }}
-          >
-            Your business,
-          </motion.span>
-          <motion.span
-            className="block"
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease, delay: 0.18 }}
-          >
-            looking <em className="font-light italic text-accent">expensive</em>
-          </motion.span>
-          <motion.span
-            className="block"
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease, delay: 0.31 }}
-          >
-            — built for free.
-          </motion.span>
-        </h1>
+        {/* Headline + photo */}
+        <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch lg:gap-14">
+          <div className="flex flex-col justify-between">
+            <h1 className="font-display display-tight text-[13.5vw] font-medium text-ink sm:text-[11vw] lg:text-[5.6rem] xl:text-[6.4rem]">
+              <motion.span
+                className="block"
+                initial={{ opacity: 0, y: 60 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.9, ease, delay: 0.05 }}
+              >
+                Your business,
+              </motion.span>
+              <motion.span
+                className="block"
+                initial={{ opacity: 0, y: 60 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.9, ease, delay: 0.18 }}
+              >
+                looking{" "}
+                <em className="font-light italic text-accent">expensive</em>
+              </motion.span>
+              <motion.span
+                className="block"
+                initial={{ opacity: 0, y: 60 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.9, ease, delay: 0.31 }}
+              >
+                — built for free.
+              </motion.span>
+            </h1>
 
-        {/* Sub + CTAs */}
-        <div className="mt-12 grid gap-10 lg:mt-16 lg:grid-cols-[1fr_auto] lg:items-end">
-          <motion.p
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease, delay: 0.45 }}
-            className="max-w-xl text-lg leading-8 text-ink/70 sm:text-xl"
-          >
-            Bsites designs and builds your custom website for{" "}
-            <span className="font-semibold text-ink">$0 upfront</span>, then
-            hosts, secures, and maintains it for one flat monthly price. No
-            agency invoice. No template smell.
-          </motion.p>
+            {/* Sub + CTAs */}
+            <div className="mt-12 lg:mt-10">
+              <motion.p
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease, delay: 0.45 }}
+                className="max-w-xl text-lg leading-8 text-ink/70 sm:text-xl"
+              >
+                Bsites designs and builds your custom website for{" "}
+                <span className="font-semibold text-ink">$0 upfront</span>,
+                then hosts, secures, and maintains it for one flat monthly
+                price. No agency invoice. No template smell.
+              </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease, delay: 0.55 }}
-            className="flex flex-col gap-3 sm:flex-row"
-          >
-            <CheckoutButton className="group relative overflow-hidden rounded-full bg-ink px-9 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-paper">
-              <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
-              <span className="relative">Start Checkout — $84/mo</span>
-            </CheckoutButton>
-            <button
-              onClick={() => Router.push("/contact")}
-              className="rounded-full border border-ink/20 px-9 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-ink transition-colors duration-300 hover:border-ink hover:bg-ink hover:text-paper"
-            >
-              Contact Us
-            </button>
-          </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease, delay: 0.55 }}
+                className="mt-10 flex flex-col gap-3 sm:flex-row"
+              >
+                <CheckoutButton className="group relative overflow-hidden rounded-full bg-ink px-9 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-paper">
+                  <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
+                  <span className="relative">Start Checkout — $84/mo</span>
+                </CheckoutButton>
+                <button
+                  onClick={() => Router.push("/contact")}
+                  className="rounded-full border border-ink/20 px-9 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-ink transition-colors duration-300 hover:border-ink hover:bg-ink hover:text-paper"
+                >
+                  Contact Us
+                </button>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Hero visual */}
+          <DeviceShowcase />
         </div>
 
         {/* Stat rules */}
@@ -127,7 +136,7 @@ const Hero = () => {
       </div>
 
       {/* Marquee */}
-      <div className="mt-4 border-y border-ink/15 bg-ink py-4 sm:py-5">
+      <div className="mt-16 border-y border-ink/15 bg-ink py-4 sm:py-5 lg:mt-20">
         <div className="flex w-max animate-marquee items-center gap-10 whitespace-nowrap pr-10">
           {[...marqueeItems, ...marqueeItems, ...marqueeItems, ...marqueeItems].map(
             (item, i) => (
