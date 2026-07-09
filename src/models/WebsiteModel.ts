@@ -34,5 +34,8 @@ export const findWebsiteByEmail = async (email: string) => {
 };
 
 export const findWebsiteById = async (id: string) => {
-  return await Website.findOne({ id });
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+  return await Website.findById(id);
 };
