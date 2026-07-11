@@ -1,4 +1,3 @@
-//CustomerModel.ts
 import mongoose, { Schema, Model, Document } from "mongoose";
 
 export interface ICustomer extends Document {
@@ -6,6 +5,9 @@ export interface ICustomer extends Document {
   email: string;
   phone: string;
   customerId: string;
+  subscriptionStatus?: string;
+  subscriptionCancelAt?: Date | null;
+  subscriptionCanceledAt?: Date | null;
 }
 
 const CustomerSchema = new Schema<ICustomer>(
@@ -21,6 +23,18 @@ const CustomerSchema = new Schema<ICustomer>(
     customerId: {
       type: String,
       required: true,
+    },
+    subscriptionStatus: {
+      type: String,
+      default: "none",
+    },
+    subscriptionCancelAt: {
+      type: Date,
+      default: null,
+    },
+    subscriptionCanceledAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

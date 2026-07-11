@@ -1,31 +1,31 @@
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
-import Purchase from "@/models/Purchase";
 import Customer from "@/models/Customer";
 import Order from "@/models/Order";
 import dbConnect from "@/lib/db";
 import { findCustomerByEmail } from "@/models/Customer";
 import Website from "@/models/WebsiteModel";
+import {
+  getSubscriptionInfoForCustomer,
+  summarizeSubscriptions,
+} from "@/lib/stripeSubscription";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
-async function subscriptionScheduleExists(
-  customerId: string,
-  productId: string
-): Promise<boolean> {
-  const schedules = await stripe.subscriptionSchedules.list({
-    customer: customerId,
-  });
+async function syncCustomerSubscription(stripeCustomerId: string) {
+  const customer = await Customer.findOne({ customerId: stripeCustomerId });
+  if (!customer) return;
 
-  return schedules.data.some((schedule) =>
-    schedule.phases.some((phase) =>
-      phase.items.some((item) => {
-        const price = item.price as Stripe.Price;
-        return price.product === productId;
-      })
-    )
-  );
+  const info = await getSubscriptionInfoForCustomer(stripeCustomerId);
+  customer.subscriptionStatus = info.status;
+  customer.subscriptionCancelAt = info.cancelAt
+    ? new Date(info.cancelAt * 1000)
+    : null;
+  customer.subscriptionCanceledAt = info.canceledAt
+    ? new Date(info.canceledAt * 1000)
+    : null;
+  await customer.save();
 }
 
 export async function POST(req: NextRequest) {
@@ -40,7 +40,6 @@ export async function POST(req: NextRequest) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      // Fetch line items for the session
       const lineItems = await stripe.checkout.sessions.listLineItems(
         session.id,
         {
@@ -105,7 +104,31 @@ export async function POST(req: NextRequest) {
         });
       }
       customer.phone = phone as string;
+      customer.subscriptionStatus = "active";
       await customer.save();
+
+      if (customer.customerId) {
+        await syncCustomerSubscription(customer.customerId);
+      }
+    }
+
+    if (
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted" ||
+      event.type === "customer.subscription.created"
+    ) {
+      const subscription = event.data.object as Stripe.Subscription;
+      const stripeCustomerId =
+        typeof subscription.customer === "string"
+          ? subscription.customer
+          : subscription.customer.id;
+
+      await syncCustomerSubscription(stripeCustomerId);
+
+      const info = summarizeSubscriptions([subscription]);
+      console.log(
+        `Subscription ${event.type} for ${stripeCustomerId}: ${info.status}`
+      );
     }
 
     return NextResponse.json({ status: "success", event: event.type });
@@ -114,4 +137,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "error", message: err.message });
   }
 }
-//

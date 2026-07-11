@@ -131,3 +131,30 @@ body {
   z-index: 10;
   background: transparent;
 }
+
+/* Admin range input */
+.admin-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2px;
+  background: rgba(26, 20, 51, 0.12);
+  outline: none;
+}
+
+.admin-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #5b2e9e;
+  cursor: pointer;
+  border: none;
+}
+
+.admin-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #5b2e9e;
+  cursor: pointer;
+  border: none;
+}
