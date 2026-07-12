@@ -81,6 +81,10 @@ export default function OnboardingAdmin() {
   const [selected, setSelected] = useState<AdminSession | null>(null);
   const [creating, setCreating] = useState(false);
   const [createEmail, setCreateEmail] = useState("");
+  const [fbEmail, setFbEmail] = useState("");
+  const [fbPageUrl, setFbPageUrl] = useState("");
+  const [fbImporting, setFbImporting] = useState(false);
+  const [fbResult, setFbResult] = useState("");
   const [copiedToken, setCopiedToken] = useState("");
   const [copiedLabel, setCopiedLabel] = useState("");
   const [promptCopied, setPromptCopied] = useState(false);
@@ -148,6 +152,7 @@ export default function OnboardingAdmin() {
     setCreating(true);
     setError("");
     setCopyHint("");
+    setFbResult("");
     try {
       const response = await fetch("/api/admin/onboarding", {
         method: "POST",
@@ -175,6 +180,61 @@ export default function OnboardingAdmin() {
       setError(err instanceof Error ? err.message : "Could not create link");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const importFacebook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = fbEmail.trim();
+    const pageUrl = fbPageUrl.trim();
+    if (!email) {
+      setError("Enter the client’s email for the Facebook import.");
+      return;
+    }
+    if (!pageUrl) {
+      setError("Paste the Facebook page URL.");
+      return;
+    }
+
+    setFbImporting(true);
+    setError("");
+    setFbResult("");
+    setCopyHint("");
+    try {
+      const response = await fetch("/api/admin/onboarding/facebook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, pageUrl }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Facebook import failed");
+      }
+
+      setFbEmail("");
+      setFbPageUrl("");
+      await load();
+      selectSession({ ...data.session, url: data.url });
+
+      const photoCount = data.imported?.photoCount ?? 0;
+      const pageName = data.imported?.pageName || "Facebook page";
+      const usedAi = Boolean(data.imported?.usedAi);
+      setFbResult(
+        `Imported ${pageName} with ${photoCount} photo${
+          photoCount === 1 ? "" : "s"
+        }${usedAi ? " (AI cleaned fields)" : " (raw scrape mapping)"}. Brief is ready to review.`
+      );
+
+      if (data.url) {
+        const copied = await copyText(data.url);
+        if (copied) {
+          markLinkCopied({ ...data.session, url: data.url });
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Facebook import failed");
+    } finally {
+      setFbImporting(false);
     }
   };
 
@@ -318,6 +378,69 @@ export default function OnboardingAdmin() {
           {creating ? "Creating…" : "Create & copy link"}
         </button>
       </form>
+
+      <form
+        onSubmit={importFacebook}
+        className="mb-6 space-y-4 rounded-3xl border border-ink/15 bg-paper p-5 sm:mb-8 sm:p-6"
+      >
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45">
+            Import from Facebook
+          </p>
+          <p className="mt-2 text-sm text-ink/55">
+            Paste a page URL and submit — we scrape it locally, then OpenAI
+            cleans the copy into the brief and we import photos. Best from local
+            admin (<code className="text-xs">npm run dev</code>) with{" "}
+            <code className="text-xs">OPENAI_API_KEY</code> set.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45">
+              Client email
+            </label>
+            <input
+              type="email"
+              required
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              value={fbEmail}
+              onChange={(e) => setFbEmail(e.target.value)}
+              placeholder="client@email.com"
+              className="w-full border-b border-ink/20 bg-transparent py-3 text-base outline-none focus:border-accent"
+            />
+          </div>
+          <div className="min-w-0">
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45">
+              Facebook page URL
+            </label>
+            <input
+              type="url"
+              required
+              value={fbPageUrl}
+              onChange={(e) => setFbPageUrl(e.target.value)}
+              placeholder="https://www.facebook.com/TheirPage"
+              className="w-full border-b border-ink/20 bg-transparent py-3 text-base outline-none focus:border-accent"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={fbImporting}
+          className="w-full rounded-full bg-accent px-6 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] text-paper disabled:opacity-60 sm:w-auto"
+        >
+          {fbImporting ? "Scraping page & photos…" : "Import Facebook page"}
+        </button>
+      </form>
+
+      {fbResult ? (
+        <p className="mb-3 rounded-2xl border border-accent/25 bg-accent/10 px-4 py-3 text-sm text-accent">
+          {fbResult}
+        </p>
+      ) : null}
 
       {copiedToken ? (
         <p className="mb-3 rounded-2xl border border-accent/25 bg-accent/10 px-4 py-3 text-sm text-accent">
