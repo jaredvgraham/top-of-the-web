@@ -1,41 +1,65 @@
-import React from "react";
-import Head from "next/head";
+import type { Metadata } from "next";
 import Link from "next/link";
 import Footer from "@/components/HomePage/Footer";
+
+export const metadata: Metadata = {
+  title: "Thank You — Bsites.io",
+  robots: { index: false, follow: false },
+};
 
 export default function ThankYou() {
   return (
     <>
-      <Head>
-        <title>Thank You - Bsites.io</title>
-        <meta name="robots" content="noindex" />
-      </Head>
-      <main className="flex flex-col items-center justify-center min-h-screen bg-paper text-center px-4 pt-24">
+      <main className="relative flex min-h-screen flex-col items-center overflow-hidden px-5 pb-20 pt-28 text-center sm:px-8">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(91,46,158,0.14), transparent 55%), linear-gradient(180deg, #f5f5fb 0%, #ebe8f7 100%)",
+          }}
+        />
         <div className="max-w-2xl">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-4">
-            Thank You for Your Purchase!
-          </h1>
-          <p className="text-lg text-gray-600 mb-8">
-            {` We've received your order and will get started on your new website
-            right away. You will receive an email confirmation shortly with all
-            the details.`}
+          <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-ink/45">
+            You&apos;re in
           </p>
-          <p className="text-lg text-gray-600 mb-8">
-            In the meantime, if you have any questions, feel free to contact us
-            at{" "}
+          <h1 className="font-display mt-3 text-4xl font-medium tracking-tight text-ink sm:text-6xl">
+            Thank you for your purchase
+          </h1>
+          <p className="mt-6 text-[16px] leading-7 text-ink/60">
+            We&apos;ve received your order and will get started on your website.
+            You&apos;ll get an email confirmation shortly.
+          </p>
+          <p className="mt-4 text-[16px] leading-7 text-ink/60">
+            If you haven&apos;t finished your site brief yet, complete it so we
+            have logos, copy, and photos before we build.
+          </p>
+
+          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <Link
+              href="/onboarding"
+              className="group relative inline-flex overflow-hidden rounded-full bg-ink px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-paper"
+            >
+              <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
+              <span className="relative">Finish your site brief</span>
+            </Link>
+            <Link
+              href="/"
+              className="text-sm font-medium text-ink/50 transition-colors hover:text-ink"
+            >
+              Back to homepage
+            </Link>
+          </div>
+
+          <p className="mt-10 text-sm text-ink/45">
+            Questions?{" "}
             <a
               href="mailto:bsitesioteam@gmail.com"
-              className="text-blue-600 hover:underline"
+              className="text-accent hover:underline"
             >
               bsitesioteam@gmail.com
             </a>
-            .
           </p>
-          <Link href="/" legacyBehavior>
-            <a className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300">
-              Back to Homepage
-            </a>
-          </Link>
         </div>
       </main>
       <Footer />
