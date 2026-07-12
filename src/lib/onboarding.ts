@@ -1,17 +1,13 @@
 import { randomUUID } from "crypto";
 import type { IOnboarding, OnboardingAssetKind } from "@/models/Onboarding";
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_UPLOAD_BYTES,
+  ONBOARDING_STEP_COUNT,
+} from "@/lib/onboardingConstants";
 
 export type { OnboardingAssetKind };
-
-export const ONBOARDING_STEP_COUNT = 3;
-export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 MB
-export const ALLOWED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/svg+xml",
-];
+export { ALLOWED_IMAGE_TYPES, MAX_UPLOAD_BYTES, ONBOARDING_STEP_COUNT };
 
 export function createOnboardingToken() {
   return randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, "");

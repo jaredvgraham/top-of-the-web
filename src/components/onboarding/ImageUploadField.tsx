@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
 import type { OnboardingAsset, OnboardingSession } from "./types";
 import { labelClasses } from "./types";
+import {
+  isAllowedImageType,
+  MAX_UPLOAD_BYTES,
+} from "@/lib/onboardingConstants";
 
 type Props = {
   token: string;
@@ -13,6 +18,10 @@ type Props = {
   label: string;
   hint?: string;
 };
+
+function formatMb(bytes: number) {
+  return `${Math.round(bytes / (1024 * 1024))} MB`;
+}
 
 export default function ImageUploadField({
   token,
@@ -25,6 +34,7 @@ export default function ImageUploadField({
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
 
   const visible = assets.filter((asset) => asset.kind === kind);
@@ -33,27 +43,63 @@ export default function ImageUploadField({
     if (!files?.length) return;
     setError("");
     setUploading(true);
+    setProgress("");
 
     try {
       let latest: OnboardingSession | null = null;
       const list = Array.from(files);
 
-      for (const file of list) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("kind", kind);
+      for (let index = 0; index < list.length; index += 1) {
+        const file = list[index];
+        setProgress(
+          list.length > 1
+            ? `Uploading ${index + 1} of ${list.length}…`
+            : "Uploading…"
+        );
 
-        const response = await fetch(`/api/onboarding/${token}/upload`, {
+        if (!isAllowedImageType(file.type)) {
+          throw new Error(
+            `${file.name}: use JPEG, PNG, WebP, GIF, or SVG`
+          );
+        }
+
+        if (file.size > MAX_UPLOAD_BYTES) {
+          throw new Error(
+            `${file.name} is over ${formatMb(MAX_UPLOAD_BYTES)}`
+          );
+        }
+
+        const safeName =
+          file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "upload";
+        const pathname = `onboarding/${token}/${kind}-${Date.now()}-${safeName}`;
+
+        // Upload goes browser → Blob (not through our serverless function).
+        const blob = await upload(pathname, file, {
+          access: "public",
+          handleUploadUrl: `/api/onboarding/${token}/blob`,
+          multipart: true,
+          clientPayload: JSON.stringify({ kind }),
+          contentType: file.type,
+        });
+
+        const response = await fetch(`/api/onboarding/${token}/assets`, {
           method: "POST",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: blob.url,
+            pathname: blob.pathname,
+            filename: file.name,
+            kind,
+          }),
         });
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "Upload failed");
+          throw new Error(data.message || "Could not save uploaded image");
         }
 
         latest = data.session;
+        if (data.session) onSession(data.session);
       }
 
       if (latest) onSession(latest);
@@ -61,6 +107,7 @@ export default function ImageUploadField({
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
+      setProgress("");
       if (inputRef.current) inputRef.current.value = "";
     }
   };
@@ -116,7 +163,11 @@ export default function ImageUploadField({
           onClick={() => inputRef.current?.click()}
           className="flex h-32 min-w-[8rem] flex-col items-center justify-center rounded-2xl border border-dashed border-ink/25 px-4 text-sm text-ink/55 transition-colors hover:border-accent hover:text-accent disabled:opacity-60"
         >
-          {uploading ? "Uploading…" : multiple ? "Add photos" : "Upload"}
+          {uploading
+            ? progress || "Uploading…"
+            : multiple
+              ? "Add photos"
+              : "Upload"}
         </button>
       </div>
 
