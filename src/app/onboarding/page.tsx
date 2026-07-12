@@ -3,9 +3,24 @@ import Footer from "@/components/HomePage/Footer";
 import OnboardingStart from "@/components/onboarding/OnboardingStart";
 
 export const metadata: Metadata = {
-  title: "Site Brief — Bsites.io",
+  title: "Your Bsites site brief — start onboarding",
   description:
-    "A short brief about your business — enough for us to start building your site.",
+    "This is a Bsites onboarding link. Share a short brief about your business so we can start building your website.",
+  robots: { index: false, follow: false },
+  openGraph: {
+    title: "Your Bsites site brief — start onboarding",
+    description:
+      "Private Bsites onboarding. Answer a few questions about your business so we can build your site.",
+    type: "website",
+    siteName: "Bsites.io",
+    url: "https://www.bsites.io/onboarding",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Your Bsites site brief — start onboarding",
+    description:
+      "Private Bsites onboarding. Answer a few questions about your business so we can build your site.",
+  },
 };
 
 export default function OnboardingPage() {
