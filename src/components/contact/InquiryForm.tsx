@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { motion } from "framer-motion";
 
@@ -10,6 +11,7 @@ const inputClasses =
   "w-full border-0 border-b border-ink/20 bg-transparent px-0 py-4 text-lg text-ink placeholder:text-ink/30 outline-none transition-colors focus:border-accent focus:ring-0";
 
 const InquiryForm: React.FC = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -38,21 +40,22 @@ const InquiryForm: React.FC = () => {
     setSubmitting(true);
     try {
       const response = await axios.post("/api/inquiry", formData);
-      if (response.status === 200) {
-        setResponseMessage(
-          "Inquiry received — we'll be in touch within one business day."
-        );
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          inquiry: "",
-        });
-      } else {
-        setResponseMessage("Error submitting inquiry. Please try again.");
-        setError(true);
+      const onboardingUrl =
+        typeof response.data?.onboardingUrl === "string"
+          ? response.data.onboardingUrl
+          : "";
+      const token =
+        typeof response.data?.token === "string" ? response.data.token : "";
+
+      if (response.status === 200 && (onboardingUrl || token)) {
+        setResponseMessage("Got it — taking you to your site brief…");
+        router.push(onboardingUrl || `/onboarding/${token}`);
+        return;
       }
-    } catch (error) {
+
+      setResponseMessage("Error submitting inquiry. Please try again.");
+      setError(true);
+    } catch {
       setResponseMessage("Error submitting inquiry. Please try again.");
       setError(true);
     } finally {
@@ -156,6 +159,10 @@ const InquiryForm: React.FC = () => {
             {submitting ? "Sending..." : "Send Message"}
           </span>
         </button>
+        <p className="text-center text-sm text-ink/45">
+          After you send, we’ll take you to a short site brief so we can start
+          building.
+        </p>
         {responseMessage && (
           <p
             className={`text-center text-sm font-medium ${

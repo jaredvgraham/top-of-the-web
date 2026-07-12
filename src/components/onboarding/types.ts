@@ -114,3 +114,37 @@ export function emptySession(token = ""): OnboardingSession {
     assets: [],
   };
 }
+
+/** Deep-merge API session onto empty defaults so nested prefill never drops. */
+export function mergeSession(
+  token: string,
+  session: Partial<OnboardingSession> | null | undefined
+): OnboardingSession {
+  const base = emptySession(token);
+  if (!session) return base;
+
+  const ownerNames = (session.contact?.ownerNames || [])
+    .map((n) => n.trim())
+    .filter(Boolean);
+
+  return {
+    ...base,
+    ...session,
+    token: session.token || token,
+    email: session.email || session.contact?.email || base.email,
+    contact: {
+      ...base.contact,
+      ...session.contact,
+      ownerNames: ownerNames.length
+        ? ownerNames
+        : session.contact?.name?.trim()
+          ? [session.contact.name.trim()]
+          : base.contact.ownerNames,
+    },
+    business: { ...base.business, ...session.business },
+    brand: { ...base.brand, ...session.brand },
+    content: { ...base.content, ...session.content },
+    extras: { ...base.extras, ...session.extras },
+    assets: session.assets?.length ? session.assets : base.assets,
+  };
+}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import Footer from "@/components/HomePage/Footer";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import {
-  emptySession,
+  mergeSession,
   type OnboardingSession,
 } from "@/components/onboarding/types";
 
@@ -80,10 +80,7 @@ export default function OnboardingTokenClient({ token }: Props) {
 
         {!loading && session && (
           <OnboardingWizard
-            initialSession={{
-              ...emptySession(token),
-              ...session,
-            }}
+            initialSession={mergeSession(token, session)}
           />
         )}
       </main>

@@ -32,6 +32,13 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
       );
     }
 
+    if (!(session.contact?.businessName || "").trim()) {
+      return NextResponse.json(
+        { message: "Add your business name before submitting" },
+        { status: 400 }
+      );
+    }
+
     const owners = (session.contact?.ownerNames || [])
       .map((n) => n.trim())
       .filter(Boolean);

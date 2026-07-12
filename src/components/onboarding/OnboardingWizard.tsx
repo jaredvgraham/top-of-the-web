@@ -86,6 +86,25 @@ export default function OnboardingWizard({ initialSession }: Props) {
     }
   }, []);
 
+  // Lock in contact-form (or admin) prefill as soon as the brief opens.
+  useEffect(() => {
+    if (initialSession.status === "completed") return;
+    const hasPrefill =
+      Boolean(initialSession.contact.email?.trim()) ||
+      Boolean(initialSession.contact.phone?.trim()) ||
+      Boolean(initialSession.contact.name?.trim()) ||
+      Boolean(
+        (initialSession.contact.ownerNames || []).some((n) => n.trim())
+      ) ||
+      Boolean(initialSession.business.description?.trim()) ||
+      Boolean(initialSession.extras.notes?.trim());
+    if (!hasPrefill) return;
+    dirtyRef.current = true;
+    void persist(true);
+    // Only on first mount for this session token
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSession.token, persist]);
+
   const scheduleSave = useCallback(() => {
     dirtyRef.current = true;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -163,6 +182,10 @@ export default function OnboardingWizard({ initialSession }: Props) {
         setSubmitError("Add your business phone number.");
         return;
       }
+      if (!session.contact.businessName.trim()) {
+        setSubmitError("Add your business name.");
+        return;
+      }
     }
     if (step === 1 && next > 1) {
       if (!session.business.description.trim()) {
@@ -183,6 +206,11 @@ export default function OnboardingWizard({ initialSession }: Props) {
   };
 
   const handleSubmit = async () => {
+    if (!session.contact.businessName.trim()) {
+      setSubmitError("Add your business name.");
+      setStep(0);
+      return;
+    }
     if (!session.business.description.trim()) {
       setSubmitError(
         "Tell us what the business does — that’s the main thing we need."
@@ -393,7 +421,8 @@ export default function OnboardingWizard({ initialSession }: Props) {
                   name="businessName"
                   value={session.contact.businessName}
                   onChange={(v) => updateSection("contact", "businessName", v)}
-                  placeholder="If you have one"
+                  placeholder="Acme Landscaping"
+                  required
                 />
                 <TextField
                   label="Business email"
