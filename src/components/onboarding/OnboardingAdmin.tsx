@@ -82,6 +82,7 @@ export default function OnboardingAdmin() {
   const [creating, setCreating] = useState(false);
   const [createEmail, setCreateEmail] = useState("");
   const [copiedToken, setCopiedToken] = useState("");
+  const [copiedLabel, setCopiedLabel] = useState("");
   const [promptCopied, setPromptCopied] = useState(false);
   const [copyHint, setCopyHint] = useState("");
   const [deletingToken, setDeletingToken] = useState("");
@@ -89,6 +90,18 @@ export default function OnboardingAdmin() {
     "all" | "not_started" | "in_progress" | "completed"
   >("all");
   const detailRef = useRef<HTMLDivElement>(null);
+  const copiedClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const markLinkCopied = (session: AdminSession) => {
+    setCopiedToken(session.token);
+    setCopiedLabel(sessionEmail(session));
+    setCopyHint("");
+    if (copiedClearRef.current) clearTimeout(copiedClearRef.current);
+    copiedClearRef.current = setTimeout(() => {
+      setCopiedToken("");
+      setCopiedLabel("");
+    }, 4500);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -111,6 +124,12 @@ export default function OnboardingAdmin() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    return () => {
+      if (copiedClearRef.current) clearTimeout(copiedClearRef.current);
+    };
+  }, []);
 
   const selectSession = (session: AdminSession) => {
     setSelected(session);
@@ -146,8 +165,7 @@ export default function OnboardingAdmin() {
       if (data.url) {
         const copied = await copyText(data.url);
         if (copied) {
-          setCopiedToken(data.token);
-          window.setTimeout(() => setCopiedToken(""), 2500);
+          markLinkCopied({ ...data.session, url: data.url });
         } else {
           setCopyHint("Created — tap Link to copy on this device");
           window.setTimeout(() => setCopyHint(""), 4000);
@@ -166,9 +184,8 @@ export default function OnboardingAdmin() {
       `${window.location.origin}/onboarding/${session.token}`;
     const copied = await copyText(url);
     if (copied) {
-      setCopiedToken(session.token);
-      setCopyHint("");
-      window.setTimeout(() => setCopiedToken(""), 2000);
+      markLinkCopied(session);
+      setSelected(session);
     } else {
       setCopyHint("Couldn’t copy automatically — long-press the Open link");
       window.setTimeout(() => setCopyHint(""), 4000);
@@ -303,7 +320,9 @@ export default function OnboardingAdmin() {
       </form>
 
       {copiedToken ? (
-        <p className="mb-3 text-sm text-accent">Link copied to clipboard</p>
+        <p className="mb-3 rounded-2xl border border-accent/25 bg-accent/10 px-4 py-3 text-sm text-accent">
+          Copied link for <span className="font-semibold">{copiedLabel}</span>
+        </p>
       ) : null}
       {promptCopied ? (
         <p className="mb-3 text-sm text-accent">
@@ -325,15 +344,23 @@ export default function OnboardingAdmin() {
             ) : (
               sessions.map((session) => {
                 const active = selected?.token === session.token;
+                const justCopied = copiedToken === session.token;
                 return (
                   <div
                     key={session.token}
-                    className={`rounded-3xl border p-4 transition-colors sm:p-5 ${
-                      active
-                        ? "border-accent/40 bg-accent/5"
-                        : "border-ink/15 bg-paper"
+                    className={`rounded-3xl border p-4 transition-all duration-300 sm:p-5 ${
+                      justCopied
+                        ? "border-accent bg-accent/10 ring-2 ring-accent/40 shadow-[0_0_0_4px_rgba(91,46,158,0.12)]"
+                        : active
+                          ? "border-accent/40 bg-accent/5"
+                          : "border-ink/15 bg-paper"
                     }`}
                   >
+                    {justCopied ? (
+                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
+                        Link copied · {sessionEmail(session)}
+                      </p>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => selectSession(session)}
@@ -372,9 +399,13 @@ export default function OnboardingAdmin() {
                       <button
                         type="button"
                         onClick={() => void copyUrl(session)}
-                        className="rounded-full border border-ink/15 px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/70"
+                        className={`rounded-full px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] ${
+                          justCopied
+                            ? "bg-accent text-paper"
+                            : "border border-ink/15 text-ink/70"
+                        }`}
                       >
-                        Link
+                        {justCopied ? "Copied" : "Link"}
                       </button>
                       <button
                         type="button"
