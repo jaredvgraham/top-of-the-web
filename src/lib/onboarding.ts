@@ -81,3 +81,10 @@ export type OnboardingPatchBody = {
   content?: Partial<IOnboarding["content"]>;
   extras?: Partial<IOnboarding["extras"]>;
 };
+
+/** Flip not_started → in_progress on first real edit/upload. */
+export function markOnboardingStarted(doc: IOnboarding) {
+  if (doc.status === "not_started") {
+    doc.status = "in_progress";
+  }
+}

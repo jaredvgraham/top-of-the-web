@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Onboarding from "@/models/Onboarding";
 import {
+  markOnboardingStarted,
   normalizeEmail,
   normalizeOwnerNames,
   serializeOnboarding,
@@ -115,6 +116,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       };
     }
 
+    markOnboardingStarted(session);
     await session.save();
 
     return NextResponse.json({

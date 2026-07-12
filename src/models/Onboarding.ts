@@ -1,6 +1,6 @@
 import mongoose, { Schema, Model, Document } from "mongoose";
 
-export type OnboardingStatus = "in_progress" | "completed";
+export type OnboardingStatus = "not_started" | "in_progress" | "completed";
 
 export type OnboardingAssetKind = "logo" | "about" | "photo" | "other";
 
@@ -97,8 +97,8 @@ const OnboardingSchema = new Schema<IOnboarding>(
     },
     status: {
       type: String,
-      enum: ["in_progress", "completed"],
-      default: "in_progress",
+      enum: ["not_started", "in_progress", "completed"],
+      default: "not_started",
     },
     currentStep: {
       type: Number,

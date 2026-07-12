@@ -13,7 +13,9 @@ export async function GET(req: NextRequest) {
     await dbConnect();
     const status = req.nextUrl.searchParams.get("status");
     const query =
-      status === "in_progress" || status === "completed"
+      status === "not_started" ||
+      status === "in_progress" ||
+      status === "completed"
         ? { status }
         : {};
 
@@ -60,7 +62,7 @@ export async function POST(req: NextRequest) {
       contact: {
         email,
       },
-      status: "in_progress",
+      status: "not_started",
       currentStep: 0,
     });
 

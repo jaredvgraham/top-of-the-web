@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
     let session = await Onboarding.findOne({
       $or: [{ email }, { "contact.email": email }],
-      status: "in_progress",
+      status: { $in: ["not_started", "in_progress"] },
     }).sort({ updatedAt: -1 });
 
     if (!session) {
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
         token,
         email,
         contact: { email },
-        status: "in_progress",
+        status: "not_started",
         currentStep: 0,
       });
 

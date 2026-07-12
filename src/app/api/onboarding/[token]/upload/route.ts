@@ -5,6 +5,7 @@ import Onboarding from "@/models/Onboarding";
 import {
   ALLOWED_IMAGE_TYPES,
   MAX_UPLOAD_BYTES,
+  markOnboardingStarted,
   serializeOnboarding,
   type OnboardingAssetKind,
 } from "@/lib/onboarding";
@@ -85,6 +86,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       uploadedAt: new Date(),
     });
 
+    markOnboardingStarted(session);
     await session.save();
 
     return NextResponse.json({

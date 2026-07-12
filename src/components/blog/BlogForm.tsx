@@ -15,18 +15,28 @@ const BlogForm = () => {
       setMessage("Blog post created successfully!");
       setTitle("");
       setContent("");
-    } catch (error) {
+    } catch {
       setMessage("Failed to create blog post.");
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Create a New Blog Post</h1>
-      {message && <p className="mb-4 text-green-500">{message}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-8 sm:py-12">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-ink/45">
+        Content
+      </p>
+      <h1 className="font-display mt-2 text-3xl font-medium tracking-tight text-ink sm:text-4xl">
+        Create a blog post
+      </h1>
+      {message ? (
+        <p className="mt-4 text-sm text-accent">{message}</p>
+      ) : null}
+      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         <div>
-          <label htmlFor="title" className="block font-medium mb-1">
+          <label
+            htmlFor="title"
+            className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45"
+          >
             Title
           </label>
           <input
@@ -34,26 +44,31 @@ const BlogForm = () => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full border-gray-300 rounded-md shadow-sm"
+            className="w-full border-b border-ink/20 bg-transparent py-3 text-base outline-none focus:border-accent"
+            required
           />
         </div>
         <div>
-          <label htmlFor="content" className="block font-medium mb-1">
+          <label
+            htmlFor="content"
+            className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45"
+          >
             Content
           </label>
           <textarea
             id="content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full border-gray-300 rounded-md shadow-sm"
-            rows={10}
-          ></textarea>
+            className="w-full resize-y border border-ink/15 bg-transparent p-4 text-base outline-none focus:border-accent"
+            rows={12}
+            required
+          />
         </div>
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded-md"
+          className="w-full rounded-full bg-ink px-6 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] text-paper sm:w-auto"
         >
-          Create Post
+          Create post
         </button>
       </form>
     </div>

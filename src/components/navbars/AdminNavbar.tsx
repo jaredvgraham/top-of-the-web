@@ -26,12 +26,12 @@ const AdminNavbar = () => {
   if (!isAdminPage || isLogin) return null;
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-ink/10 bg-paper/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
-        <div className="flex items-center gap-8">
+    <nav className="sticky top-0 z-40 max-w-[100vw] overflow-x-hidden border-b border-ink/10 bg-paper/95 backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-8 sm:py-3.5">
+        <div className="flex min-w-0 items-center gap-6 sm:gap-8">
           <Link
             href="/admin"
-            className="font-display text-lg font-medium tracking-tight text-ink"
+            className="font-display shrink-0 text-lg font-medium tracking-tight text-ink"
           >
             Bsites
             <span className="ml-1.5 text-[10px] font-sans font-medium uppercase tracking-[0.2em] text-accent">
@@ -69,13 +69,13 @@ const AdminNavbar = () => {
         <button
           type="button"
           onClick={handleLogout}
-          className="text-sm text-ink/45 transition-colors hover:text-ink"
+          className="shrink-0 rounded-full px-3 py-2 text-sm text-ink/45 transition-colors hover:bg-ink/5 hover:text-ink"
         >
           Log out
         </button>
       </div>
 
-      <div className="flex gap-1 overflow-x-auto border-t border-ink/5 px-5 py-2 sm:hidden">
+      <div className="flex max-w-[100vw] gap-2 overflow-x-auto border-t border-ink/5 px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden">
         {links.map((link) => {
           const active =
             link.href === "/admin"
@@ -85,8 +85,8 @@ const AdminNavbar = () => {
             <Link
               key={link.href}
               href={link.href}
-              className={`shrink-0 px-3 py-1 text-xs font-medium ${
-                active ? "bg-ink text-paper" : "text-ink/50"
+              className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] ${
+                active ? "bg-ink text-paper" : "bg-ink/5 text-ink/55"
               }`}
             >
               {link.label}

@@ -11,7 +11,7 @@ export type OnboardingAsset = {
 export type OnboardingSession = {
   token: string;
   email: string;
-  status: "in_progress" | "completed";
+  status: "not_started" | "in_progress" | "completed";
   currentStep: number;
   contact: {
     name: string;
@@ -85,7 +85,7 @@ export function emptySession(token = ""): OnboardingSession {
   return {
     token,
     email: "",
-    status: "in_progress",
+    status: "not_started",
     currentStep: 0,
     contact: {
       name: "",

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       token,
       email,
       contact: { email },
-      status: "in_progress",
+      status: "not_started",
       currentStep: 0,
     });
 
