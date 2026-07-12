@@ -77,8 +77,30 @@ Required design standard:
 - Spacing, rhythm, and polish that feel art-directed
 - Restraint where it helps, richness where it matters — never cluttered, never bland
 - Every section should look considered, not auto-generated
+- Section boundaries must feel deliberate and elegant — no awkward hard cuts, cramped stacks, uneven gaps, or “template strips” slapped together. Transitions between sections should breathe; use consistent vertical rhythm, thoughtful backgrounds/dividers only when they help, and never leave seams that look unfinished or careless
+- If a layout choice looks lazy, generic, or half-hearted, redo it. The site must feel like someone cared deeply about every screen
 
 If the design would not impress a picky client, keep refining until it would.
+
+## Photo & asset curation (non-negotiable)
+Do NOT dump images onto the page in upload order. Study every photo first, understand what it shows, then place it with intention.
+
+Before using any photo, answer for yourself:
+- What is actually in this image? (people, work, product, space, result, process)
+- Is it flattering and brand-positive, or awkward / unfinished / unflattering?
+- Is it a “before,” an “after,” a process shot, a detail, or a hero-worthy moment?
+- Where does it belong (hero, about, gallery, services proof, before/after pair) — or should it be skipped?
+
+Hard rules for images:
+- Hero image: pick the single most flattering, sharp, brand-forward photo. Prefer finished results, strong people moments, beautiful spaces, or polished work — never a messy “before,” a random mid-process shot, or a weak/unflattering frame just because it was first in the list
+- Before & after: if the gallery includes before/after work, treat them as pairs. Label clearly, keep them together, and never use a “before” as the hero or primary brand image
+- About / owner photo: use the dedicated about photo when provided; don’t substitute a random gallery shot of equipment or a before photo
+- Logo: use the real logo in header/footer; don’t stretch, squash, or bury it
+- Quality filter: skip blurry, poorly lit, duplicate, or off-brand shots rather than forcing every upload onto the page
+- Layout: crop/frame thoughtfully (object-cover with care, not random awkward crops). Give images room — no cramped collages or tiny thumbnails that waste strong photography
+- Prefer their real photos over stock. Only use tasteful stock if the brief truly lacks usable imagery, and never let stock overpower their real work
+
+A rushed “sprinkle photos everywhere” gallery is a failure. Image placement should feel curated by a designer who looked at every file.
 
 ## Stack (keep this consistent with our other client sites)
 - Next.js (App Router)
@@ -90,9 +112,9 @@ If the design would not impress a picky client, keep refining until it would.
 Do not invent a different stack unless the brief explicitly requires it. Add tasteful animations to polish the experience.
 
 ## Build goals
-- Make a real first-viewport hero composition (brand-forward, not a dashboard)
+- Make a real first-viewport hero composition (brand-forward, not a dashboard) with a carefully chosen hero image
 - Use the business description as the source of truth for copy; expand and polish as needed
-- Use provided images where available (logo, about photo, gallery) — download/reference the URLs below
+- Curate provided images (logo, about photo, gallery) after reviewing each URL — do not place them blindly
 - Include clear contact CTA with their business phone/email
 - Keep the design distinctive and on-brand for this specific business
 - Mobile-friendly, fast, and production-ready
@@ -100,6 +122,7 @@ Do not invent a different stack unless the brief explicitly requires it. Add tas
 - Ship something that looks like a premium custom build worth $4,000
 - Use animations to polish interactions and section reveals — keep them intentional, not noisy
 - Full SEO implementation out of the box (metadata, OG tags, sitemap/robots, semantic structure, local relevance)
+- Finish with a visual QA pass focused on section separation, spacing rhythm, and whether every image choice still feels flattering and intentional
 
 ## Contact / quote forms (required)
 Wire form submissions with Nodemailer (same pattern we use on Bsites: Next.js API route + SMTP via env vars like EMAIL / EMAIL_PASS).
@@ -135,7 +158,9 @@ ${line("Existing website", session.business.existingSiteUrl)}
 ${line("Preferred domain", session.extras.preferredDomain)}
 ${line("Notes / must-haves", session.extras.notes)}
 
-## Assets (use these URLs)
+## Assets (review each URL before placing — curate, don’t dump)
+Open and inspect every image. Identify before/after pairs, flattering vs unflattering shots, and which one deserves the hero. Captions below (if any) are hints from the client.
+
 ### Logo
 ${formatAssetList(session, "logo", "None uploaded")}
 
