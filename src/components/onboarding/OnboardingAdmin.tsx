@@ -19,6 +19,36 @@ function formatDate(value?: string | Date) {
   });
 }
 
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Mobile Safari often blocks clipboard after await — fall through.
+  }
+
+  try {
+    const input = document.createElement("textarea");
+    input.value = text;
+    input.setAttribute("readonly", "");
+    input.style.position = "fixed";
+    input.style.top = "0";
+    input.style.left = "0";
+    input.style.opacity = "0";
+    document.body.appendChild(input);
+    input.focus();
+    input.select();
+    input.setSelectionRange(0, text.length);
+    const ok = document.execCommand("copy");
+    document.body.removeChild(input);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 function sessionTitle(session: AdminSession) {
   return (
     session.contact.businessName ||
@@ -53,6 +83,7 @@ export default function OnboardingAdmin() {
   const [createEmail, setCreateEmail] = useState("");
   const [copiedToken, setCopiedToken] = useState("");
   const [promptCopied, setPromptCopied] = useState(false);
+  const [copyHint, setCopyHint] = useState("");
   const [deletingToken, setDeletingToken] = useState("");
   const [filter, setFilter] = useState<
     "all" | "not_started" | "in_progress" | "completed"
@@ -97,6 +128,7 @@ export default function OnboardingAdmin() {
     }
     setCreating(true);
     setError("");
+    setCopyHint("");
     try {
       const response = await fetch("/api/admin/onboarding", {
         method: "POST",
@@ -109,12 +141,18 @@ export default function OnboardingAdmin() {
       }
       setCreateEmail("");
       await load();
-      if (data.url) {
-        await navigator.clipboard.writeText(data.url);
-        setCopiedToken(data.token);
-        window.setTimeout(() => setCopiedToken(""), 2500);
-      }
       selectSession({ ...data.session, url: data.url });
+
+      if (data.url) {
+        const copied = await copyText(data.url);
+        if (copied) {
+          setCopiedToken(data.token);
+          window.setTimeout(() => setCopiedToken(""), 2500);
+        } else {
+          setCopyHint("Created — tap Link to copy on this device");
+          window.setTimeout(() => setCopyHint(""), 4000);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create link");
     } finally {
@@ -126,17 +164,29 @@ export default function OnboardingAdmin() {
     const url =
       session.url ||
       `${window.location.origin}/onboarding/${session.token}`;
-    await navigator.clipboard.writeText(url);
-    setCopiedToken(session.token);
-    window.setTimeout(() => setCopiedToken(""), 2000);
+    const copied = await copyText(url);
+    if (copied) {
+      setCopiedToken(session.token);
+      setCopyHint("");
+      window.setTimeout(() => setCopiedToken(""), 2000);
+    } else {
+      setCopyHint("Couldn’t copy automatically — long-press the Open link");
+      window.setTimeout(() => setCopyHint(""), 4000);
+    }
   };
 
   const copyCursorPrompt = async (session: AdminSession) => {
     const prompt = buildCursorBuildPrompt(session);
-    await navigator.clipboard.writeText(prompt);
-    setPromptCopied(true);
+    const copied = await copyText(prompt);
     setSelected(session);
-    window.setTimeout(() => setPromptCopied(false), 2500);
+    if (copied) {
+      setPromptCopied(true);
+      setCopyHint("");
+      window.setTimeout(() => setPromptCopied(false), 2500);
+    } else {
+      setCopyHint("Couldn’t copy — use Download .md instead");
+      window.setTimeout(() => setCopyHint(""), 4000);
+    }
   };
 
   const downloadCursorPrompt = (session: AdminSession) => {
@@ -260,6 +310,7 @@ export default function OnboardingAdmin() {
           Cursor build prompt copied — paste it into a new chat
         </p>
       ) : null}
+      {copyHint ? <p className="mb-3 text-sm text-ink/55">{copyHint}</p> : null}
       {error ? <p className="mb-3 text-sm text-red-600">{error}</p> : null}
 
       {loading ? (
