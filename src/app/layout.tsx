@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Fraunces, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/navbars/Navbar";
-
 import AdminNavbar from "@/components/navbars/AdminNavbar";
+import MetaPixel from "@/components/analytics/MetaPixel";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -33,8 +33,8 @@ export default function RootLayout({
       <body
         className={`${fraunces.variable} ${spaceGrotesk.variable} bg-paper font-sans text-ink max-w-full overflow-x-hidden`}
       >
+        <MetaPixel />
         <Navbar />
-
         <AdminNavbar />
         {children}
       </body>

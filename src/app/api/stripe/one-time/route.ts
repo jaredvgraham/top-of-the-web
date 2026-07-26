@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
         },
       ],
 
-      success_url: `https://www.bsites.io/thank-you`,
+      success_url: `https://www.bsites.io/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `https://www.bsites.io/pricing`,
     });
 

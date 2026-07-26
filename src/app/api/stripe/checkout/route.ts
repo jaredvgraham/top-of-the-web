@@ -9,46 +9,53 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const PACK_NAME = "Managed Website Plan";
 const PLAN_NAME = "Managed Website Plan";
 
-async function getCustomerIdByEmail(email: string) {
+async function getCustomerByEmail(email: string) {
   await dbConnect();
-  const customer = await Customer.findOne({ email });
-  if (!customer) {
-    return null;
-  }
-  return customer.customerId;
+  return Customer.findOne({ email });
 }
 
-async function saveCustomerId(customerId: string, email: string) {
-  await dbConnect();
-  const customer = new Customer({
+async function getOrCreateCustomerId(email: string, phone: string) {
+  const existing = await getCustomerByEmail(email);
+  if (existing?.customerId) {
+    if (phone && existing.phone !== phone) {
+      existing.phone = phone;
+      await existing.save();
+      try {
+        await stripe.customers.update(existing.customerId, { phone });
+      } catch {
+        // non-fatal
+      }
+    }
+    return existing.customerId;
+  }
+
+  const customer = await stripe.customers.create({
     email,
-    customerId,
+    ...(phone ? { phone } : {}),
   });
-  await customer.save();
+  await dbConnect();
+  await new Customer({
+    email,
+    customerId: customer.id,
+    phone: phone || "",
+  }).save();
+  return customer.id;
 }
 
-async function getOrCreateCustomerId(email: string) {
-  let customerId = await getCustomerIdByEmail(email);
-  if (!customerId) {
-    const customer = await stripe.customers.create({ email });
-    customerId = customer.id;
-    await saveCustomerId(customerId, email);
-  }
-  return customerId;
-}
-
-async function createOrder(email: string) {
+async function createOrder(email: string, phone: string) {
   await dbConnect();
   const order = await Order.findOne({ email });
   if (order) {
     order.pack = PACK_NAME;
     order.plan = PLAN_NAME;
     order.progress = 0;
+    if (phone) order.phone = phone;
     await order.save();
     return;
   }
   const newOrder = new Order({
     email,
+    phone: phone || "",
     pack: PACK_NAME,
     plan: PLAN_NAME,
     progress: 0,
@@ -57,9 +64,16 @@ async function createOrder(email: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const { email } = await req.json();
+  const body = await req.json();
+  const email =
+    typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const phone = typeof body?.phone === "string" ? body.phone.trim() : "";
+  const previewSlug =
+    typeof body?.previewSlug === "string"
+      ? body.previewSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "")
+      : "";
 
-  if (!email || typeof email !== "string") {
+  if (!email) {
     return NextResponse.json({ message: "Email is required" }, { status: 400 });
   }
 
@@ -73,26 +87,43 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const customerId = await getOrCreateCustomerId(email);
-    await createOrder(email);
+    const customerId = await getOrCreateCustomerId(email, phone);
+    await createOrder(email, phone);
 
     const origin = req.headers.get("origin") || "https://www.bsites.io";
+    const cancelUrl = previewSlug
+      ? `${origin}/preview/${previewSlug}/claim`
+      : `${origin}/pricing`;
 
-    const session = await stripe.checkout.sessions.create({
+    const metadata: Record<string, string> = {};
+    if (previewSlug) metadata.previewSlug = previewSlug;
+    if (phone) metadata.phone = phone;
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
       customer: customerId,
       line_items: [{ price: freePriceId, quantity: 1 }],
       mode: "subscription",
-      custom_fields: [
+      success_url: `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl,
+    };
+
+    if (Object.keys(metadata).length) {
+      sessionParams.metadata = metadata;
+    }
+
+    // Pricing-page checkouts still collect phone in Stripe when we don't have it yet
+    if (!phone) {
+      sessionParams.custom_fields = [
         {
           key: "phone_number",
           label: { type: "custom", custom: "Phone Number" },
           type: "text",
         },
-      ],
-      success_url: `${origin}/thank-you`,
-      cancel_url: `${origin}/pricing`,
-    });
+      ];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return NextResponse.json({ url: session.url });
   } catch (error: unknown) {

@@ -530,7 +530,7 @@ export async function scrapeFacebookPageLocally(
     const photoLinks = unique(photoLinkPool)
       .map((href) => absolutize(href, wwwUrl))
       .filter(Boolean)
-      .slice(0, 12);
+      .slice(0, 36);
 
     logSection("PHOTO LINKS TO FOLLOW", {
       totalFound: unique(photoLinkPool).length,
@@ -565,7 +565,7 @@ export async function scrapeFacebookPageLocally(
 
   const photoUrls = pickBestFacebookPhotoUrls(
     [...imagePool, ...networkImages],
-    40
+    60
   );
 
   if (profilePictureUrl && !isUsefulPhotoUrl(profilePictureUrl)) {

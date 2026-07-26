@@ -40,6 +40,11 @@ const Navbar = () => {
 
   if (isAdminPage) return null;
 
+  // Hide marketing chrome on generated preview sites so SiteSpec renders full-bleed.
+  const isGeneratedPreview =
+    pathname.startsWith("/preview/") && pathname !== "/preview";
+  if (isGeneratedPreview) return null;
+
   return (
     <>
       <header

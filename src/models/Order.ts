@@ -8,6 +8,8 @@ export interface IOrder extends mongoose.Document {
   pack: string;
   plan: string;
   success: boolean;
+  /** Prevents duplicate purchase confirmation emails on Stripe webhook retries. */
+  confirmationEmailSent?: boolean;
 }
 
 const OrderSchema = new mongoose.Schema<IOrder>(
@@ -32,6 +34,10 @@ const OrderSchema = new mongoose.Schema<IOrder>(
       required: true,
     },
     success: {
+      type: Boolean,
+      default: false,
+    },
+    confirmationEmailSent: {
       type: Boolean,
       default: false,
     },

@@ -275,8 +275,8 @@ export async function fetchFacebookPageData(
     "location",
     "picture.type(large)",
     "cover",
-    "photos.limit(40).type(uploaded){images,name}",
-    "posts.limit(25){message,full_picture,created_time}",
+    "photos.limit(60).type(uploaded){images,name}",
+    "posts.limit(40){message,full_picture,created_time}",
   ].join(",");
 
   const page = await graphGet<PageGraphResponse>(pageKey, { fields });
@@ -658,17 +658,19 @@ export async function importFacebookImagesToBlob(
 
   try {
     if (data.profilePictureUrl) {
-      const logo = await downloadAndStoreImage({
+      // Save as photo — vision decides if it's a real logo. Profile portraits
+      // must not auto-become the site logo.
+      const profile = await downloadAndStoreImage({
         sourceUrl: data.profilePictureUrl,
         token: onboardingToken,
-        kind: "logo",
+        kind: "photo",
         filenameHint: "profile",
         caption: "Facebook profile picture",
         request,
       });
-      if (logo) {
-        console.log(`[fb-import] saved profile/logo`);
-        assets.push(logo);
+      if (profile) {
+        console.log(`[fb-import] saved profile photo`);
+        assets.push(profile);
       } else {
         console.log(`[fb-import] FAILED profile: ${data.profilePictureUrl}`);
       }
@@ -695,10 +697,10 @@ export async function importFacebookImagesToBlob(
       data.photoUrls.filter(
         (url) => url !== data.profilePictureUrl && url !== data.coverPhotoUrl
       ),
-      40
+      60
     );
 
-    for (let i = 0; i < gallerySources.length && assets.length < 28; i += 1) {
+    for (let i = 0; i < gallerySources.length && assets.length < 48; i += 1) {
       const imported = await downloadAndStoreImage({
         sourceUrl: gallerySources[i],
         token: onboardingToken,

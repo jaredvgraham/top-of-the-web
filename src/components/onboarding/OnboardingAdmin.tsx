@@ -85,6 +85,10 @@ export default function OnboardingAdmin() {
   const [fbPageUrl, setFbPageUrl] = useState("");
   const [fbImporting, setFbImporting] = useState(false);
   const [fbResult, setFbResult] = useState("");
+  const [siteEmail, setSiteEmail] = useState("");
+  const [siteUrl, setSiteUrl] = useState("");
+  const [siteImporting, setSiteImporting] = useState(false);
+  const [siteResult, setSiteResult] = useState("");
   const [copiedToken, setCopiedToken] = useState("");
   const [copiedLabel, setCopiedLabel] = useState("");
   const [promptCopied, setPromptCopied] = useState(false);
@@ -153,6 +157,7 @@ export default function OnboardingAdmin() {
     setError("");
     setCopyHint("");
     setFbResult("");
+    setSiteResult("");
     try {
       const response = await fetch("/api/admin/onboarding", {
         method: "POST",
@@ -199,6 +204,7 @@ export default function OnboardingAdmin() {
     setFbImporting(true);
     setError("");
     setFbResult("");
+    setSiteResult("");
     setCopyHint("");
     try {
       const response = await fetch("/api/admin/onboarding/facebook", {
@@ -235,6 +241,65 @@ export default function OnboardingAdmin() {
       setError(err instanceof Error ? err.message : "Facebook import failed");
     } finally {
       setFbImporting(false);
+    }
+  };
+
+  const importWebsite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = siteEmail.trim();
+    const url = siteUrl.trim();
+    if (!email) {
+      setError("Enter the client’s email for the website import.");
+      return;
+    }
+    if (!url) {
+      setError("Paste the website URL.");
+      return;
+    }
+
+    setSiteImporting(true);
+    setError("");
+    setSiteResult("");
+    setFbResult("");
+    setCopyHint("");
+    try {
+      const response = await fetch("/api/admin/onboarding/website", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, siteUrl: url }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Website import failed");
+      }
+
+      setSiteEmail("");
+      setSiteUrl("");
+      await load();
+      selectSession({ ...data.session, url: data.url });
+
+      const photoCount = data.imported?.photoCount ?? 0;
+      const siteName = data.imported?.siteName || "Website";
+      const usedAi = Boolean(data.imported?.usedAi);
+      const pages = data.imported?.pagesScraped ?? 0;
+      setSiteResult(
+        `Imported ${siteName} (${pages} page${
+          pages === 1 ? "" : "s"
+        }, ${photoCount} photo${photoCount === 1 ? "" : "s"})${
+          usedAi ? " — AI cleaned fields" : " — raw scrape mapping"
+        }. Brief is ready to review.`
+      );
+
+      if (data.url) {
+        const copied = await copyText(data.url);
+        if (copied) {
+          markLinkCopied({ ...data.session, url: data.url });
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Website import failed");
+    } finally {
+      setSiteImporting(false);
     }
   };
 
@@ -436,9 +501,72 @@ export default function OnboardingAdmin() {
         </button>
       </form>
 
+      <form
+        onSubmit={importWebsite}
+        className="mb-6 space-y-4 rounded-3xl border border-ink/15 bg-paper p-5 sm:mb-8 sm:p-6"
+      >
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45">
+            Import from website
+          </p>
+          <p className="mt-2 text-sm text-ink/55">
+            Paste their existing site URL — we scrape key pages, OpenAI cleans
+            the brief, and we import logos/photos. Best from local admin (
+            <code className="text-xs">npm run dev</code>) with{" "}
+            <code className="text-xs">OPENAI_API_KEY</code> set.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45">
+              Client email
+            </label>
+            <input
+              type="email"
+              required
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              value={siteEmail}
+              onChange={(e) => setSiteEmail(e.target.value)}
+              placeholder="client@email.com"
+              className="w-full border-b border-ink/20 bg-transparent py-3 text-base outline-none focus:border-accent"
+            />
+          </div>
+          <div className="min-w-0">
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45">
+              Website URL
+            </label>
+            <input
+              type="url"
+              required
+              value={siteUrl}
+              onChange={(e) => setSiteUrl(e.target.value)}
+              placeholder="https://theirbusiness.com"
+              className="w-full border-b border-ink/20 bg-transparent py-3 text-base outline-none focus:border-accent"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={siteImporting}
+          className="w-full rounded-full bg-accent px-6 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] text-paper disabled:opacity-60 sm:w-auto"
+        >
+          {siteImporting ? "Scraping site & photos…" : "Import website"}
+        </button>
+      </form>
+
       {fbResult ? (
         <p className="mb-3 rounded-2xl border border-accent/25 bg-accent/10 px-4 py-3 text-sm text-accent">
           {fbResult}
+        </p>
+      ) : null}
+
+      {siteResult ? (
+        <p className="mb-3 rounded-2xl border border-accent/25 bg-accent/10 px-4 py-3 text-sm text-accent">
+          {siteResult}
         </p>
       ) : null}
 

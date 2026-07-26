@@ -4,6 +4,9 @@ import {
   buildBusinessDescription,
   buildFacebookImportNotes,
 } from "@/lib/facebookPageImport";
+import type { WebsiteScrapeData } from "@/lib/websiteScrape";
+import { buildWebsiteImportNotes } from "@/lib/websiteScrape";
+import { resolveOpenAiTextModel } from "@/lib/preview/openaiModels";
 
 export type CleanedOnboardingFields = {
   contact: {
@@ -309,7 +312,7 @@ export async function cleanFacebookDataForOnboarding(
     return { fields: fallback, usedAi: false };
   }
 
-  const model = process.env.OPENAI_MODEL?.trim() || "gpt-5.4-mini";
+  const model = resolveOpenAiTextModel();
   const client = new OpenAI({ apiKey });
 
   const scrapePayload = {
@@ -350,7 +353,7 @@ export async function cleanFacebookDataForOnboarding(
 Rules:
 - Use only facts supported by the scrape. Do not invent phone numbers, emails, addresses, or owners.
 - If owner names are unknown, set ownerNames to [""] and name to "".
-- businessName should be the public trade name (title case, no "| Facebook").
+- businessName should be the public trade name (title case, no "| Facebook"). Do NOT append city/town/state unless that place is clearly part of the brand name (usually at the start). Strip trailing location like " - Plymouth" or " Plymouth, MA".
 - description: 2–5 clear sentences about what the business does, who they serve, and where — website-ready, no login-wall / cookie / Meta chrome text.
 - city/state: US city + 2-letter state when possible.
 - serviceArea: short phrase (city/region or "Buzzards Bay, MA and surrounding areas").
@@ -359,7 +362,7 @@ Rules:
 - preferredDomain: hostname of existingSiteUrl without www, else "".
 - brand.tagline: short punchy line only if strongly implied; else "".
 - brand.colors / fontsVibe: only if clearly stated; else "".
-- content.servicesProducts: bullet-like plain text list of services inferred from category/about/posts.
+- content.servicesProducts: bullet-like plain text list of services inferred from category/about/posts. Stay inside THIS business's actual trade only (e.g. power washing → house/driveway/deck/soft wash — never invent vinyl siding, roofing, or unrelated trades because posts show houses).
 - content.aboutCopy: polished 1–2 paragraph about section when enough signal; else "".
 - content.pagesNeeded: comma-separated likely pages (e.g. "Home, Services, Gallery, About, Contact").
 - content.primaryCta: e.g. "Get a free estimate" when appropriate.
@@ -402,6 +405,190 @@ Rules:
     console.warn(
       "[fb-ai] cleanup failed — using fallback",
       error instanceof Error ? error.message : error,
+    );
+    return { fields: fallback, usedAi: false };
+  }
+}
+
+/** Deterministic fallback when OpenAI is unavailable. */
+export function mapWebsiteDataToOnboardingFields(
+  site: WebsiteScrapeData,
+  fallbackEmail: string
+): CleanedOnboardingFields {
+  const email = (site.email || fallbackEmail).toLowerCase();
+  const website = normalizeWebsite(site.website || site.siteUrl);
+  const description =
+    [site.about, site.description].filter(Boolean).join("\n\n") ||
+    `${site.name || "Business"} website import — add more detail if needed.`;
+
+  return {
+    contact: {
+      name: "",
+      ownerNames: [""],
+      email,
+      phone: site.phone ? normalizeUsPhone(site.phone) : "",
+      businessName: site.name || "",
+    },
+    business: {
+      description,
+      city: site.city || "",
+      state: site.state || "",
+      idealCustomers: "",
+      serviceArea: site.addressLine || "",
+      existingSiteUrl: website,
+    },
+    brand: {
+      colors: "",
+      fontsVibe: "",
+      tagline: site.tagline || "",
+    },
+    content: {
+      pagesNeeded: site.pagesVisited
+        .map((url) => {
+          try {
+            return new URL(url).pathname.replace(/\/$/, "") || "Home";
+          } catch {
+            return url;
+          }
+        })
+        .join(", "),
+      aboutCopy: site.about || "",
+      servicesProducts: site.services.join("\n"),
+      faqs: "",
+      primaryCta: "",
+    },
+    extras: {
+      preferredDomain: preferredDomainFromWebsite(website),
+      inspirationLinks: [site.siteUrl, ...site.socialLinks]
+        .filter(Boolean)
+        .join("\n"),
+      notes: buildWebsiteImportNotes(site),
+    },
+  };
+}
+
+/**
+ * Use OpenAI to turn a scraped website into clean onboarding fields.
+ */
+export async function cleanWebsiteDataForOnboarding(
+  site: WebsiteScrapeData,
+  fallbackEmail: string
+): Promise<{ fields: CleanedOnboardingFields; usedAi: boolean }> {
+  const fallback = mapWebsiteDataToOnboardingFields(site, fallbackEmail);
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) {
+    console.warn(
+      "[site-ai] OPENAI_API_KEY missing — using raw scrape field mapping"
+    );
+    return { fields: fallback, usedAi: false };
+  }
+
+  const model = resolveOpenAiTextModel();
+  const client = new OpenAI({ apiKey });
+
+  const scrapePayload = {
+    siteUrl: site.siteUrl,
+    name: site.name,
+    tagline: site.tagline,
+    about: site.about,
+    description: site.description.slice(0, 2500),
+    phone: site.phone,
+    email: site.email,
+    website: site.website,
+    city: site.city,
+    state: site.state,
+    addressLine: site.addressLine,
+    services: site.services,
+    pagesVisited: site.pagesVisited,
+    socialLinks: site.socialLinks,
+    pageSummaries: site.pageSummaries.map((p) => ({
+      url: p.url,
+      title: p.title,
+      h1: p.h1,
+      metaDescription: p.metaDescription,
+      headings: p.headings.slice(0, 15),
+      bodyText: p.bodyText.slice(0, 2000),
+    })),
+    imageCount: site.imageUrls.length,
+    fallbackEmail,
+  };
+
+  try {
+    console.log(`[site-ai] cleaning scrape with ${model}`);
+    const completion = await client.chat.completions.create({
+      model,
+      temperature: 0.2,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "onboarding_fields",
+          strict: true,
+          schema: CLEANUP_SCHEMA,
+        },
+      },
+      messages: [
+        {
+          role: "system",
+          content: `You clean an existing business website scrape into a website rebuild onboarding brief.
+
+Rules:
+- Use only facts supported by the scrape. Do not invent phone numbers, emails, addresses, or owners.
+- If owner names are unknown, set ownerNames to [""] and name to "".
+- businessName: public trade name (clean title case; strip "Home", "Welcome", "| WordPress").
+- description: 2–5 clear sentences about what they do, who they serve, and where — website-ready.
+- city/state: US city + 2-letter state when possible.
+- serviceArea: short phrase from address/copy.
+- idealCustomers: one short sentence when inferable; else "".
+- existingSiteUrl: the scraped site URL.
+- preferredDomain: hostname without www.
+- brand.tagline: from H1/hero if it's a real tagline; else "".
+- brand.colors / fontsVibe: only if clearly stated in copy; else "".
+- content.servicesProducts: plain-text list of services from headings/pages.
+- content.aboutCopy: polished about section from About page / meta when available.
+- content.pagesNeeded: pages this business should keep (e.g. "Home, Services, Gallery, About, Contact").
+- content.primaryCta: common CTA from the site if clear (e.g. "Get a free quote").
+- content.faqs: only if FAQ content was scraped; else "".
+- extras.inspirationLinks: site URL plus any social links found.
+- extras.notes: brief notes for the designer (source site, pages scraped, gaps).
+- phone: US format like (774) 487-7616 when possible.
+- email: lowercase; prefer scrape email, else fallbackEmail.
+- Ignore cookie banners, nav chrome, and boilerplate legal text.`,
+        },
+        {
+          role: "user",
+          content: `Clean this website scrape into onboarding fields:\n\n${JSON.stringify(
+            scrapePayload,
+            null,
+            2
+          )}`,
+        },
+      ],
+    });
+
+    const text = completion.choices[0]?.message?.content || "";
+    if (!text) {
+      console.warn("[site-ai] empty model response — using fallback");
+      return { fields: fallback, usedAi: false };
+    }
+
+    const parsed = JSON.parse(text) as unknown;
+    const fields = coerceCleanedFields(parsed, fallback);
+    // Always keep the scraped site as existingSiteUrl
+    fields.business.existingSiteUrl =
+      fields.business.existingSiteUrl || fallback.business.existingSiteUrl;
+    console.log("[site-ai] cleanup ok", {
+      businessName: fields.contact.businessName,
+      city: fields.business.city,
+      state: fields.business.state,
+      phone: fields.contact.phone,
+      website: fields.business.existingSiteUrl,
+      descriptionChars: fields.business.description.length,
+    });
+    return { fields, usedAi: true };
+  } catch (error) {
+    console.warn(
+      "[site-ai] cleanup failed — using fallback",
+      error instanceof Error ? error.message : error
     );
     return { fields: fallback, usedAi: false };
   }

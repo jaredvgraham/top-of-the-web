@@ -5,6 +5,8 @@ import Order from "@/models/Order";
 import dbConnect from "@/lib/db";
 import { findCustomerByEmail } from "@/models/Customer";
 import Website from "@/models/WebsiteModel";
+import Preview from "@/models/Preview";
+import { sendPurchaseConfirmationEmail } from "@/lib/mail";
 import {
   getSubscriptionInfoForCustomer,
   summarizeSubscriptions,
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
       let productName = "";
       let amount = 0;
       for (const item of lineItems.data) {
-        if (!item.price) return;
+        if (!item.price) continue;
 
         const price = item.price as Stripe.Price;
         if (price.product && typeof price.product === "string") {
@@ -58,22 +60,39 @@ export async function POST(req: NextRequest) {
           productName = product.name;
         }
 
-        const quantity = item.quantity;
-        amount = item.amount_total;
+        amount = item.amount_total || 0;
 
         console.log("Product Name", productName);
-        console.log("Quantity", quantity);
+        console.log("Quantity", item.quantity);
         console.log("Amount", amount);
       }
 
-      const email = session.customer_details?.email;
+      const email = (
+        session.customer_details?.email ||
+        session.customer_email ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
       const phoneCustomField = session.custom_fields?.find(
         (field) => field.key === "phone_number"
       );
-      const phone = phoneCustomField?.text?.value;
+      const phoneFromCheckout =
+        session.metadata?.phone ||
+        phoneCustomField?.text?.value ||
+        session.customer_details?.phone ||
+        "";
+      const previewSlug = (session.metadata?.previewSlug || "").trim();
 
-      console.log("Customer phone: ", phone);
+      console.log("Customer phone: ", phoneFromCheckout);
       console.log("Customer email: ", email);
+
+      if (!email) {
+        return NextResponse.json({
+          status: "error",
+          message: "Checkout session missing email",
+        });
+      }
 
       const order = await Order.findOne({ email });
       if (!order) {
@@ -82,33 +101,67 @@ export async function POST(req: NextRequest) {
           message: "Order not found",
         });
       }
-      order.phone = phone as string;
+      const phone = (phoneFromCheckout || order.phone || "").trim();
+      if (phone) order.phone = phone;
+
+      let website = await Website.findOne({ email }).sort({ createdAt: -1 });
+      if (!website) {
+        website = await Website.create({
+          email,
+          pack: order.pack,
+          plan: order.plan,
+          name: "",
+          description: "",
+          url: "",
+        });
+      }
+
       order.success = true;
       await order.save();
 
-      const website = new Website({
-        email,
-        pack: order.pack,
-        plan: order.plan,
-        name: "",
-        description: "",
-        url: "",
-      });
-      await website.save();
-
-      const customer = await findCustomerByEmail(email as string);
+      const customer = await findCustomerByEmail(email);
       if (!customer) {
         return NextResponse.json({
           status: "error",
           message: "Customer not found",
         });
       }
-      customer.phone = phone as string;
+      if (phone) customer.phone = phone;
       customer.subscriptionStatus = "active";
       await customer.save();
 
       if (customer.customerId) {
         await syncCustomerSubscription(customer.customerId);
+      }
+
+      if (!order.confirmationEmailSent) {
+        let businessName = "";
+        if (previewSlug) {
+          const preview = await Preview.findOne({ slug: previewSlug })
+            .select("siteSpec")
+            .lean();
+          const siteSpec = preview?.siteSpec as
+            | { business?: { name?: string } }
+            | undefined;
+          businessName = siteSpec?.business?.name || "";
+        }
+
+        try {
+          await sendPurchaseConfirmationEmail({
+            to: email,
+            websiteId: String(website._id),
+            pack: order.pack,
+            plan: order.plan || productName || "Managed Website Plan",
+            phone,
+            businessName,
+            previewSlug: previewSlug || undefined,
+          });
+          order.confirmationEmailSent = true;
+          await order.save();
+          console.log("[webhook] confirmation email sent", email);
+        } catch (mailError) {
+          console.error("[webhook] confirmation email failed", mailError);
+        }
       }
     }
 
@@ -132,8 +185,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ status: "success", event: event.type });
-  } catch (err: any) {
-    console.log("Webhook Error", err.message);
-    return NextResponse.json({ status: "error", message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Webhook error";
+    console.log("Webhook Error", message);
+    return NextResponse.json({ status: "error", message });
   }
 }
