@@ -1,0 +1,12 @@
+# Scrape service (Playwright) — run separately from the Next.js app on Vercel.
+services:
+  scrape:
+    build: ./services/scrape
+    ports:
+      - "8787:8787"
+    environment:
+      PORT: "8787"
+      SCRAPE_SERVICE_SECRET: ${SCRAPE_SERVICE_SECRET:-dev-scrape-secret}
+    volumes:
+      - ./services/scrape/tmp:/app/tmp
+    restart: unless-stopped

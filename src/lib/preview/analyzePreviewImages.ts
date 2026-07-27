@@ -84,7 +84,7 @@ export async function analyzePreviewImages(
 ): Promise<PreviewImageAnalysis[]> {
   const candidates = assets
     .filter((a) => a.url && /^https?:\/\//i.test(a.url))
-    .slice(0, 24);
+    .slice(0, 12);
 
   if (!candidates.length) return [];
 
@@ -105,8 +105,14 @@ export async function analyzePreviewImages(
   const results: PreviewImageAnalysis[] = new Array(candidates.length);
   let failedBatches = 0;
 
-  const batchSize = 4;
+  const batchSize = 6;
+  const batchStarts: number[] = [];
   for (let start = 0; start < candidates.length; start += batchSize) {
+    batchStarts.push(start);
+  }
+
+  // Run up to 2 vision batches in parallel
+  const runBatch = async (start: number) => {
     const batch = candidates.slice(start, batchSize + start);
     let ok = false;
     for (let attempt = 1; attempt <= 2 && !ok; attempt += 1) {
@@ -132,10 +138,15 @@ export async function analyzePreviewImages(
     if (!ok) {
       failedBatches += 1;
       batch.forEach((asset, i) => {
-        // Conservative: unknown quality, never hero, never pretend flattering
         results[start + i] = heuristicAnalysis(asset, false);
       });
     }
+  };
+
+  for (let i = 0; i < batchStarts.length; i += 2) {
+    await Promise.all(
+      batchStarts.slice(i, i + 2).map((start) => runBatch(start))
+    );
   }
 
   if (failedBatches > 0) {
@@ -209,13 +220,13 @@ Be specific in subject + classification (e.g. "freshly power-washed white coloni
       type: "image_url",
       image_url: {
         url: asset.url,
-        detail: "high",
+        detail: "low",
       },
     });
   });
 
   console.log(
-    `[preview-vision] classifying ${batch.length} images (offset ${indexOffset}) with ${model} detail=high`
+    `[preview-vision] classifying ${batch.length} images (offset ${indexOffset}) with ${model} detail=low`
   );
 
   const completion = await client.chat.completions.create({

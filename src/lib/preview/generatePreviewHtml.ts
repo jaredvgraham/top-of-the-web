@@ -117,7 +117,7 @@ export async function generatePreviewHtml(input: {
         }))
   )
     .filter((img) => /^https?:\/\//i.test(img.url))
-    .slice(0, 12);
+    .slice(0, 8);
 
   const brief = {
     businessName: input.businessName,
@@ -145,7 +145,7 @@ export async function generatePreviewHtml(input: {
           serviceAreas: input.research.serviceAreas,
         }
       : null,
-    imageGuide: input.imageAnalyses.slice(0, 20).map((a) => ({
+    imageGuide: input.imageAnalyses.slice(0, 12).map((a) => ({
       url: a.url,
       classification: a.classification || a.subject,
       role: a.roleSuggestion,
@@ -165,19 +165,12 @@ export async function generatePreviewHtml(input: {
     design,
   };
 
-  // Sequential pages — avoids truncated unfinished multi-page JSON
-  console.log(`[preview-html] home via ${model}`);
-  const home = await generateOnePage(client, model, "home", shared, images);
-  console.log(`[preview-html] services via ${model}`);
-  const services = await generateOnePage(
-    client,
-    model,
-    "services",
-    shared,
-    images
-  );
-  console.log(`[preview-html] about via ${model}`);
-  const about = await generateOnePage(client, model, "about", shared, images);
+  console.log(`[preview-html] pages (home/services/about) via ${model} in parallel`);
+  const [home, services, about] = await Promise.all([
+    generateOnePage(client, model, "home", shared, images),
+    generateOnePage(client, model, "services", shared, images),
+    generateOnePage(client, model, "about", shared, images),
+  ]);
 
   const pages = {
     home: assertCompletePage(home, "home"),
@@ -283,7 +276,7 @@ CRITICAL:
     });
     content.push({
       type: "image_url",
-      image_url: { url: img.url, detail: "high" },
+      image_url: { url: img.url, detail: "low" },
     });
   });
 
@@ -292,7 +285,7 @@ CRITICAL:
     try {
       const completion = await client.chat.completions.create({
         model,
-        max_completion_tokens: 48000,
+        max_completion_tokens: 32000,
         response_format: {
           type: "json_schema",
           json_schema: {

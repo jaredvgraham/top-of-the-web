@@ -9,9 +9,9 @@ import {
 } from "@/lib/onboarding";
 import {
   importWebsiteImagesToBlob,
-  scrapeWebsiteLocally,
   type WebsiteScrapeData,
 } from "@/lib/websiteScrape";
+import { scrapeWebsite, scrapeServiceConfigured } from "@/lib/scrapeClient";
 import {
   cleanWebsiteDataForOnboarding,
   openaiConfigured,
@@ -22,9 +22,10 @@ export const maxDuration = 120;
 
 export async function GET() {
   return NextResponse.json({
-    configured: true,
+    configured: scrapeServiceConfigured(),
+    scrapeServiceConfigured: scrapeServiceConfigured(),
     openaiConfigured: openaiConfigured(),
-    mode: "live-scrape",
+    mode: "scrape-service",
   });
 }
 
@@ -116,13 +117,13 @@ export async function POST(req: NextRequest) {
     }
 
     const origin = req.headers.get("origin") || undefined;
-    const site = await scrapeWebsiteLocally(siteUrl);
+    const site = await scrapeWebsite(siteUrl);
 
     if (!site.name && !site.imageUrls.length && !site.about && !site.description) {
       return NextResponse.json(
         {
           message:
-            "Scrape returned almost nothing — the site may be blocked or down. Check the URL and try again locally.",
+            "Scrape returned almost nothing — the site may be blocked or down. Check the URL and try again.",
         },
         { status: 422 }
       );

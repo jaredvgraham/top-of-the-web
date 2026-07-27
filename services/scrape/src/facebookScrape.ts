@@ -1,8 +1,9 @@
-import type { FacebookPageImportData } from "@/lib/facebookPageImport";
+import type { FacebookPageImportData } from "./types.js";
 import {
   isFacebookChromeImageUrl,
   pickBestFacebookPhotoUrls,
-} from "@/lib/facebookPageImport";
+} from "./facebookPhotoHelpers.js";
+import { patchPlaywrightContext } from "./playwrightCompat.js";
 
 function normalizeFacebookUrl(input: string) {
   const raw = input.trim();
@@ -327,8 +328,8 @@ async function collectMeta(page: {
   }, page.url());
 }
 
-/** Playwright scrape — intended for local `next dev` / local Node, not Vercel. */
-export async function scrapeFacebookPageLocally(
+/** Playwright scrape of a public Facebook page. */
+export async function scrapeFacebookPage(
   pageUrlInput: string
 ): Promise<FacebookPageImportData> {
   let chromium: typeof import("playwright").chromium;
@@ -365,6 +366,7 @@ export async function scrapeFacebookPageLocally(
     viewport: { width: 1280, height: 1600 },
     locale: "en-US",
   });
+  await patchPlaywrightContext(context);
   const page = await context.newPage();
 
   // Capture every image-like network response — most reliable on FB.
@@ -497,9 +499,9 @@ export async function scrapeFacebookPageLocally(
     });
     await dismissCookieNoise(page);
     await sleep(2000);
-    for (let i = 0; i < 5; i += 1) {
+    for (let i = 0; i < 3; i += 1) {
       await page.mouse.wheel(0, 2200);
-      await sleep(800);
+      await sleep(600);
     }
     absorb("www/home+scroll", await collectMeta(page));
 
@@ -530,7 +532,7 @@ export async function scrapeFacebookPageLocally(
     const photoLinks = unique(photoLinkPool)
       .map((href) => absolutize(href, wwwUrl))
       .filter(Boolean)
-      .slice(0, 36);
+      .slice(0, 12);
 
     logSection("PHOTO LINKS TO FOLLOW", {
       totalFound: unique(photoLinkPool).length,
@@ -565,7 +567,7 @@ export async function scrapeFacebookPageLocally(
 
   const photoUrls = pickBestFacebookPhotoUrls(
     [...imagePool, ...networkImages],
-    60
+    24
   );
 
   if (profilePictureUrl && !isUsefulPhotoUrl(profilePictureUrl)) {

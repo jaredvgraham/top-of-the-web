@@ -82,7 +82,7 @@ ${JSON.stringify(textPayload, null, 2)}`,
     },
   ];
 
-  images.slice(0, 10).forEach((img, index) => {
+  images.slice(0, 8).forEach((img, index) => {
     content.push({
       type: "text",
       text: `PHOTO ${index}\nURL (use exactly when placing): ${img.url}\nVision classification: ${img.label}`,
@@ -91,7 +91,7 @@ ${JSON.stringify(textPayload, null, 2)}`,
       type: "image_url",
       image_url: {
         url: img.url,
-        detail: "high",
+        detail: "low",
       },
     });
   });
@@ -541,7 +541,7 @@ export async function generateSiteSpec(
         }))
   )
     .filter((img) => /^https?:\/\//i.test(img.url))
-    .slice(0, 14);
+    .slice(0, 8);
 
   const imageIndexMap = Object.fromEntries(
     imagesForModel.map((img, index) => [String(index), img.url])
@@ -613,7 +613,7 @@ export async function generateSiteSpec(
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
       console.log(
-        `[preview-ai] SiteSpec attempt ${attempt} with ${model} (${imagesForModel.length} images attached detail=high)`
+        `[preview-ai] SiteSpec attempt ${attempt} with ${model} (${imagesForModel.length} images attached detail=low)`
       );
       const raw = await callOpenAiOnce(
         client,

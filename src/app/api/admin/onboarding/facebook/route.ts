@@ -14,7 +14,7 @@ import {
   normalizeScrapedFacebookPayload,
   type FacebookPageImportData,
 } from "@/lib/facebookPageImport";
-import { scrapeFacebookPageLocally } from "@/lib/facebookLocalScrape";
+import { scrapeFacebookPage, scrapeServiceConfigured } from "@/lib/scrapeClient";
 import {
   cleanFacebookDataForOnboarding,
   openaiConfigured,
@@ -25,10 +25,11 @@ export const maxDuration = 120;
 
 export async function GET() {
   return NextResponse.json({
-    configured: true,
+    configured: scrapeServiceConfigured() || facebookGraphConfigured(),
+    scrapeServiceConfigured: scrapeServiceConfigured(),
     graphConfigured: facebookGraphConfigured(),
     openaiConfigured: openaiConfigured(),
-    mode: "live-scrape",
+    mode: "scrape-service",
   });
 }
 
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
       page = normalizeScrapedFacebookPayload(body.page, pageUrl);
     } else if (pageUrl) {
       try {
-        page = await scrapeFacebookPageLocally(pageUrl);
+        page = await scrapeFacebookPage(pageUrl);
       } catch (scrapeError) {
         if (facebookGraphConfigured()) {
           page = await fetchFacebookPageData(pageUrl);
@@ -147,7 +148,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           message:
-            "Scrape returned almost nothing — the page may be blocked by a login wall. Try again locally or check the URL.",
+            "Scrape returned almost nothing — the page may be blocked by a login wall. Check the URL or try Graph API credentials.",
         },
         { status: 422 }
       );

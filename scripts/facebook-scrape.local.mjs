@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Optional CLI helper for Facebook import.
+ * Requires the scrape service running (see services/scrape/README.md).
  * Prefer Admin → Onboarding → Import Facebook page (email + URL → Submit).
  *
  *   node scripts/facebook-scrape.local.mjs "https://www.facebook.com/PageName"
@@ -22,6 +23,9 @@ const api =
   "http://localhost:3000/api/admin/onboarding/facebook";
 const email = process.argv[3] || "import@local.test";
 
+console.log(
+  "Requires scrape service: cd services/scrape && npm run dev (or docker compose up scrape)."
+);
 console.log(
   "Tip: use Admin → Onboarding → paste email + Facebook URL → Import Facebook page."
 );

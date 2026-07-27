@@ -456,18 +456,6 @@ async function downloadAndStoreImage(options: {
   kind: OnboardingAssetKind;
   filenameHint: string;
   caption?: string;
-  /** Optional Playwright APIRequestContext — keeps FB cookies/session. */
-  request?: {
-    get: (
-      url: string,
-      opts?: { headers?: Record<string, string> }
-    ) => Promise<{
-      ok: () => boolean;
-      status: () => number;
-      headers: () => Record<string, string>;
-      body: () => Promise<Buffer>;
-    }>;
-  };
 }): Promise<ImportedBlobAsset | null> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     throw new Error(
@@ -489,7 +477,8 @@ async function downloadAndStoreImage(options: {
   // Prefer the original signed URL first — rewriting path breaks CDN auth.
   const candidates = uniqueUrls(
     [options.sourceUrl, upgraded].filter(
-      (url) => url && !isFacebookChromeImageUrl(url) && scoreFacebookPhotoUrl(url) >= 0
+      (url) =>
+        url && !isFacebookChromeImageUrl(url) && scoreFacebookPhotoUrl(url) >= 0
     )
   );
 
@@ -500,38 +489,6 @@ async function downloadAndStoreImage(options: {
 
     for (const candidate of candidates) {
       try {
-        // Prefer Playwright request (has browser TLS fingerprint / cookies)
-        if (options.request) {
-          const response = await options.request.get(candidate, {
-            headers: {
-              Accept: "image/avif,image/webp,image/*,*/*;q=0.8",
-              Referer: "https://www.facebook.com/",
-            },
-          });
-          if (!response.ok()) {
-            failReasons.push(`${response.status()} ${candidate.slice(0, 80)}`);
-            continue;
-          }
-          const type =
-            response.headers()["content-type"] || "image/jpeg";
-          if (!type.startsWith("image/")) {
-            failReasons.push(`not-image:${type} ${candidate.slice(0, 60)}`);
-            continue;
-          }
-          const bytes = Buffer.from(await response.body());
-          if (!bytes.length || bytes.length > 20 * 1024 * 1024) {
-            failReasons.push(`bad-size:${bytes.length}`);
-            continue;
-          }
-          if (bytes.length < 8 * 1024) {
-            failReasons.push(`tiny:${bytes.length}`);
-            continue;
-          }
-          buffer = bytes;
-          contentType = type.split(";")[0].trim() || "image/jpeg";
-          break;
-        }
-
         const response = await fetch(candidate, {
           headers: {
             Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
@@ -579,14 +536,13 @@ async function downloadAndStoreImage(options: {
       return null;
     }
 
-    const ext =
-      contentType.includes("png")
-        ? "png"
-        : contentType.includes("webp")
-          ? "webp"
-          : contentType.includes("gif")
-            ? "gif"
-            : "jpg";
+    const ext = contentType.includes("png")
+      ? "png"
+      : contentType.includes("webp")
+        ? "webp"
+        : contentType.includes("gif")
+          ? "gif"
+          : "jpg";
     const safe =
       options.filenameHint.replace(/[^a-zA-Z0-9._-]/g, "_") || "photo";
     const pathname = `onboarding/${options.token}/facebook-${options.kind}-${Date.now()}-${safe}.${ext}`;
@@ -618,110 +574,67 @@ export async function importFacebookImagesToBlob(
 ) {
   const assets: ImportedBlobAsset[] = [];
 
-  // One Playwright context so FB CDN downloads keep a real browser session.
-  let request:
-    | {
-        get: (
-          url: string,
-          opts?: { headers?: Record<string, string> }
-        ) => Promise<{
-          ok: () => boolean;
-          status: () => number;
-          headers: () => Record<string, string>;
-          body: () => Promise<Buffer>;
-        }>;
-      }
-    | undefined;
-  let browser:
-    | Awaited<
-        ReturnType<(typeof import("playwright"))["chromium"]["launch"]>
-      >
-    | undefined;
-
-  try {
-    const { chromium } = await import("playwright");
-    browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
-      userAgent:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-      extraHTTPHeaders: {
-        Referer: "https://www.facebook.com/",
-      },
+  if (data.profilePictureUrl) {
+    // Save as photo — vision decides if it's a real logo. Profile portraits
+    // must not auto-become the site logo.
+    const profile = await downloadAndStoreImage({
+      sourceUrl: data.profilePictureUrl,
+      token: onboardingToken,
+      kind: "photo",
+      filenameHint: "profile",
+      caption: "Facebook profile picture",
     });
-    request = context.request;
-  } catch (error) {
-    console.warn(
-      "Playwright download context unavailable; falling back to fetch",
-      error
-    );
+    if (profile) {
+      console.log(`[fb-import] saved profile photo`);
+      assets.push(profile);
+    } else {
+      console.log(`[fb-import] FAILED profile: ${data.profilePictureUrl}`);
+    }
   }
 
-  try {
-    if (data.profilePictureUrl) {
-      // Save as photo — vision decides if it's a real logo. Profile portraits
-      // must not auto-become the site logo.
-      const profile = await downloadAndStoreImage({
-        sourceUrl: data.profilePictureUrl,
-        token: onboardingToken,
-        kind: "photo",
-        filenameHint: "profile",
-        caption: "Facebook profile picture",
-        request,
-      });
-      if (profile) {
-        console.log(`[fb-import] saved profile photo`);
-        assets.push(profile);
-      } else {
-        console.log(`[fb-import] FAILED profile: ${data.profilePictureUrl}`);
-      }
+  if (data.coverPhotoUrl) {
+    const about = await downloadAndStoreImage({
+      sourceUrl: data.coverPhotoUrl,
+      token: onboardingToken,
+      kind: "about",
+      filenameHint: "cover",
+      caption: "Facebook cover photo",
+    });
+    if (about) {
+      console.log(`[fb-import] saved cover`);
+      assets.push(about);
+    } else {
+      console.log(`[fb-import] FAILED cover: ${data.coverPhotoUrl}`);
     }
+  }
 
-    if (data.coverPhotoUrl) {
-      const about = await downloadAndStoreImage({
-        sourceUrl: data.coverPhotoUrl,
-        token: onboardingToken,
-        kind: "about",
-        filenameHint: "cover",
-        caption: "Facebook cover photo",
-        request,
-      });
-      if (about) {
-        console.log(`[fb-import] saved cover`);
-        assets.push(about);
-      } else {
-        console.log(`[fb-import] FAILED cover: ${data.coverPhotoUrl}`);
-      }
+  const gallerySources = pickBestFacebookPhotoUrls(
+    data.photoUrls.filter(
+      (url) => url !== data.profilePictureUrl && url !== data.coverPhotoUrl
+    ),
+    16
+  );
+
+  const galleryResults = await mapPool(gallerySources, 6, async (sourceUrl, i) => {
+    const imported = await downloadAndStoreImage({
+      sourceUrl,
+      token: onboardingToken,
+      kind: "photo",
+      filenameHint: `gallery-${i + 1}`,
+      caption: "Imported from Facebook",
+    });
+    if (imported) {
+      console.log(
+        `[fb-import] saved photo: ${sourceUrl.slice(0, 120)}`
+      );
+    } else {
+      console.log(`[fb-import] FAILED photo: ${sourceUrl.slice(0, 160)}`);
     }
+    return imported;
+  });
 
-    const gallerySources = pickBestFacebookPhotoUrls(
-      data.photoUrls.filter(
-        (url) => url !== data.profilePictureUrl && url !== data.coverPhotoUrl
-      ),
-      60
-    );
-
-    for (let i = 0; i < gallerySources.length && assets.length < 48; i += 1) {
-      const imported = await downloadAndStoreImage({
-        sourceUrl: gallerySources[i],
-        token: onboardingToken,
-        kind: "photo",
-        filenameHint: `gallery-${i + 1}`,
-        caption: "Imported from Facebook",
-        request,
-      });
-      if (imported) {
-        console.log(
-          `[fb-import] saved photo ${assets.length + 1}: ${gallerySources[i].slice(0, 120)}`
-        );
-        assets.push(imported);
-      } else {
-        console.log(
-          `[fb-import] FAILED photo: ${gallerySources[i].slice(0, 160)}`
-        );
-      }
-    }
-  } finally {
-    if (browser) await browser.close().catch(() => undefined);
+  for (const imported of galleryResults) {
+    if (imported && assets.length < 18) assets.push(imported);
   }
 
   console.log(
@@ -729,4 +642,26 @@ export async function importFacebookImagesToBlob(
   );
 
   return assets;
+}
+
+async function mapPool<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let cursor = 0;
+  async function worker() {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      results[index] = await fn(items[index], index);
+    }
+  }
+  const workers = Array.from(
+    { length: Math.min(concurrency, Math.max(items.length, 1)) },
+    () => worker()
+  );
+  await Promise.all(workers);
+  return results;
 }

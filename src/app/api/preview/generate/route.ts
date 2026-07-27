@@ -7,7 +7,7 @@ import {
   createPreviewBlobToken,
   createPreviewSlug,
 } from "@/lib/preview/createPreviewSlug";
-import { scrapeFacebookPageLocally } from "@/lib/facebookLocalScrape";
+import { scrapeFacebookPage } from "@/lib/scrapeClient";
 import {
   facebookGraphConfigured,
   fetchFacebookPageData,
@@ -135,9 +135,14 @@ export async function POST(req: NextRequest) {
     preview.status = "scraping";
     await preview.save();
 
+    const startedAt = Date.now();
+    const mark = (label: string) =>
+      console.log(`[preview] ${label} +${Date.now() - startedAt}ms`);
+
     let page: FacebookPageImportData;
     try {
-      page = await scrapeFacebookPageLocally(urlCheck.normalizedUrl);
+      page = await scrapeFacebookPage(urlCheck.normalizedUrl);
+      mark(`scrape done (${page.photoUrls.length} photos)`);
     } catch (scrapeError) {
       console.error("[preview] scrape failed", scrapeError);
       if (facebookGraphConfigured()) {
@@ -149,7 +154,7 @@ export async function POST(req: NextRequest) {
           preview.error = {
             code: "scrape_failed",
             message:
-              "We couldn’t access that Facebook page. Check the URL and try again from a local environment if needed.",
+              "We couldn’t access that Facebook page. Check the URL and try again.",
           };
           await preview.save();
           return publicError(
@@ -190,10 +195,12 @@ export async function POST(req: NextRequest) {
     }
 
     const { fields } = await cleanFacebookDataForOnboarding(page, email);
+    mark("onboarding clean done");
 
     let assets: Awaited<ReturnType<typeof importFacebookImagesToBlob>> = [];
     try {
       assets = await importFacebookImagesToBlob(page, blobToken);
+      mark(`image import done (${assets.length} assets)`);
     } catch (assetError) {
       console.warn("[preview] image import failed — continuing", assetError);
     }
@@ -237,6 +244,9 @@ export async function POST(req: NextRequest) {
         phone: fields.contact.phone || page.phone,
       }),
     ]);
+    mark(
+      `vision+research done (analyzed=${imageAnalyses.length}, web=${research.usedWeb})`
+    );
 
     const { siteSpec, usedAi: usedSiteSpecAi } = await generateSiteSpec({
       fields,
@@ -247,6 +257,7 @@ export async function POST(req: NextRequest) {
       imageAnalyses,
       research,
     });
+    mark("siteSpec done");
 
     // Prefer contact email from form for the preview owner
     if (!siteSpec.business.email) {
@@ -268,6 +279,7 @@ export async function POST(req: NextRequest) {
       accentColor: siteSpec.branding.accentColor,
       token: blobToken,
     });
+    mark("logo done");
 
     let pages: Awaited<ReturnType<typeof generatePreviewHtml>>["pages"] | null =
       null;
@@ -287,6 +299,7 @@ export async function POST(req: NextRequest) {
       pages = htmlResult.pages;
       htmlModel = htmlResult.model;
       usedHtmlAi = htmlResult.usedAi;
+      mark("html pages done");
     } catch (htmlError) {
       console.error("[preview] custom HTML generation failed", htmlError);
       preview.status = "failed";
@@ -331,6 +344,7 @@ export async function POST(req: NextRequest) {
     const previewUrl = previewPublicUrl(preview.slug, origin);
     console.log("[preview] ready", {
       slug: preview.slug,
+      elapsedMs: Date.now() - startedAt,
       usedSiteSpecAi,
       usedHtmlAi,
       htmlModel,
