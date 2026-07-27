@@ -112,7 +112,7 @@ app.post("/scrape/website", requireAuth, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+const httpServer = app.listen(PORT, () => {
   console.log(`[scrape-service] listening on :${PORT}`);
   if (!SECRET) {
     console.warn(
@@ -120,3 +120,8 @@ app.listen(PORT, () => {
     );
   }
 });
+
+// FB scrapes can run a few minutes — keep sockets open.
+httpServer.setTimeout(300_000);
+httpServer.headersTimeout = 310_000;
+httpServer.requestTimeout = 300_000;

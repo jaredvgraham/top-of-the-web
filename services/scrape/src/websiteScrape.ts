@@ -223,7 +223,16 @@ export async function scrapeWebsite(
   const siteUrl = normalizeSiteUrl(siteUrlInput);
   let browser;
   try {
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--disable-extensions",
+      ],
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/Executable doesn't exist/i.test(message)) {

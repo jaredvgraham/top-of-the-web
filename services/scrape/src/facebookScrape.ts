@@ -349,7 +349,17 @@ export async function scrapeFacebookPage(
 
   let browser;
   try {
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--disable-extensions",
+        "--disable-background-networking",
+      ],
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/Executable doesn't exist/i.test(message)) {
@@ -498,66 +508,97 @@ export async function scrapeFacebookPage(
       timeout: 60000,
     });
     await dismissCookieNoise(page);
-    await sleep(2000);
-    for (let i = 0; i < 3; i += 1) {
+    await sleep(1500);
+    for (let i = 0; i < 2; i += 1) {
       await page.mouse.wheel(0, 2200);
-      await sleep(600);
+      await sleep(500);
     }
     absorb("www/home+scroll", await collectMeta(page));
+    pushImages(networkImages, "network-after-www");
 
-    await page.goto(aboutUrl, {
-      waitUntil: "domcontentloaded",
-      timeout: 60000,
-    });
-    await dismissCookieNoise(page);
-    await sleep(1500);
-    absorb("mbasic/about", await collectMeta(page));
+    const usefulCount = () =>
+      pickBestFacebookPhotoUrls([...imagePool, ...networkImages], 24).length;
 
-    await page.goto(mbasicUrl, {
-      waitUntil: "domcontentloaded",
-      timeout: 60000,
-    });
-    await dismissCookieNoise(page);
-    await sleep(1500);
-    absorb("mbasic/home", await collectMeta(page));
-
-    await page.goto(photosUrl, {
-      waitUntil: "domcontentloaded",
-      timeout: 60000,
-    });
-    await dismissCookieNoise(page);
-    await sleep(1500);
-    absorb("mbasic/photos", await collectMeta(page));
-
-    const photoLinks = unique(photoLinkPool)
-      .map((href) => absolutize(href, wwwUrl))
-      .filter(Boolean)
-      .slice(0, 12);
-
-    logSection("PHOTO LINKS TO FOLLOW", {
-      totalFound: unique(photoLinkPool).length,
-      following: photoLinks.length,
-      links: photoLinks,
-    });
-
-    for (let index = 0; index < photoLinks.length; index += 1) {
-      const link = photoLinks[index];
-      try {
-        await page.goto(link, {
+    // Datacenter IPs often get login-walled on mbasic/photo deep-links.
+    // If www already yielded enough CDN photos, finish early (avoids Render OOM/502).
+    if (usefulCount() >= 10 && name) {
+      logSection("EARLY EXIT", {
+        reason: "enough photos from www/network",
+        usefulPhotos: usefulCount(),
+        name,
+      });
+    } else {
+      const tryPage = async (label: string, url: string) => {
+        await page.goto(url, {
           waitUntil: "domcontentloaded",
           timeout: 45000,
         });
-        await sleep(900);
-        absorb(`photo[${index + 1}/${photoLinks.length}] ${link}`, await collectMeta(page));
-      } catch (error) {
-        console.log(
-          `[fb-scrape] photo page failed: ${link}`,
-          error instanceof Error ? error.message : error
-        );
+        await dismissCookieNoise(page);
+        await sleep(800);
+        const meta = await collectMeta(page);
+        absorb(label, meta);
+        const wall =
+          isLoginWallTitle(meta.title) || isLoginWallText(meta.bodyText);
+        if (wall) {
+          console.log(`[fb-scrape] login wall on ${label} — skipping deeper pages`);
+        }
+        return !wall;
+      };
+
+      const aboutOk = await tryPage("mbasic/about", aboutUrl);
+      if (aboutOk && usefulCount() < 10) {
+        await tryPage("mbasic/home", mbasicUrl);
+      }
+      if (usefulCount() < 10) {
+        await tryPage("mbasic/photos", photosUrl);
+      }
+
+      const photoLinks =
+        usefulCount() >= 10
+          ? []
+          : unique(photoLinkPool)
+              .map((href) => absolutize(href, wwwUrl))
+              .filter(Boolean)
+              .slice(0, 4);
+
+      logSection("PHOTO LINKS TO FOLLOW", {
+        totalFound: unique(photoLinkPool).length,
+        following: photoLinks.length,
+        usefulSoFar: usefulCount(),
+        links: photoLinks,
+      });
+
+      let loginWallHits = 0;
+      for (let index = 0; index < photoLinks.length; index += 1) {
+        if (usefulCount() >= 12 || loginWallHits >= 2) break;
+        const link = photoLinks[index];
+        try {
+          await page.goto(link, {
+            waitUntil: "domcontentloaded",
+            timeout: 30000,
+          });
+          await sleep(600);
+          const meta = await collectMeta(page);
+          absorb(
+            `photo[${index + 1}/${photoLinks.length}] ${link}`,
+            meta
+          );
+          if (
+            isLoginWallTitle(meta.title) ||
+            isLoginWallText(meta.bodyText)
+          ) {
+            loginWallHits += 1;
+          }
+        } catch (error) {
+          console.log(
+            `[fb-scrape] photo page failed: ${link}`,
+            error instanceof Error ? error.message : error
+          );
+        }
       }
     }
   } finally {
-    await browser.close();
+    await browser.close().catch(() => undefined);
   }
 
   pushImages(networkImages, "network-responses");
