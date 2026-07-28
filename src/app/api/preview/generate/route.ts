@@ -32,6 +32,7 @@ import {
   normalizeLeadEmail,
   normalizeLeadPhone,
 } from "@/lib/preview/lead";
+import { sendPreviewReadyEmail } from "@/lib/mail";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -395,6 +396,21 @@ export async function POST(req: NextRequest) {
     }
 
     const previewUrl = previewPublicUrl(preview.slug, origin);
+
+    try {
+      if (process.env.EMAIL && process.env.EMAIL_PASS) {
+        await sendPreviewReadyEmail({
+          to: email,
+          previewUrl,
+          businessName: siteSpec.business.name,
+          name: leadDoc?.name || "",
+        });
+        console.log("[preview] ready email sent", email);
+      }
+    } catch (mailError) {
+      console.error("[preview] ready email failed", mailError);
+    }
+
     console.log("[preview] ready", {
       slug: preview.slug,
       elapsedMs: Date.now() - startedAt,
