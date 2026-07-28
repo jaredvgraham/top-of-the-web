@@ -185,7 +185,7 @@ export async function loadPreviewSite(slugRaw: string): Promise<LoadedPreview> {
         doc.email || "",
         site.business.email
       ),
-      phone: (site.business.phone || "").trim(),
+      phone: (doc.phone || site.business.phone || "").trim(),
       facebookUrl: doc.source?.url || "",
     };
   }
@@ -209,7 +209,7 @@ export async function loadPreviewSite(slugRaw: string): Promise<LoadedPreview> {
       doc.email || "",
       parsed.data.business.email
     ),
-    phone: (parsed.data.business.phone || "").trim(),
+    phone: (doc.phone || parsed.data.business.phone || "").trim(),
     facebookUrl: doc.source?.url || "",
   };
 }

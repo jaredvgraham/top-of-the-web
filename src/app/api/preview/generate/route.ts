@@ -26,6 +26,12 @@ import {
 import { generateSiteSpec } from "@/lib/preview/generateSiteSpec";
 import { researchCompany } from "@/lib/preview/researchCompany";
 import { websiteSafeCopy } from "@/lib/preview/sanitizeCopy";
+import Lead, { type ILead } from "@/models/Lead";
+import {
+  isValidLeadPhone,
+  normalizeLeadEmail,
+  normalizeLeadPhone,
+} from "@/lib/preview/lead";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -34,7 +40,7 @@ const RATE_LIMIT = 3;
 const RATE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
+  return normalizeLeadEmail(email);
 }
 
 function previewPublicUrl(slug: string, origin?: string) {
@@ -63,6 +69,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const email =
       typeof body.email === "string" ? normalizeEmail(body.email) : "";
+    const phoneRaw = typeof body.phone === "string" ? body.phone : "";
+    const phone = phoneRaw ? normalizeLeadPhone(phoneRaw) : "";
+    const leadToken =
+      typeof body.leadToken === "string" ? body.leadToken.trim() : "";
     const facebookUrlRaw =
       typeof body.facebookUrl === "string"
         ? body.facebookUrl
@@ -78,6 +88,21 @@ export async function POST(req: NextRequest) {
       return publicError(
         "invalid_email",
         "Enter a valid email address.",
+        400
+      );
+    }
+
+    if (phone && !isValidLeadPhone(phone)) {
+      return publicError(
+        "invalid_phone",
+        "Enter a valid phone number (at least 10 digits).",
+        400
+      );
+    }
+    if (leadToken && !phone) {
+      return publicError(
+        "invalid_phone",
+        "Enter a valid phone number.",
         400
       );
     }
@@ -105,6 +130,24 @@ export async function POST(req: NextRequest) {
 
     await dbConnect();
 
+    let leadDoc: ILead | null = null;
+    if (leadToken) {
+      leadDoc = await Lead.findOne({ token: leadToken });
+      if (!leadDoc) {
+        return publicError(
+          "invalid_lead",
+          "This continue link is invalid. Start again from the preview page.",
+          400
+        );
+      }
+      leadDoc.status = "generating";
+      leadDoc.email = email;
+      if (phone) leadDoc.phone = phone;
+      leadDoc.facebookUrl = urlCheck.normalizedUrl;
+      leadDoc.authorized = true;
+      await leadDoc.save();
+    }
+
     const since = new Date(Date.now() - RATE_WINDOW_MS);
     const recentCount = await Preview.countDocuments({
       email,
@@ -125,6 +168,8 @@ export async function POST(req: NextRequest) {
     const preview = await Preview.create({
       slug,
       email,
+      phone: phone || leadDoc?.phone || "",
+      leadToken: leadToken || "",
       onboardingToken: blobToken,
       status: "queued",
       source: { type: "facebook", url: urlCheck.normalizedUrl },
@@ -340,6 +385,14 @@ export async function POST(req: NextRequest) {
     preview.status = "ready";
     preview.error = { code: "", message: "" };
     await preview.save();
+
+    if (leadDoc) {
+      leadDoc.status = "preview_ready";
+      leadDoc.previewSlug = preview.slug;
+      leadDoc.email = email;
+      if (phone) leadDoc.phone = phone;
+      await leadDoc.save();
+    }
 
     const previewUrl = previewPublicUrl(preview.slug, origin);
     console.log("[preview] ready", {

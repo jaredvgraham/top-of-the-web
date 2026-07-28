@@ -6,6 +6,7 @@ import dbConnect from "@/lib/db";
 import { findCustomerByEmail } from "@/models/Customer";
 import Website from "@/models/WebsiteModel";
 import Preview from "@/models/Preview";
+import Lead from "@/models/Lead";
 import { sendPurchaseConfirmationEmail } from "@/lib/mail";
 import {
   getSubscriptionInfoForCustomer,
@@ -138,12 +139,32 @@ export async function POST(req: NextRequest) {
         let businessName = "";
         if (previewSlug) {
           const preview = await Preview.findOne({ slug: previewSlug })
-            .select("siteSpec")
+            .select("siteSpec leadToken email")
             .lean();
           const siteSpec = preview?.siteSpec as
             | { business?: { name?: string } }
             | undefined;
           businessName = siteSpec?.business?.name || "";
+
+          try {
+            if (preview?.leadToken) {
+              await Lead.findOneAndUpdate(
+                { token: preview.leadToken },
+                { $set: { status: "purchased" } }
+              );
+            } else if (preview?.email || email) {
+              await Lead.findOneAndUpdate(
+                {
+                  email: preview?.email || email,
+                  status: { $in: ["preview_ready", "generating", "continued"] },
+                },
+                { $set: { status: "purchased", previewSlug } },
+                { sort: { createdAt: -1 } }
+              );
+            }
+          } catch (leadError) {
+            console.warn("[webhook] lead purchase update failed", leadError);
+          }
         }
 
         try {

@@ -9,7 +9,7 @@ export interface IOrder extends mongoose.Document {
   plan: string;
   success: boolean;
   /** Prevents duplicate purchase confirmation emails on Stripe webhook retries. */
-  confirmationEmailSent?: boolean;
+  confirmationEmailSent: boolean;
 }
 
 const OrderSchema = new mongoose.Schema<IOrder>(
@@ -45,8 +45,15 @@ const OrderSchema = new mongoose.Schema<IOrder>(
   { timestamps: true }
 );
 
-const Order: mongoose.Model<IOrder> =
-  mongoose.models.Order || mongoose.model<IOrder>("Order", OrderSchema);
+if (mongoose.models.Order) {
+  delete mongoose.models.Order;
+}
+const connectionModels = mongoose.connection.models as Record<string, unknown>;
+if (connectionModels.Order) {
+  delete connectionModels.Order;
+}
+
+const Order = mongoose.model<IOrder>("Order", OrderSchema);
 export default Order;
 
 export const addOrder = async (order: IOrder) => {

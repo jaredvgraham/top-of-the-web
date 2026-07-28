@@ -19,6 +19,9 @@ export interface IPreview extends Document {
   _id: mongoose.Types.ObjectId;
   slug: string;
   email: string;
+  phone?: string;
+  /** Opaque lead funnel token (ad → email → continue). */
+  leadToken?: string;
   /** Preview-only Blob path token — not an Onboarding session. */
   onboardingToken?: string;
   status: PreviewStatus;
@@ -56,6 +59,16 @@ const PreviewSchema = new Schema<IPreview>(
       index: true,
       lowercase: true,
       trim: true,
+    },
+    phone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    leadToken: {
+      type: String,
+      default: "",
+      index: true,
     },
     onboardingToken: {
       type: String,

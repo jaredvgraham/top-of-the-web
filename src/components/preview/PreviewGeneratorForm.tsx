@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import PreviewLoadingState from "@/components/preview/PreviewLoadingState";
 import { resolveBrandPalette } from "@/lib/preview/brandColors";
 import { BRAND_COLOR_PRESETS } from "@/lib/preview/brandPreferences";
+import { trackMetaEvent } from "@/lib/preview/metaAttribution";
 
 type FormPhase =
   | "idle"
@@ -15,9 +16,20 @@ type FormPhase =
 
 const DEFAULT_PRESET = BRAND_COLOR_PRESETS[0];
 
-export default function PreviewGeneratorForm() {
+export type PreviewGeneratorFormProps = {
+  leadToken?: string;
+  initialEmail?: string;
+  initialPhone?: string;
+};
+
+export default function PreviewGeneratorForm({
+  leadToken = "",
+  initialEmail = "",
+  initialPhone = "",
+}: PreviewGeneratorFormProps) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
+  const [phone, setPhone] = useState(initialPhone);
   const [facebookUrl, setFacebookUrl] = useState("");
   const [authorized, setAuthorized] = useState(false);
   const [primaryColor, setPrimaryColor] = useState<string>(
@@ -33,6 +45,23 @@ export default function PreviewGeneratorForm() {
   const [phase, setPhase] = useState<FormPhase>("idle");
   const [error, setError] = useState("");
   const [elapsedMs, setElapsedMs] = useState(0);
+
+  useEffect(() => {
+    setEmail(initialEmail);
+  }, [initialEmail]);
+
+  useEffect(() => {
+    setPhone(initialPhone);
+  }, [initialPhone]);
+
+  useEffect(() => {
+    if (leadToken) {
+      trackMetaEvent("ViewContent", {
+        content_name: "Preview Continue",
+        content_category: "website_preview",
+      });
+    }
+  }, [leadToken]);
 
   useEffect(() => {
     if (phase !== "submitting") return;
@@ -67,7 +96,12 @@ export default function PreviewGeneratorForm() {
     setPhase("validating");
 
     if (!email.trim()) {
-      setError("Enter your email address.");
+      setError("Enter your business email.");
+      setPhase("failure");
+      return;
+    }
+    if (!phone.trim()) {
+      setError("Enter your business phone number.");
       setPhase("failure");
       return;
     }
@@ -88,13 +122,19 @@ export default function PreviewGeneratorForm() {
     setElapsedMs(0);
 
     try {
+      trackMetaEvent("InitiateCheckout", {
+        content_name: "Website Preview Generate",
+      });
+
       const response = await fetch("/api/preview/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim(),
+          phone: phone.trim(),
           facebookUrl: facebookUrl.trim(),
           authorized: true,
+          leadToken: leadToken || undefined,
           primaryColor,
           secondaryColor,
           tertiaryColor,
@@ -127,7 +167,6 @@ export default function PreviewGeneratorForm() {
       }
 
       setPhase("success");
-      // Keep overlay up through navigation so nothing unfinished flashes
       router.push(`/preview/${slug}`);
     } catch {
       setError("Something went wrong. Check your connection and try again.");
@@ -150,7 +189,7 @@ export default function PreviewGeneratorForm() {
             htmlFor="preview-email"
             className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45"
           >
-            Email address
+            Business email
           </label>
           <input
             id="preview-email"
@@ -161,7 +200,28 @@ export default function PreviewGeneratorForm() {
             value={email}
             disabled={busy}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@business.com"
+            placeholder="you@yourbusiness.com"
+            className="w-full border-b border-ink/20 bg-transparent py-3 text-lg text-ink outline-none focus:border-accent disabled:opacity-60"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="preview-phone"
+            className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45"
+          >
+            Business phone
+          </label>
+          <input
+            id="preview-phone"
+            type="tel"
+            required
+            autoComplete="tel"
+            inputMode="tel"
+            value={phone}
+            disabled={busy}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="(555) 555-5555"
             className="w-full border-b border-ink/20 bg-transparent py-3 text-lg text-ink outline-none focus:border-accent disabled:opacity-60"
           />
         </div>
@@ -183,6 +243,9 @@ export default function PreviewGeneratorForm() {
             placeholder="https://www.facebook.com/YourPage"
             className="w-full border-b border-ink/20 bg-transparent py-3 text-lg text-ink outline-none focus:border-accent disabled:opacity-60"
           />
+          <p className="mt-2 text-xs text-ink/45">
+            Open Facebook → your Page → copy the link from the address bar.
+          </p>
         </div>
 
         <fieldset disabled={busy} className="space-y-4">
