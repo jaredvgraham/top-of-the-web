@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 import dbConnect from "@/lib/db";
 import Onboarding from "@/models/Onboarding";
+import { sendAdminInquiryEmail } from "@/lib/mail";
 import {
   createOnboardingToken,
   normalizeEmail,
   normalizeOwnerNames,
   onboardingPublicUrl,
 } from "@/lib/onboarding";
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASS,
-  },
-});
 
 export async function POST(req: NextRequest) {
   try {
@@ -102,24 +92,22 @@ export async function POST(req: NextRequest) {
     const origin = req.headers.get("origin") || undefined;
     const onboardingUrl = onboardingPublicUrl(session.token, origin);
 
-    const textMessage = [
-      `Name: ${name}`,
-      `Email: ${email}`,
-      `Phone: ${phone}`,
-      `Inquiry: ${inquiry}`,
-      "",
-      `Onboarding link (client was redirected here):`,
-      onboardingUrl,
-    ].join("\n");
-
-    await transporter.sendMail({
-      from: process.env.EMAIL,
-      to: process.env.EMAIL,
-      replyTo: email,
-      subject: `New inquiry — ${name}`,
-      text: textMessage,
-      html: `<p>${textMessage.replace(/\n/g, "<br>")}</p>`,
-    });
+    const notifyTo = process.env.EMAIL?.trim();
+    if (notifyTo) {
+      // A failed notification shouldn't lose the lead — it's already saved.
+      try {
+        await sendAdminInquiryEmail({
+          to: notifyTo,
+          name,
+          email,
+          phone,
+          inquiry,
+          onboardingUrl,
+        });
+      } catch (mailError) {
+        console.error("Inquiry saved but notification failed:", mailError);
+      }
+    }
 
     return NextResponse.json({
       message: "Success",

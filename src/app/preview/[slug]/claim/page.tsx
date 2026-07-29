@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const loaded = await loadPreviewSite(params.slug);
   const name = loaded.ok ? loaded.site.business.name : "Your demo";
   return {
-    title: `Lock in ${name} — Custom build | Bsites`,
+    title: { absolute: `Lock in ${name} — Custom build | Bsites` },
     description:
       "Claim your custom Bsites website build from this Facebook demo preview.",
     robots: { index: false, follow: false },

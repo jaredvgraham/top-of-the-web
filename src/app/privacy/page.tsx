@@ -4,7 +4,7 @@ import Link from "next/link";
 import Footer from "@/components/HomePage/Footer";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - Bsites.io",
+  title: "Privacy Policy",
   description:
     "Learn how Bsites.io collects, uses, and protects your personal information when you use our website and services.",
   openGraph: {

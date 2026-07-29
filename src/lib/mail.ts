@@ -172,6 +172,107 @@ function plainValue(value: string) {
   return value?.trim() || "—";
 }
 
+/** Escapes for HTML, then preserves the author's line breaks. */
+function escapeMultiline(value: string) {
+  return escapeHtml(value).replace(/\r?\n/g, "<br/>");
+}
+
+export type AdminInquiryEmailInput = {
+  to: string;
+  name: string;
+  email: string;
+  phone: string;
+  inquiry: string;
+  onboardingUrl: string;
+};
+
+export async function sendAdminInquiryEmail(input: AdminInquiryEmailInput) {
+  const from = process.env.EMAIL?.trim();
+  if (!from) throw new Error("EMAIL is not configured");
+
+  const subject = `New inquiry — ${input.name || input.email}`;
+
+  const text = [
+    `New contact form inquiry`,
+    ``,
+    `Name: ${plainValue(input.name)}`,
+    `Email: ${plainValue(input.email)}`,
+    `Phone: ${plainValue(input.phone)}`,
+    ``,
+    `Message:`,
+    plainValue(input.inquiry),
+    ``,
+    `Onboarding link (client was redirected here):`,
+    plainValue(input.onboardingUrl),
+    ``,
+    `— Bsites admin`,
+  ].join("\n");
+
+  const htmlRows = rowsToHtml([
+    ["Name", escapeHtml(plainValue(input.name))],
+    [
+      "Email",
+      `<a href="mailto:${escapeHtml(input.email)}" style="color:#5B2E9E;">${escapeHtml(input.email)}</a>`,
+    ],
+    [
+      "Phone",
+      input.phone
+        ? `<a href="tel:${escapeHtml(input.phone)}" style="color:#5B2E9E;">${escapeHtml(input.phone)}</a>`
+        : "—",
+    ],
+  ]);
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#F5F5FB;font-family:Georgia,'Times New Roman',serif;color:#1A1433;">
+  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
+    <p style="margin:0 0 8px;font-family:system-ui,sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5B2E9E;font-weight:600;">Admin alert</p>
+    <h1 style="margin:0 0 8px;font-size:26px;line-height:1.15;font-weight:500;">New contact inquiry</h1>
+    <p style="margin:0 0 20px;font-family:system-ui,sans-serif;font-size:14px;color:#6B6578;">Someone submitted the contact form. Reply to this email to answer them directly.</p>
+
+    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid rgba(26,20,51,0.1);border-radius:16px;padding:8px 16px;display:block;">
+      ${htmlRows}
+    </table>
+
+    <div style="background:#fff;border:1px solid rgba(26,20,51,0.1);border-radius:16px;padding:20px 22px;margin-top:16px;">
+      <p style="margin:0 0 10px;font-family:system-ui,sans-serif;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#6B6578;">What should the site help them sell?</p>
+      <p style="margin:0;font-family:system-ui,sans-serif;font-size:15px;line-height:1.65;color:#1A1433;word-break:break-word;">${escapeMultiline(plainValue(input.inquiry))}</p>
+    </div>
+
+    <p style="margin:22px 0 0;font-family:system-ui,sans-serif;">
+      <a href="mailto:${escapeHtml(input.email)}" style="display:inline-block;background:#5B2E9E;color:#fff;text-decoration:none;padding:12px 20px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;">Reply by email</a>
+      ${
+        input.phone
+          ? `<a href="tel:${escapeHtml(input.phone)}" style="display:inline-block;margin-left:8px;border:1px solid rgba(26,20,51,0.25);color:#1A1433;text-decoration:none;padding:11px 20px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;">Call now</a>`
+          : ""
+      }
+    </p>
+
+    ${
+      input.onboardingUrl
+        ? `<p style="margin:20px 0 0;font-family:system-ui,sans-serif;font-size:13px;line-height:1.55;color:#6B6578;">
+      Onboarding brief they were sent to:<br/>
+      <a href="${escapeHtml(input.onboardingUrl)}" style="color:#5B2E9E;word-break:break-all;">${escapeHtml(input.onboardingUrl)}</a>
+    </p>`
+        : ""
+    }
+  </div>
+</body>
+</html>
+`.trim();
+
+  const transporter = getMailTransporter();
+  await transporter.sendMail({
+    from: `Bsites Alerts <${from}>`,
+    to: input.to,
+    replyTo: input.email,
+    subject,
+    text,
+    html,
+  });
+}
+
 export type AdminLeadCapturedInput = {
   name: string;
   businessName: string;

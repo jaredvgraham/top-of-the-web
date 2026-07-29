@@ -6,7 +6,7 @@ import PreviewGeneratorForm from "@/components/preview/PreviewGeneratorForm";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Continue Your Website Preview | Bsites",
+  title: "Continue Your Website Preview",
   description:
     "Paste your Facebook page to finish your free private website demo.",
   robots: { index: false, follow: false },

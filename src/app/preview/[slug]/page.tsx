@@ -17,7 +17,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const name = loaded.ok ? loaded.site.business.name : null;
 
   return {
-    title: name ? `${name} — Website Demo | Bsites` : "Website Demo | Bsites",
+    title: {
+      absolute: name
+        ? `${name} — Website Demo | Bsites`
+        : "Website Demo | Bsites",
+    },
     description:
       "Private BSITES auto-generated website demo. Not indexed by search engines.",
     robots: { index: false, follow: false },

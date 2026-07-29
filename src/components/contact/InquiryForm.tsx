@@ -68,10 +68,16 @@ const InquiryForm: React.FC = () => {
       initial={{ opacity: 0, y: 32 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease, delay: 0.2 }}
-      className="rounded-3xl border border-ink/15 bg-paper p-8 sm:p-12"
+      className="min-w-0 rounded-3xl border border-ink/15 bg-white/70 p-6 shadow-[0_18px_60px_-30px_rgba(26,20,51,0.5)] sm:p-10"
     >
-      <p className="mb-10 text-[12px] font-semibold uppercase tracking-[0.24em] text-ink/50">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-ink/50">
         Send us a message
+      </p>
+      <h2 className="font-display mt-3 text-3xl font-medium tracking-tight text-ink">
+        Tell us about your business
+      </h2>
+      <p className="mb-10 mt-3 text-[15px] leading-7 text-ink/60">
+        Four quick fields. We reply personally, usually within one business day.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -156,12 +162,12 @@ const InquiryForm: React.FC = () => {
         >
           <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
           <span className="relative">
-            {submitting ? "Sending..." : "Send Message"}
+            {submitting ? "Sending..." : "Send message"}
           </span>
         </button>
-        <p className="text-center text-sm text-ink/45">
-          After you send, we’ll take you to a short site brief so we can start
-          building.
+        <p className="text-center text-sm leading-6 text-ink/45">
+          After you send, we&rsquo;ll take you to a short site brief so we can
+          start building. No payment required.
         </p>
         {responseMessage && (
           <p

@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const loaded = await loadPreviewSite(params.slug);
   const name = loaded.ok ? loaded.site.business.name : "Services";
   return {
-    title: `${name} — Services Demo | Bsites`,
+    title: { absolute: `${name} — Services Demo | Bsites` },
     robots: { index: false, follow: false },
   };
 }

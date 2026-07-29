@@ -5,7 +5,7 @@ import Footer from "@/components/HomePage/Footer";
 import ThankYouPurchasePixel from "@/components/analytics/ThankYouPurchasePixel";
 
 export const metadata: Metadata = {
-  title: "Thank You — Bsites.io",
+  title: "Thank You",
   description: "Thanks for your purchase. Your custom website is on the way.",
   robots: { index: false, follow: false },
 };

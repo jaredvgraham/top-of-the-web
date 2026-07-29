@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import PreviewLeadCaptureForm from "@/components/preview/PreviewLeadCaptureForm";
 
 export const metadata: Metadata = {
-  title: "Free Website Demo from Facebook | Bsites",
+  title: "Free Website Demo from Facebook",
   description:
     "Get a free private website demo for your business. Enter your email and phone — we’ll send your next step.",
   robots: { index: false, follow: false },
