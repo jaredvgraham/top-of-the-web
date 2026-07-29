@@ -35,6 +35,14 @@ export function readMetaAttributionFromBrowser() {
     utmCampaign: (params.get("utm_campaign") || "").trim(),
     utmContent: (params.get("utm_content") || "").trim(),
     utmTerm: (params.get("utm_term") || "").trim(),
+    // Meta URL macros: campaign_id={{campaign.id}} etc.
+    campaignId: (
+      params.get("campaign_id") ||
+      params.get("campaignId") ||
+      ""
+    ).trim(),
+    adsetId: (params.get("adset_id") || params.get("adsetId") || "").trim(),
+    adId: (params.get("ad_id") || params.get("adId") || "").trim(),
   };
 }
 

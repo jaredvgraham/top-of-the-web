@@ -18,6 +18,9 @@ export type AdminLeadAttribution = {
   utmCampaign: string;
   utmContent: string;
   utmTerm: string;
+  campaignId: string;
+  adsetId: string;
+  adId: string;
 };
 
 export type AdminLeadRow = {
@@ -58,18 +61,93 @@ function iso(value: Date | string | undefined) {
   return String(value || "");
 }
 
+function paramFromLandingUrl(landingUrl: string, keys: string[]) {
+  if (!landingUrl) return "";
+  try {
+    const url = new URL(landingUrl);
+    for (const key of keys) {
+      const value = (url.searchParams.get(key) || "").trim();
+      if (value) return value;
+    }
+  } catch {
+    // ignore invalid URLs
+  }
+  return "";
+}
+
+function normalizeCampaignLabel(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s-]+/g, " ");
+}
+
+/** Resolve campaign id / utm campaign, including values buried in landingUrl. */
+export function resolveLeadCampaignTags(lead: Pick<AdminLeadRow, "attribution">) {
+  const attr = lead.attribution;
+  const campaignId =
+    attr.campaignId ||
+    paramFromLandingUrl(attr.landingUrl, ["campaign_id", "campaignId"]);
+  const adsetId =
+    attr.adsetId ||
+    paramFromLandingUrl(attr.landingUrl, ["adset_id", "adsetId"]);
+  const adId =
+    attr.adId || paramFromLandingUrl(attr.landingUrl, ["ad_id", "adId"]);
+  const utmCampaign =
+    attr.utmCampaign ||
+    paramFromLandingUrl(attr.landingUrl, ["utm_campaign"]);
+  return { campaignId, adsetId, adId, utmCampaign };
+}
+
+export function leadMatchesCampaign(
+  lead: Pick<AdminLeadRow, "attribution">,
+  campaignId: string,
+  campaignName: string
+) {
+  if (!campaignId && !campaignName) return true;
+  const tags = resolveLeadCampaignTags(lead);
+  if (tags.campaignId && campaignId && tags.campaignId === campaignId) {
+    return true;
+  }
+  if (tags.utmCampaign && campaignName) {
+    const a = normalizeCampaignLabel(tags.utmCampaign);
+    const b = normalizeCampaignLabel(campaignName);
+    if (a && b && (a === b || a.includes(b) || b.includes(a))) return true;
+  }
+  return false;
+}
+
+export function leadHasCampaignTag(lead: Pick<AdminLeadRow, "attribution">) {
+  const tags = resolveLeadCampaignTags(lead);
+  return Boolean(tags.campaignId || tags.utmCampaign);
+}
+
 export function serializeAdminLead(doc: LeanLead): AdminLeadRow {
   const attr = (doc.attribution || {}) as Partial<AdminLeadAttribution>;
+  const landingUrl = attr.landingUrl || "";
   const attribution: AdminLeadAttribution = {
     fbclid: attr.fbclid || "",
     fbp: attr.fbp || "",
     fbc: attr.fbc || "",
-    landingUrl: attr.landingUrl || "",
+    landingUrl,
     utmSource: attr.utmSource || "",
     utmMedium: attr.utmMedium || "",
-    utmCampaign: attr.utmCampaign || "",
+    utmCampaign:
+      attr.utmCampaign ||
+      paramFromLandingUrl(landingUrl, ["utm_campaign"]) ||
+      "",
     utmContent: attr.utmContent || "",
     utmTerm: attr.utmTerm || "",
+    campaignId:
+      attr.campaignId ||
+      paramFromLandingUrl(landingUrl, ["campaign_id", "campaignId"]) ||
+      "",
+    adsetId:
+      attr.adsetId ||
+      paramFromLandingUrl(landingUrl, ["adset_id", "adsetId"]) ||
+      "",
+    adId:
+      attr.adId || paramFromLandingUrl(landingUrl, ["ad_id", "adId"]) || "",
   };
 
   return {

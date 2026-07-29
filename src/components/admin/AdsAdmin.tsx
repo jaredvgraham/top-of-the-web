@@ -1,14 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { motion } from "framer-motion";
 import AdminLeadCard from "@/components/admin/AdminLeadCard";
-import type { AdminLeadRow } from "@/lib/adminLeads";
+import {
+  leadHasCampaignTag,
+  leadMatchesCampaign,
+  type AdminLeadRow,
+} from "@/lib/adminLeads";
 
 type InsightRow = {
   id: string;
   name: string;
   level: string;
+  campaignId: string;
+  campaignName: string;
   impressions: number;
   reach: number;
   clicks: number;
@@ -22,6 +34,21 @@ type InsightRow = {
   purchaseValue: number;
   dateStart: string;
   dateStop: string;
+};
+
+type Summary = {
+  spend: number;
+  impressions: number;
+  reach: number;
+  clicks: number;
+  purchases: number;
+  leads: number;
+  initiateCheckouts: number;
+  purchaseValue: number;
+  cpc: number | null;
+  cpm: number | null;
+  ctr: number | null;
+  roas: number | null;
 };
 
 type Dashboard = {
@@ -44,20 +71,8 @@ type Dashboard = {
   dateStart: string;
   dateStop: string;
   currency: string;
-  summary: {
-    spend: number;
-    impressions: number;
-    reach: number;
-    clicks: number;
-    purchases: number;
-    leads: number;
-    initiateCheckouts: number;
-    purchaseValue: number;
-    cpc: number | null;
-    cpm: number | null;
-    ctr: number | null;
-    roas: number | null;
-  };
+  summary: Summary;
+  campaigns: InsightRow[];
   rows: InsightRow[];
   siteFunnel: {
     dateStart: string;
@@ -68,6 +83,27 @@ type Dashboard = {
   };
   leads: AdminLeadRow[];
 };
+
+function summaryFromRow(row: InsightRow): Summary {
+  const spend = row.spend;
+  const impressions = row.impressions;
+  const clicks = row.clicks;
+  const purchaseValue = row.purchaseValue;
+  return {
+    spend,
+    impressions,
+    reach: row.reach,
+    clicks,
+    purchases: row.purchases,
+    leads: row.leads,
+    initiateCheckouts: row.initiateCheckouts,
+    purchaseValue,
+    cpc: row.cpc ?? (clicks > 0 ? spend / clicks : null),
+    cpm: row.cpm ?? (impressions > 0 ? (spend / impressions) * 1000 : null),
+    ctr: row.ctr ?? (impressions > 0 ? (clicks / impressions) * 100 : null),
+    roas: spend > 0 ? purchaseValue / spend : null,
+  };
+}
 
 const ease = [0.65, 0, 0.35, 1] as const;
 
@@ -173,6 +209,7 @@ export default function AdsAdmin() {
   const [datePreset, setDatePreset] = useState("last_7d_incl_today");
   const [level, setLevel] = useState("campaign");
   const [accountId, setAccountId] = useState("");
+  const [campaignId, setCampaignId] = useState("");
   const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -201,6 +238,10 @@ export default function AdsAdmin() {
       if (!accountId && json.account?.id) {
         setAccountId(json.account.id);
       }
+      const campaignIds = new Set(
+        ((json.campaigns || []) as InsightRow[]).map((c) => c.id)
+      );
+      setCampaignId((prev) => (prev && campaignIds.has(prev) ? prev : ""));
     } catch {
       setError("Could not reach the ads API.");
       setData(null);
@@ -214,7 +255,58 @@ export default function AdsAdmin() {
   }, [load]);
 
   const currency = data?.currency || "USD";
-  const leads = data?.leads || [];
+  const campaigns = data?.campaigns || [];
+
+  const selectedCampaign = useMemo(
+    () => campaigns.find((c) => c.id === campaignId) || null,
+    [campaigns, campaignId]
+  );
+
+  const summary = useMemo(() => {
+    if (!data) return null;
+    if (selectedCampaign) return summaryFromRow(selectedCampaign);
+    return data.summary;
+  }, [data, selectedCampaign]);
+
+  const breakdownRows = useMemo(() => {
+    if (!data) return [];
+    if (!campaignId) return data.rows;
+    if (data.level === "campaign") {
+      return data.rows.filter((r) => r.id === campaignId);
+    }
+    if (data.level === "account") return data.rows;
+    return data.rows.filter((r) => r.campaignId === campaignId);
+  }, [data, campaignId]);
+
+  const leads = useMemo(() => {
+    const all = data?.leads || [];
+    if (!selectedCampaign) return all;
+    return all.filter((lead) =>
+      leadMatchesCampaign(
+        lead,
+        selectedCampaign.id,
+        selectedCampaign.name
+      )
+    );
+  }, [data?.leads, selectedCampaign]);
+
+  const campaignLeadStats = useMemo(() => {
+    if (!selectedCampaign || !data) {
+      return {
+        formLeads: data?.siteFunnel.leads ?? 0,
+        purchased: data?.siteFunnel.purchased ?? 0,
+        untagged: 0,
+      };
+    }
+    const all = data.leads || [];
+    const matched = leads;
+    const untagged = all.filter((l) => !leadHasCampaignTag(l)).length;
+    return {
+      formLeads: matched.length,
+      purchased: matched.filter((l) => l.status === "purchased").length,
+      untagged,
+    };
+  }, [data, selectedCampaign, leads]);
 
   return (
     <div className="grain relative min-h-[calc(100dvh-57px)] max-w-[100vw] overflow-x-hidden bg-paper">
@@ -293,6 +385,31 @@ export default function AdsAdmin() {
             ))}
           </ChipRow>
 
+          {campaigns.length > 0 ? (
+            <div>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">
+                Campaign
+              </p>
+              <ChipRow>
+                <Chip
+                  active={!campaignId}
+                  onClick={() => setCampaignId("")}
+                >
+                  All
+                </Chip>
+                {campaigns.map((campaign) => (
+                  <Chip
+                    key={campaign.id}
+                    active={campaignId === campaign.id}
+                    onClick={() => setCampaignId(campaign.id)}
+                  >
+                    {campaign.name}
+                  </Chip>
+                ))}
+              </ChipRow>
+            </div>
+          ) : null}
+
           {data?.accounts && data.accounts.length > 1 ? (
             <label className="block text-sm">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">
@@ -300,7 +417,10 @@ export default function AdsAdmin() {
               </span>
               <select
                 value={accountId || data.account.id}
-                onChange={(e) => setAccountId(e.target.value)}
+                onChange={(e) => {
+                  setCampaignId("");
+                  setAccountId(e.target.value);
+                }}
                 className="min-h-11 w-full rounded-xl border border-ink/15 bg-white/70 px-3 outline-none focus:border-accent"
               >
                 {data.accounts.map((account) => (
@@ -319,35 +439,41 @@ export default function AdsAdmin() {
           <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </p>
-        ) : data ? (
+        ) : data && summary ? (
           <>
             <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
               <MetaStat
                 label="Spend"
-                value={money(data.summary.spend, currency)}
+                value={money(summary.spend, currency)}
+                hint={selectedCampaign ? selectedCampaign.name : undefined}
               />
-              <MetaStat label="Clicks" value={num(data.summary.clicks)} />
-              <MetaStat
-                label="Pixel leads"
-                value={num(data.summary.leads)}
-              />
+              <MetaStat label="Clicks" value={num(summary.clicks)} />
+              <MetaStat label="Pixel leads" value={num(summary.leads)} />
               <MetaStat
                 label="Initiate checkout"
-                value={num(data.summary.initiateCheckouts)}
+                value={num(summary.initiateCheckouts)}
                 hint="Demo generates"
               />
               <MetaStat
                 label="Meta form leads"
-                value={num(data.siteFunnel.leads)}
+                value={num(campaignLeadStats.formLeads)}
+                hint={
+                  selectedCampaign
+                    ? campaignLeadStats.untagged > 0
+                      ? `Tagged only · ${campaignLeadStats.untagged} untagged hidden`
+                      : "Matched to campaign"
+                    : undefined
+                }
               />
               <MetaStat
                 label="Purchased"
-                value={num(data.siteFunnel.purchased)}
+                value={num(campaignLeadStats.purchased)}
+                hint={selectedCampaign ? "Matched to campaign" : undefined}
               />
               <MetaStat
                 label="CTR"
-                value={pct(data.summary.ctr)}
-                hint={`${num(data.summary.impressions)} impr.`}
+                value={pct(summary.ctr)}
+                hint={`${num(summary.impressions)} impr.`}
               />
             </div>
 
@@ -359,8 +485,12 @@ export default function AdsAdmin() {
                   </p>
                   <p className="mt-1 text-xs text-ink/40">
                     {leads.length} shown
-                    {data.siteFunnel.leads > leads.length
+                    {!selectedCampaign &&
+                    data.siteFunnel.leads > leads.length
                       ? ` of ${data.siteFunnel.leads}`
+                      : ""}
+                    {selectedCampaign
+                      ? " · matched to this campaign"
                       : ""}{" "}
                     · organic leads live under{" "}
                     <a href="/admin/leads" className="underline">
@@ -372,7 +502,9 @@ export default function AdsAdmin() {
 
               {leads.length === 0 ? (
                 <p className="mt-4 text-sm text-ink/50">
-                  No Meta-attributed form leads in this date window.
+                  {selectedCampaign
+                    ? "No form leads matched this campaign. Matching uses campaign_id or utm_campaign on the landing URL."
+                    : "No Meta-attributed form leads in this date window."}
                 </p>
               ) : (
                 <div className="mt-2 divide-y-0 border-t border-ink/10">
@@ -393,18 +525,18 @@ export default function AdsAdmin() {
                   Campaign breakdown
                 </span>
                 <span className="text-xs text-ink/40">
-                  {showInsights ? "Hide" : `${data.rows.length} rows`}
+                  {showInsights ? "Hide" : `${breakdownRows.length} rows`}
                 </span>
               </button>
 
               {showInsights ? (
-                data.rows.length === 0 ? (
+                breakdownRows.length === 0 ? (
                   <p className="mt-3 text-sm text-ink/50">
                     No insights for this range.
                   </p>
                 ) : (
                   <div className="mt-3 space-y-3">
-                    {data.rows.map((row) => (
+                    {breakdownRows.map((row) => (
                       <div
                         key={`${row.level}-${row.id}-${row.name}`}
                         className="border-b border-ink/10 pb-3 last:border-b-0"

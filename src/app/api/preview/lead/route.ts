@@ -115,6 +115,38 @@ export async function POST(req: NextRequest) {
       fbc = buildFbcFromFbclid(fbclid);
     }
 
+    const str = (key: string, max: number) =>
+      typeof body[key] === "string" ? body[key].trim().slice(0, max) : "";
+
+    const landingUrl = str("landingUrl", 2000);
+    let campaignId = str("campaignId", 64);
+    let adsetId = str("adsetId", 64);
+    let adId = str("adId", 64);
+    if (landingUrl && (!campaignId || !adsetId || !adId)) {
+      try {
+        const url = new URL(landingUrl);
+        campaignId =
+          campaignId ||
+          (url.searchParams.get("campaign_id") ||
+            url.searchParams.get("campaignId") ||
+            ""
+          ).trim();
+        adsetId =
+          adsetId ||
+          (
+            url.searchParams.get("adset_id") ||
+            url.searchParams.get("adsetId") ||
+            ""
+          ).trim();
+        adId =
+          adId ||
+          (url.searchParams.get("ad_id") || url.searchParams.get("adId") || "")
+            .trim();
+      } catch {
+        // ignore
+      }
+    }
+
     const token = createLeadToken();
     const origin = req.headers.get("origin") || undefined;
     const continueUrl = leadContinueUrl(token, origin);
@@ -133,32 +165,17 @@ export async function POST(req: NextRequest) {
         fbclid,
         fbp,
         fbc,
-        landingUrl:
-          typeof body.landingUrl === "string"
-            ? body.landingUrl.trim().slice(0, 2000)
-            : "",
+        landingUrl,
         userAgent: (req.headers.get("user-agent") || "").slice(0, 500),
         ip: clientIp(req).slice(0, 64),
-        utmSource:
-          typeof body.utmSource === "string"
-            ? body.utmSource.trim().slice(0, 200)
-            : "",
-        utmMedium:
-          typeof body.utmMedium === "string"
-            ? body.utmMedium.trim().slice(0, 200)
-            : "",
-        utmCampaign:
-          typeof body.utmCampaign === "string"
-            ? body.utmCampaign.trim().slice(0, 200)
-            : "",
-        utmContent:
-          typeof body.utmContent === "string"
-            ? body.utmContent.trim().slice(0, 200)
-            : "",
-        utmTerm:
-          typeof body.utmTerm === "string"
-            ? body.utmTerm.trim().slice(0, 200)
-            : "",
+        utmSource: str("utmSource", 200),
+        utmMedium: str("utmMedium", 200),
+        utmCampaign: str("utmCampaign", 200),
+        utmContent: str("utmContent", 200),
+        utmTerm: str("utmTerm", 200),
+        campaignId,
+        adsetId,
+        adId,
       },
       expiresAt: leadExpiresAt(),
     });
@@ -199,8 +216,7 @@ export async function POST(req: NextRequest) {
           typeof body.utmMedium === "string" ? body.utmMedium.trim() : "",
         utmCampaign:
           typeof body.utmCampaign === "string" ? body.utmCampaign.trim() : "",
-        landingUrl:
-          typeof body.landingUrl === "string" ? body.landingUrl.trim() : "",
+        landingUrl,
         ip: clientIp(req),
       });
     } catch (adminMailError) {

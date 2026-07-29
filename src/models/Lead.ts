@@ -20,6 +20,10 @@ export interface ILeadAttribution {
   utmCampaign?: string;
   utmContent?: string;
   utmTerm?: string;
+  /** Meta Ads dynamic URL param (e.g. campaign_id={{campaign.id}}). */
+  campaignId?: string;
+  adsetId?: string;
+  adId?: string;
 }
 
 export interface ILead extends Document {
@@ -111,6 +115,9 @@ const LeadSchema = new Schema<ILead>(
       utmCampaign: { type: String, default: "" },
       utmContent: { type: String, default: "" },
       utmTerm: { type: String, default: "" },
+      campaignId: { type: String, default: "" },
+      adsetId: { type: String, default: "" },
+      adId: { type: String, default: "" },
     },
     previewSlug: {
       type: String,

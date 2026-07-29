@@ -32,6 +32,8 @@ export type MetaInsightRow = {
   id: string;
   name: string;
   level: MetaInsightLevel;
+  campaignId: string;
+  campaignName: string;
   impressions: number;
   reach: number;
   clicks: number;
@@ -68,6 +70,8 @@ export type MetaAdsDashboard = {
     ctr: number | null;
     roas: number | null;
   };
+  /** Always campaign-level rows for the campaign switcher. */
+  campaigns: MetaInsightRow[];
   rows: MetaInsightRow[];
   currency: string;
 };
@@ -304,6 +308,9 @@ function mapInsight(row: GraphInsight, level: MetaInsightLevel): MetaInsightRow 
     id,
     name,
     level,
+    campaignId: row.campaign_id || (level === "campaign" ? id : ""),
+    campaignName:
+      row.campaign_name || (level === "campaign" ? name : "") || "",
     impressions: asNumber(row.impressions),
     reach: asNumber(row.reach),
     clicks: asNumber(row.clicks),
@@ -396,14 +403,19 @@ export async function loadMetaAdsDashboard(input: {
   );
 
   // Account-level row is the source of truth for totals (matches Ads Manager account).
-  // Breakdown rows are fetched separately and must not be summed for the summary.
-  const [accountRows, breakdownRows] = await Promise.all([
+  // Campaign rows always load for the switcher; breakdown rows follow `level`.
+  const [accountRows, campaignRows, breakdownRows] = await Promise.all([
     fetchInsightsPages({
       accountId: account.id,
       level: "account",
       timeParams,
     }),
-    level === "account"
+    fetchInsightsPages({
+      accountId: account.id,
+      level: "campaign",
+      timeParams,
+    }),
+    level === "account" || level === "campaign"
       ? Promise.resolve([] as MetaInsightRow[])
       : fetchInsightsPages({
           accountId: account.id,
@@ -413,7 +425,12 @@ export async function loadMetaAdsDashboard(input: {
   ]);
 
   const accountRow = accountRows[0];
-  const rows = level === "account" ? accountRows : breakdownRows;
+  const rows =
+    level === "account"
+      ? accountRows
+      : level === "campaign"
+        ? campaignRows
+        : breakdownRows;
 
   const spend = accountRow?.spend ?? 0;
   const impressions = accountRow?.impressions ?? 0;
@@ -432,6 +449,7 @@ export async function loadMetaAdsDashboard(input: {
     dateStart: accountRow?.dateStart || rows[0]?.dateStart || "",
     dateStop: accountRow?.dateStop || rows[0]?.dateStop || "",
     currency: account.currency || "USD",
+    campaigns: campaignRows,
     rows,
     summary: {
       spend,
