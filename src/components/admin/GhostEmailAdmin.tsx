@@ -22,9 +22,10 @@ type GhostRow = {
   previewExpiresAt: string | null;
   previewCreatedAt: string | null;
   facebookUrl: string;
-  segment: "ready" | "expired";
+  segment: "no_facebook" | "ready" | "expired" | "failed";
   previewUrl: string;
   claimUrl: string;
+  continueUrl: string;
   createdAt: string | null;
   updatedAt: string | null;
 };
@@ -62,11 +63,11 @@ export default function GhostEmailAdmin() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
-  const [segmentFilter, setSegmentFilter] = useState<"all" | "ready" | "expired">(
-    "all"
-  );
+  const [segmentFilter, setSegmentFilter] = useState<
+    "all" | "no_facebook" | "ready" | "expired" | "failed"
+  >("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [templateId, setTemplateId] = useState<string>("demo_waiting");
+  const [templateId, setTemplateId] = useState<string>("continue_facebook");
   const [subject, setSubject] = useState("");
   const [sending, setSending] = useState(false);
   const [previewHtml, setPreviewHtml] = useState("");
@@ -89,7 +90,7 @@ export default function GhostEmailAdmin() {
         if (current && nextTemplates.some((t) => t.id === current)) {
           return current;
         }
-        return nextTemplates[0]?.id || "demo_waiting";
+        return nextTemplates[0]?.id || "continue_facebook";
       });
       setSubject((current) => {
         if (current.trim()) return current;
@@ -122,14 +123,17 @@ export default function GhostEmailAdmin() {
         g.previewSlug,
         g.phone,
         g.facebookUrl,
+        g.leadStatus,
       ]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q));
     });
   }, [ghosts, segmentFilter, query]);
 
+  const noFacebookCount = ghosts.filter((g) => g.segment === "no_facebook").length;
   const readyCount = ghosts.filter((g) => g.segment === "ready").length;
   const expiredCount = ghosts.filter((g) => g.segment === "expired").length;
+  const failedCount = ghosts.filter((g) => g.segment === "failed").length;
 
   const toggleSelected = (id: string) => {
     setSelectedIds((prev) => {
@@ -209,16 +213,17 @@ export default function GhostEmailAdmin() {
       return;
     }
 
-    const expiredInSelection = selectedRows.filter(
-      (r) => r.segment === "expired"
-    ).length;
-    const warnExpired =
-      selectedTemplate?.audience === "ready" && expiredInSelection
-        ? `\n\nNote: ${expiredInSelection} selected have expired demos — their preview/claim links will be empty for this template.`
-        : "";
+    const warnMismatch =
+      selectedTemplate?.audience === "ready" &&
+      selectedRows.some((r) => r.segment !== "ready")
+        ? `\n\nNote: some selected leads don’t have a live demo — preview/claim links may be empty for this template.`
+        : selectedTemplate?.audience === "no_facebook" &&
+            selectedRows.some((r) => r.segment !== "no_facebook")
+          ? `\n\nNote: some selected already uploaded Facebook / have a demo — consider a different template.`
+          : "";
 
     const ok = window.confirm(
-      `Send “${selectedTemplate?.label || templateId}” to ${selectedRows.length} ghost lead(s)?${warnExpired}`
+      `Send “${selectedTemplate?.label || templateId}” to ${selectedRows.length} ghost lead(s)?${warnMismatch}`
     );
     if (!ok) return;
 
@@ -279,16 +284,18 @@ export default function GhostEmailAdmin() {
                 Ghost leads
               </h1>
               <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink/55">
-                People who became leads, generated a preview, and never claimed.
-                Send HTML follow-ups with a link back to their demo.
+                Anyone who entered the funnel and never subscribed — lead form
+                only, or Facebook uploaded / demo ready but unpaid. Send HTML
+                follow-ups with their continue or demo link.
               </p>
             </div>
 
             {!loading && !error && (
-              <div className="grid grid-cols-3 gap-4 text-sm sm:flex sm:gap-8">
+              <div className="grid grid-cols-2 gap-4 text-sm sm:flex sm:gap-8">
                 <MetaStat label="Ghosts" value={ghosts.length} />
+                <MetaStat label="No FB" value={noFacebookCount} />
                 <MetaStat label="Ready" value={readyCount} />
-                <MetaStat label="Expired" value={expiredCount} />
+                <MetaStat label="Expired" value={expiredCount + failedCount} />
               </div>
             )}
           </div>
@@ -419,8 +426,10 @@ export default function GhostEmailAdmin() {
             {(
               [
                 ["all", "All"],
+                ["no_facebook", "No Facebook"],
                 ["ready", "Ready demos"],
                 ["expired", "Expired demos"],
+                ["failed", "Started / failed"],
               ] as const
             ).map(([value, label]) => (
               <button
@@ -478,8 +487,8 @@ export default function GhostEmailAdmin() {
           <p className="text-sm text-red-700">{error}</p>
         ) : filtered.length === 0 ? (
           <p className="text-sm text-ink/50">
-            No ghost leads match this filter. Paid emails and purchased leads
-            are excluded.
+            No ghost leads match this filter. Purchased leads and emails with a
+            successful order / website are excluded.
           </p>
         ) : (
           <div className="overflow-x-auto border border-ink/10">
@@ -488,7 +497,7 @@ export default function GhostEmailAdmin() {
                 <tr>
                   <th className="px-3 py-3 w-10" />
                   <th className="px-3 py-3">Lead</th>
-                  <th className="px-3 py-3">Preview</th>
+                  <th className="px-3 py-3">Link</th>
                   <th className="px-3 py-3">Status</th>
                   <th className="px-3 py-3">Updated</th>
                 </tr>
@@ -496,6 +505,18 @@ export default function GhostEmailAdmin() {
               <tbody>
                 {filtered.map((row) => {
                   const checked = selectedIds.has(row.id);
+                  const segmentClass =
+                    row.segment === "ready"
+                      ? "bg-emerald-500/10 text-emerald-800"
+                      : row.segment === "no_facebook"
+                        ? "bg-sky-500/10 text-sky-800"
+                        : row.segment === "failed"
+                          ? "bg-amber-500/10 text-amber-800"
+                          : "bg-orange-500/10 text-orange-800";
+                  const segmentLabel =
+                    row.segment === "no_facebook"
+                      ? "no facebook"
+                      : row.segment;
                   return (
                     <tr
                       key={row.id}
@@ -526,9 +547,11 @@ export default function GhostEmailAdmin() {
                         </p>
                       </td>
                       <td className="px-3 py-3 align-top">
-                        <p className="font-mono text-xs text-ink/80">
-                          {row.previewSlug || "—"}
-                        </p>
+                        {row.previewSlug ? (
+                          <p className="font-mono text-xs text-ink/80">
+                            {row.previewSlug}
+                          </p>
+                        ) : null}
                         {row.previewUrl ? (
                           <a
                             href={row.previewUrl}
@@ -538,19 +561,24 @@ export default function GhostEmailAdmin() {
                           >
                             Open demo
                           </a>
+                        ) : row.continueUrl ? (
+                          <a
+                            href={row.continueUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-accent hover:underline"
+                          >
+                            Continue link
+                          </a>
                         ) : (
                           <span className="text-xs text-ink/40">No live link</span>
                         )}
                       </td>
                       <td className="px-3 py-3 align-top">
                         <span
-                          className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${
-                            row.segment === "ready"
-                              ? "bg-emerald-500/10 text-emerald-800"
-                              : "bg-orange-500/10 text-orange-800"
-                          }`}
+                          className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${segmentClass}`}
                         >
-                          {row.segment}
+                          {segmentLabel}
                         </span>
                         <p className="mt-1 text-xs text-ink/40">
                           lead: {row.leadStatus}
@@ -560,7 +588,9 @@ export default function GhostEmailAdmin() {
                         </p>
                       </td>
                       <td className="px-3 py-3 align-top text-ink/55">
-                        {formatDate(row.updatedAt || row.previewCreatedAt)}
+                        {formatDate(
+                          row.updatedAt || row.previewCreatedAt || row.createdAt
+                        )}
                       </td>
                     </tr>
                   );

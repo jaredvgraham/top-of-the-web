@@ -2,9 +2,16 @@ import Order from "@/models/Order";
 import Preview from "@/models/Preview";
 import Website from "@/models/WebsiteModel";
 import Lead, { isLeadExpired } from "@/models/Lead";
+import { leadContinueUrl } from "@/lib/preview/lead";
 import { resolveGhostUrls } from "@/lib/ghostEmailTemplates";
 
-export type GhostSegment = "ready" | "expired" | "all";
+/** Funnel drop-off stages for unpaid leads. */
+export type GhostSegment =
+  | "no_facebook"
+  | "ready"
+  | "expired"
+  | "failed"
+  | "all";
 
 export type GhostLeadRow = {
   id: string;
@@ -24,9 +31,10 @@ export type GhostLeadRow = {
   previewExpiresAt: string | null;
   previewCreatedAt: string | null;
   facebookUrl: string;
-  segment: "ready" | "expired";
+  segment: Exclude<GhostSegment, "all">;
   previewUrl: string;
   claimUrl: string;
+  continueUrl: string;
   createdAt: string | null;
   updatedAt: string | null;
 };
@@ -62,9 +70,39 @@ function previewIsExpired(doc: {
   return new Date(doc.expiresAt).getTime() < Date.now();
 }
 
+function classifySegment(input: {
+  preview: {
+    status?: string;
+    expiresAt?: Date | string | null;
+    source?: { url?: string };
+  } | null;
+  facebookUrl?: string;
+}): Exclude<GhostSegment, "all"> {
+  const preview = input.preview;
+  if (!preview) return "no_facebook";
+
+  const expired = previewIsExpired(preview);
+  if (preview.status === "ready" && !expired) return "ready";
+  if (preview.status === "expired" || expired) return "expired";
+  if (preview.status === "failed") return "failed";
+
+  // queued / scraping / generating — they started Facebook upload
+  if (["queued", "scraping", "generating"].includes(preview.status || "")) {
+    return "failed";
+  }
+
+  // Has a facebook URL on the lead but no usable preview yet
+  if (input.facebookUrl?.trim()) return "failed";
+
+  return "no_facebook";
+}
+
 /**
- * Ghost = became a lead, generated a preview, did not purchase.
- * Paid exclusion matches admin previews: successful Order OR any Website on email.
+ * Ghost = entered the preview funnel and never became a paying subscriber.
+ *
+ * Includes:
+ * 1. Lead form filled, never uploaded Facebook / never generated a demo
+ * 2. Uploaded Facebook / generated a demo, but never paid (Order success / Website)
  */
 export async function listGhostLeads(
   segment: GhostSegment = "all"
@@ -72,18 +110,10 @@ export async function listGhostLeads(
   const paidEmails = await loadPaidEmails();
 
   const [leads, previews] = await Promise.all([
-    Lead.find({
-      status: { $nin: ["purchased"] },
-      $or: [
-        { previewSlug: { $exists: true, $nin: ["", null] } },
-        { status: { $in: ["preview_ready", "generating"] } },
-      ],
-    })
+    Lead.find({ status: { $nin: ["purchased"] } })
       .sort({ updatedAt: -1 })
       .lean(),
-    Preview.find({
-      status: { $in: ["ready", "expired"] },
-    })
+    Preview.find()
       .select("slug email leadToken status expiresAt createdAt source")
       .sort({ createdAt: -1 })
       .lean(),
@@ -91,20 +121,18 @@ export async function listGhostLeads(
 
   const previewByLeadToken = new Map<string, (typeof previews)[number]>();
   const previewBySlug = new Map<string, (typeof previews)[number]>();
-  const readyPreviewsByEmail = new Map<string, (typeof previews)[number][]>();
+  const previewsByEmail = new Map<string, (typeof previews)[number][]>();
 
   for (const preview of previews) {
-    if (preview.leadToken) {
-      if (!previewByLeadToken.has(preview.leadToken)) {
-        previewByLeadToken.set(preview.leadToken, preview);
-      }
+    if (preview.leadToken && !previewByLeadToken.has(preview.leadToken)) {
+      previewByLeadToken.set(preview.leadToken, preview);
     }
     if (preview.slug) previewBySlug.set(preview.slug, preview);
     const key = emailKey(preview.email);
     if (!key) continue;
-    const list = readyPreviewsByEmail.get(key) || [];
+    const list = previewsByEmail.get(key) || [];
     list.push(preview);
-    readyPreviewsByEmail.set(key, list);
+    previewsByEmail.set(key, list);
   }
 
   const rows: GhostLeadRow[] = [];
@@ -115,37 +143,34 @@ export async function listGhostLeads(
     if (!email || paidEmails.has(email)) continue;
     if (lead.status === "purchased") continue;
 
+    // Prefer the newest lead per email
+    if (seenEmails.has(email)) continue;
+    seenEmails.add(email);
+
     let preview =
       (lead.token && previewByLeadToken.get(lead.token)) ||
       (lead.previewSlug && previewBySlug.get(lead.previewSlug)) ||
       null;
 
-    // Fall back to newest preview on same email if lead link is missing
     if (!preview) {
-      const byEmail = readyPreviewsByEmail.get(email);
-      preview = byEmail?.[0] || null;
+      preview = previewsByEmail.get(email)?.[0] || null;
     }
 
-    // Must have generated a usable/expired demo
-    if (!preview) continue;
-    if (preview.status !== "ready" && preview.status !== "expired") continue;
+    const facebookUrl = preview?.source?.url || lead.facebookUrl || "";
+    const rowSegment = classifySegment({ preview, facebookUrl });
 
-    const expired = previewIsExpired(preview);
-    const ready = preview.status === "ready" && !expired;
-    const rowSegment: "ready" | "expired" = ready ? "ready" : "expired";
+    if (segment !== "all" && rowSegment !== segment) continue;
 
-    if (segment === "ready" && rowSegment !== "ready") continue;
-    if (segment === "expired" && rowSegment !== "expired") continue;
-
-    // Deduplicate by email — keep most recently updated lead
-    if (seenEmails.has(email)) continue;
-    seenEmails.add(email);
-
+    const expired = preview ? previewIsExpired(preview) : false;
+    const ready = Boolean(preview && preview.status === "ready" && !expired);
     const urls = resolveGhostUrls({
-      previewSlug: preview.slug,
+      previewSlug: preview?.slug,
       previewReady: ready,
       previewExpired: expired,
     });
+
+    const continueUrl =
+      lead.token && !isLeadExpired(lead) ? leadContinueUrl(lead.token) : "";
 
     rows.push({
       id: String(lead._id),
@@ -159,19 +184,20 @@ export async function listGhostLeads(
       leadStatus: lead.status,
       leadExpired: isLeadExpired(lead),
       previewId: preview?._id ? String(preview._id) : null,
-      previewSlug: preview.slug || lead.previewSlug || "",
-      previewStatus: preview.status || null,
+      previewSlug: preview?.slug || lead.previewSlug || "",
+      previewStatus: preview?.status || null,
       previewExpired: expired,
-      previewExpiresAt: preview.expiresAt
+      previewExpiresAt: preview?.expiresAt
         ? new Date(preview.expiresAt).toISOString()
         : null,
-      previewCreatedAt: preview.createdAt
+      previewCreatedAt: preview?.createdAt
         ? new Date(preview.createdAt).toISOString()
         : null,
-      facebookUrl: preview.source?.url || lead.facebookUrl || "",
+      facebookUrl,
       segment: rowSegment,
       previewUrl: urls.previewUrl,
       claimUrl: urls.claimUrl,
+      continueUrl,
       createdAt: lead.createdAt
         ? new Date(lead.createdAt).toISOString()
         : null,
@@ -181,19 +207,19 @@ export async function listGhostLeads(
     });
   }
 
-  // Also catch ready/expired unpaid previews that have no lead record
+  // Unpaid previews with no matching Lead record
   for (const preview of previews) {
     const email = emailKey(preview.email);
     if (!email || paidEmails.has(email) || seenEmails.has(email)) continue;
-    if (preview.status !== "ready" && preview.status !== "expired") continue;
 
-    const expired = previewIsExpired(preview);
-    const ready = preview.status === "ready" && !expired;
-    const rowSegment: "ready" | "expired" = ready ? "ready" : "expired";
-    if (segment === "ready" && rowSegment !== "ready") continue;
-    if (segment === "expired" && rowSegment !== "expired") continue;
+    const facebookUrl = preview.source?.url || "";
+    const rowSegment = classifySegment({ preview, facebookUrl });
+    if (segment !== "all" && rowSegment !== segment) continue;
+    if (rowSegment === "no_facebook") continue;
 
     seenEmails.add(email);
+    const expired = previewIsExpired(preview);
+    const ready = preview.status === "ready" && !expired;
     const urls = resolveGhostUrls({
       previewSlug: preview.slug,
       previewReady: ready,
@@ -221,10 +247,11 @@ export async function listGhostLeads(
       previewCreatedAt: preview.createdAt
         ? new Date(preview.createdAt).toISOString()
         : null,
-      facebookUrl: preview.source?.url || "",
+      facebookUrl,
       segment: rowSegment,
       previewUrl: urls.previewUrl,
       claimUrl: urls.claimUrl,
+      continueUrl: "",
       createdAt: preview.createdAt
         ? new Date(preview.createdAt).toISOString()
         : null,

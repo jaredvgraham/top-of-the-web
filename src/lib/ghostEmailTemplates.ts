@@ -1,6 +1,7 @@
 import { siteOrigin } from "@/lib/mail";
 
 export type GhostTemplateId =
+  | "continue_facebook"
   | "demo_waiting"
   | "claim_today"
   | "demo_expiring"
@@ -14,6 +15,7 @@ export type GhostEmailVars = {
   state?: string;
   previewUrl?: string;
   claimUrl?: string;
+  continueUrl?: string;
   email?: string;
 };
 
@@ -21,12 +23,20 @@ export type GhostTemplateMeta = {
   id: GhostTemplateId;
   label: string;
   description: string;
-  /** Best for ready (non-expired) demos */
-  audience: "ready" | "expired" | "any";
+  /** Best funnel stage for this template */
+  audience: "no_facebook" | "ready" | "expired" | "failed" | "any";
   defaultSubject: string;
 };
 
 export const GHOST_TEMPLATES: GhostTemplateMeta[] = [
+  {
+    id: "continue_facebook",
+    label: "Finish your demo",
+    description:
+      "Lead form done, never pasted Facebook — send their continue link.",
+    audience: "no_facebook",
+    defaultSubject: "{{firstName}}, finish your free {{business}} website demo",
+  },
   {
     id: "demo_waiting",
     label: "Demo still waiting",
@@ -51,7 +61,7 @@ export const GHOST_TEMPLATES: GhostTemplateMeta[] = [
   {
     id: "come_back",
     label: "Soft check-in",
-    description: "Low-pressure follow-up if they went quiet after generating.",
+    description: "Low-pressure follow-up if they went quiet mid-funnel.",
     audience: "any",
     defaultSubject: "Quick check-in about your {{business}} website demo",
   },
@@ -172,12 +182,41 @@ export function buildGhostEmail(
   const loc = locationLine(vars);
   const previewUrl = vars.previewUrl || "";
   const claimUrl = vars.claimUrl || previewUrl;
+  const continueUrl = vars.continueUrl || "";
   const subject = fillSubject(subjectOverride?.trim() || meta.defaultSubject, vars);
 
   let text = "";
   let html = "";
 
   switch (templateId) {
+    case "continue_facebook": {
+      text = [
+        greet,
+        ``,
+        `Thanks for starting your free website preview for ${business}.`,
+        ``,
+        `You’re one step away — paste your Facebook business page link and we’ll build your private demo.`,
+        continueUrl ? `Continue here: ${continueUrl}` : `Start again at https://www.bsites.io/preview`,
+        ``,
+        `Questions? Reply to this email or write bsitesioteam@gmail.com.`,
+        ``,
+        `— Bsites`,
+      ].join("\n");
+
+      html = shell({
+        eyebrow: "Almost there",
+        title: "Finish your free website demo",
+        bodyHtml: `<p style="margin:0 0 24px;font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#3D3654;">
+      ${escapeHtml(greet)} You started a free preview for <strong>${escapeHtml(business)}</strong>${loc ? ` in ${escapeHtml(loc)}` : ""}. Paste your Facebook business page link and we’ll generate a private demo.
+    </p>`,
+        ctaHtml: continueUrl
+          ? ctaButton(continueUrl, "Continue my website preview") +
+            linkFallback(continueUrl)
+          : ctaButton("https://www.bsites.io/preview", "Start my preview") +
+            linkFallback("https://www.bsites.io/preview"),
+      });
+      break;
+    }
     case "demo_waiting": {
       text = [
         greet,
@@ -263,11 +302,16 @@ export function buildGhostEmail(
       break;
     }
     case "come_back": {
+      const ctaUrl = previewUrl || continueUrl;
       text = [
         greet,
         ``,
-        `Checking in — we generated a website demo for ${business} and haven’t heard back.`,
-        previewUrl ? `Your demo: ${previewUrl}` : `Reply to this email if you’d like us to refresh or resend your demo.`,
+        previewUrl
+          ? `Checking in — we generated a website demo for ${business} and haven’t heard back.`
+          : `Checking in — you started a free website preview for ${business} and haven’t finished yet.`,
+        ctaUrl
+          ? `Pick up here: ${ctaUrl}`
+          : `Reply to this email if you’d like us to help you finish.`,
         ``,
         `No pressure — happy to answer questions if you’re still deciding.`,
         ``,
@@ -280,10 +324,17 @@ export function buildGhostEmail(
         eyebrow: "Checking in",
         title: "Still thinking it over?",
         bodyHtml: `<p style="margin:0 0 24px;font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#3D3654;">
-      ${escapeHtml(greet)} We built a demo for <strong>${escapeHtml(business)}</strong> and wanted to make sure you didn’t lose the link. No pressure — reply anytime with questions.
+      ${escapeHtml(greet)} ${
+          previewUrl
+            ? `We built a demo for <strong>${escapeHtml(business)}</strong> and wanted to make sure you didn’t lose the link.`
+            : `You started a free preview for <strong>${escapeHtml(business)}</strong> — happy to help you finish whenever you’re ready.`
+        } No pressure — reply anytime with questions.
     </p>`,
-        ctaHtml: previewUrl
-          ? ctaButton(previewUrl, "View my demo") + linkFallback(previewUrl)
+        ctaHtml: ctaUrl
+          ? ctaButton(
+              ctaUrl,
+              previewUrl ? "View my demo" : "Continue my preview"
+            ) + linkFallback(ctaUrl)
           : `<p style="margin:0 0 8px;font-family:system-ui,sans-serif;font-size:14px;line-height:1.6;color:#3D3654;">Reply to this email and we’ll get you sorted.</p>`,
       });
       break;

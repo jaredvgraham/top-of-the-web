@@ -20,7 +20,10 @@ export async function GET(request: NextRequest) {
     await dbConnect();
     const segmentParam = request.nextUrl.searchParams.get("segment") || "all";
     const segment =
-      segmentParam === "ready" || segmentParam === "expired"
+      segmentParam === "ready" ||
+      segmentParam === "expired" ||
+      segmentParam === "no_facebook" ||
+      segmentParam === "failed"
         ? segmentParam
         : "all";
 
@@ -32,8 +35,10 @@ export async function GET(request: NextRequest) {
         templates: GHOST_TEMPLATES,
         counts: {
           total: ghosts.length,
+          no_facebook: ghosts.filter((g) => g.segment === "no_facebook").length,
           ready: ghosts.filter((g) => g.segment === "ready").length,
           expired: ghosts.filter((g) => g.segment === "expired").length,
+          failed: ghosts.filter((g) => g.segment === "failed").length,
         },
       },
       {
@@ -119,6 +124,7 @@ export async function POST(request: NextRequest) {
             state: row.state,
             previewUrl: row.previewUrl,
             claimUrl: row.claimUrl,
+            continueUrl: row.continueUrl,
             email: row.email,
           },
           subjectOverride
@@ -154,6 +160,7 @@ export async function POST(request: NextRequest) {
             state: row.state,
             previewUrl: row.previewUrl,
             claimUrl: row.claimUrl,
+            continueUrl: row.continueUrl,
             email: row.email,
           },
           subjectOverride
