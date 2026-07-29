@@ -4,6 +4,7 @@ import Website from "@/models/WebsiteModel";
 import Lead, { isLeadExpired } from "@/models/Lead";
 import { leadContinueUrl } from "@/lib/preview/lead";
 import { resolveGhostUrls } from "@/lib/ghostEmailTemplates";
+import { deletePreviewBlobPrefix } from "@/lib/preview/deletePreviewAssets";
 
 /** Funnel drop-off stages for unpaid leads. */
 export type GhostSegment =
@@ -272,4 +273,93 @@ export async function getGhostLeadsByIds(ids: string[]) {
   const all = await listGhostLeads("all");
   const wanted = new Set(ids);
   return all.filter((row) => wanted.has(row.id));
+}
+
+async function deletePreviewById(previewId: string): Promise<{
+  ok: boolean;
+  blobsDeleted: number;
+}> {
+  const preview = await Preview.findById(previewId);
+  if (!preview) return { ok: false, blobsDeleted: 0 };
+
+  const blobs = await deletePreviewBlobPrefix(preview.onboardingToken || "");
+  await Preview.deleteOne({ _id: preview._id });
+  return { ok: true, blobsDeleted: blobs.deleted };
+}
+
+/**
+ * Remove ghost funnel rows: unpaid leads (all for that email) + linked previews/blobs.
+ * Ids are either Lead `_id` strings or `preview:{previewId}` for preview-only rows.
+ */
+export async function deleteGhostLeadsByIds(ids: string[]) {
+  const rows = await getGhostLeadsByIds(ids);
+  let leadsDeleted = 0;
+  let previewsDeleted = 0;
+  let blobsDeleted = 0;
+  const failed: string[] = [];
+  const deletedIds: string[] = [];
+
+  for (const row of rows) {
+    try {
+      if (row.previewId) {
+        const result = await deletePreviewById(row.previewId);
+        if (result.ok) {
+          previewsDeleted += 1;
+          blobsDeleted += result.blobsDeleted;
+        }
+      }
+
+      if (row.id.startsWith("preview:")) {
+        // Preview-only ghost — no Lead document behind this id
+        deletedIds.push(row.id);
+        continue;
+      }
+
+      const email = emailKey(row.email);
+      if (email) {
+        // Remove all unpaid leads for this email so an older one doesn't reappear
+        const result = await Lead.deleteMany({
+          email,
+          status: { $nin: ["purchased"] },
+        });
+        leadsDeleted += result.deletedCount || 0;
+      } else {
+        const result = await Lead.deleteOne({ _id: row.id });
+        leadsDeleted += result.deletedCount || 0;
+      }
+
+      deletedIds.push(row.id);
+    } catch (error) {
+      console.error("[ghost] delete failed", row.id, error);
+      failed.push(row.id);
+    }
+  }
+
+  // Also wipe orphan previews for deleted emails (extra demos not linked on the row)
+  for (const row of rows) {
+    if (failed.includes(row.id)) continue;
+    const email = emailKey(row.email);
+    if (!email) continue;
+    try {
+      const orphans = await Preview.find({ email }).select("_id onboardingToken");
+      for (const preview of orphans) {
+        const blobs = await deletePreviewBlobPrefix(preview.onboardingToken || "");
+        await Preview.deleteOne({ _id: preview._id });
+        previewsDeleted += 1;
+        blobsDeleted += blobs.deleted;
+      }
+    } catch (error) {
+      console.warn("[ghost] orphan preview cleanup failed", email, error);
+    }
+  }
+
+  return {
+    deleted: deletedIds.length,
+    deletedIds,
+    leadsDeleted,
+    previewsDeleted,
+    blobsDeleted,
+    failed,
+    missing: ids.filter((id) => !rows.some((r) => r.id === id)),
+  };
 }

@@ -70,6 +70,7 @@ export default function GhostEmailAdmin() {
   const [templateId, setTemplateId] = useState<string>("continue_facebook");
   const [subject, setSubject] = useState("");
   const [sending, setSending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [previewHtml, setPreviewHtml] = useState("");
   const [previewSubject, setPreviewSubject] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -257,6 +258,56 @@ export default function GhostEmailAdmin() {
     }
   };
 
+  const deleteSelected = async () => {
+    if (!selectedRows.length) {
+      setMessage("Select at least one ghost lead to delete");
+      return;
+    }
+
+    const ok = window.confirm(
+      `Delete ${selectedRows.length} ghost lead(s)?\n\nThis permanently removes their Lead record(s), any unpaid demos for that email, and Vercel Blob images. Paid customers are never in this list.`
+    );
+    if (!ok) return;
+
+    setDeleting(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/admin/ghost-email/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedRows.map((r) => r.id) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(data.error || "Delete failed");
+        return;
+      }
+
+      const removed = new Set<string>(data.deletedIds || []);
+      for (const id of data.failed || []) removed.delete(id);
+
+      setGhosts((prev) => prev.filter((g) => !removed.has(g.id)));
+      clearSelection();
+      setMessage(
+        `Deleted ${data.deleted ?? 0}` +
+          (data.leadsDeleted != null
+            ? ` · ${data.leadsDeleted} lead(s)`
+            : "") +
+          (data.previewsDeleted != null
+            ? ` · ${data.previewsDeleted} preview(s)`
+            : "") +
+          (data.blobsDeleted != null
+            ? ` · ${data.blobsDeleted} blob(s)`
+            : "") +
+          (data.failed?.length ? ` · ${data.failed.length} failed` : "")
+      );
+    } catch {
+      setMessage("Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="grain relative min-h-[calc(100dvh-57px)] max-w-[100vw] overflow-x-hidden bg-paper">
       <div
@@ -369,12 +420,22 @@ export default function GhostEmailAdmin() {
             <button
               type="button"
               onClick={sendEmails}
-              disabled={sending || loading || selectedIds.size === 0}
+              disabled={sending || deleting || loading || selectedIds.size === 0}
               className="rounded-full bg-ink px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-paper disabled:opacity-50"
             >
               {sending
                 ? "Working…"
                 : `Send to ${selectedIds.size || 0} selected`}
+            </button>
+            <button
+              type="button"
+              onClick={() => void deleteSelected()}
+              disabled={sending || deleting || loading || selectedIds.size === 0}
+              className="rounded-full bg-red-600 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleting
+                ? "Deleting…"
+                : `Delete ${selectedIds.size || 0} selected`}
             </button>
           </div>
 
@@ -459,21 +520,32 @@ export default function GhostEmailAdmin() {
               <button
                 type="button"
                 onClick={selectFiltered}
-                className="rounded-full bg-ink/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink/60 hover:bg-ink/10"
+                disabled={deleting || sending}
+                className="rounded-full bg-ink/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink/60 hover:bg-ink/10 disabled:opacity-50"
               >
                 Select filtered ({filtered.length})
               </button>
               <button
                 type="button"
                 onClick={clearSelection}
-                className="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink/45 hover:text-ink"
+                disabled={deleting || sending}
+                className="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink/45 hover:text-ink disabled:opacity-50"
               >
                 Clear
               </button>
               <button
                 type="button"
+                onClick={() => void deleteSelected()}
+                disabled={deleting || sending || selectedIds.size === 0}
+                className="rounded-full bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? "Deleting…" : `Delete selected (${selectedIds.size})`}
+              </button>
+              <button
+                type="button"
                 onClick={load}
-                className="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink/45 hover:text-ink"
+                disabled={deleting || sending}
+                className="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink/45 hover:text-ink disabled:opacity-50"
               >
                 Refresh
               </button>
