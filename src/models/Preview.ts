@@ -133,7 +133,7 @@ export default Preview;
 
 export function previewExpiresAt(from = new Date()) {
   const d = new Date(from);
-  d.setDate(d.getDate() + 7);
+  d.setDate(d.getDate() + 30);
   return d;
 }
 

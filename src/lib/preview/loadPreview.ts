@@ -126,7 +126,7 @@ export async function loadPreviewSite(slugRaw: string): Promise<LoadedPreview> {
       ok: false,
       kind: "expired",
       message:
-        "Unclaimed demos expire after 7 days. Generate a new one anytime from your Facebook page.",
+        "Unclaimed demos expire after 30 days. Generate a new one anytime from your Facebook page.",
     };
   }
 
