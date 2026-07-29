@@ -49,6 +49,8 @@ export async function GET() {
         email: doc.email || "",
         status: doc.status,
         facebookUrl: doc.source?.url || "",
+        onboardingToken: doc.onboardingToken || "",
+        leadToken: doc.leadToken || "",
         generation: doc.generation || null,
         error: doc.error?.code
           ? { code: doc.error.code, message: doc.error.message || "" }

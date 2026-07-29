@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Lead, { leadExpiresAt } from "@/models/Lead";
-import { sendLeadContinueEmail } from "@/lib/mail";
+import {
+  sendAdminLeadCapturedEmail,
+  sendLeadContinueEmail,
+} from "@/lib/mail";
 import {
   buildFbcFromFbclid,
   createLeadToken,
@@ -175,6 +178,33 @@ export async function POST(req: NextRequest) {
         "We saved your info but couldn’t send the email. Please try again in a moment.",
         502
       );
+    }
+
+    try {
+      await sendAdminLeadCapturedEmail({
+        name,
+        businessName,
+        city,
+        state,
+        email,
+        phone,
+        continueUrl,
+        token: lead.token,
+        fbclid,
+        fbp,
+        fbc,
+        utmSource:
+          typeof body.utmSource === "string" ? body.utmSource.trim() : "",
+        utmMedium:
+          typeof body.utmMedium === "string" ? body.utmMedium.trim() : "",
+        utmCampaign:
+          typeof body.utmCampaign === "string" ? body.utmCampaign.trim() : "",
+        landingUrl:
+          typeof body.landingUrl === "string" ? body.landingUrl.trim() : "",
+        ip: clientIp(req),
+      });
+    } catch (adminMailError) {
+      console.error("[lead] admin notify failed", adminMailError);
     }
 
     console.log("[lead] captured", {

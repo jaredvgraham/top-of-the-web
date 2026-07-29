@@ -9,6 +9,8 @@ type PreviewRow = {
   email: string;
   status: string;
   facebookUrl: string;
+  onboardingToken?: string;
+  leadToken?: string;
   generation: { engine?: string; model?: string } | null;
   error: { code: string; message: string } | null;
   expiresAt?: string;
@@ -78,6 +80,8 @@ export default function PreviewsAdmin() {
     "all" | "ready" | "generating" | "failed" | "expired"
   >("all");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState("");
   const detailRef = useRef<HTMLElement | null>(null);
 
@@ -135,6 +139,103 @@ export default function PreviewsAdmin() {
       setMessage("Download failed");
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectFilteredUnpaid = () => {
+    setSelectedIds(
+      new Set(filtered.filter((p) => !p.paid).map((p) => p.id))
+    );
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const deletePreview = async (row: PreviewRow) => {
+    const paidWarn = row.paid
+      ? "\n\nThis email looks PAID (order/website on file). Delete anyway?"
+      : "";
+    const ok = window.confirm(
+      `Delete preview “${row.slug}”?\n\nThis removes the Mongo record and all Vercel Blob images under its storage token.${paidWarn}`
+    );
+    if (!ok) return;
+
+    setDeleting(true);
+    setMessage("");
+    try {
+      const res = await fetch(`/api/admin/previews/${row.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(data.error || "Delete failed");
+        return;
+      }
+      setPreviews((prev) => prev.filter((p) => p.id !== row.id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(row.id);
+        return next;
+      });
+      if (selectedId === row.id) setSelectedId(null);
+      setMessage(
+        `Deleted ${row.slug} · ${data.blobsDeleted ?? 0} blob image(s) removed`
+      );
+    } catch {
+      setMessage("Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const deleteSelected = async () => {
+    const rows = filtered.filter((p) => selectedIds.has(p.id));
+    if (!rows.length) return;
+
+    const paidInSelection = rows.filter((p) => p.paid).length;
+    const ok = window.confirm(
+      `Delete ${rows.length} preview(s)?\n\nThis removes Mongo records and Vercel Blob images for each.${
+        paidInSelection
+          ? `\n\nWarning: ${paidInSelection} selected look PAID.`
+          : ""
+      }`
+    );
+    if (!ok) return;
+
+    setDeleting(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/admin/previews/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: rows.map((r) => r.id) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(data.error || "Bulk delete failed");
+        return;
+      }
+      const removed = new Set(rows.map((r) => r.id));
+      for (const id of data.failed || []) removed.delete(id);
+      setPreviews((prev) => prev.filter((p) => !removed.has(p.id)));
+      clearSelection();
+      if (selectedId && removed.has(selectedId)) setSelectedId(null);
+      setMessage(
+        `Deleted ${data.deleted ?? 0} preview(s) · ${data.blobsDeleted ?? 0} blob image(s) removed` +
+          (data.failed?.length ? ` · ${data.failed.length} failed` : "")
+      );
+    } catch {
+      setMessage("Bulk delete failed");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -199,8 +300,8 @@ export default function PreviewsAdmin() {
                 Previews
               </h1>
               <p className="mt-2 max-w-md text-sm leading-relaxed text-ink/55">
-                Facebook → website demos. Download the HTML as your build
-                template. Paid = matching order or website on that email.
+                Facebook → website demos. Download HTML, or delete test demos
+                (Mongo + Vercel Blob images). Paid = order/website on that email.
               </p>
             </div>
 
@@ -267,13 +368,47 @@ export default function PreviewsAdmin() {
             ))}
           </div>
 
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search slug, email, Facebook URL…"
-            className="w-full max-w-md border-b border-ink/20 bg-transparent py-2 text-sm text-ink outline-none focus:border-accent"
-          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search slug, email, Facebook URL…"
+              className="w-full max-w-md border-b border-ink/20 bg-transparent py-2 text-sm text-ink outline-none focus:border-accent"
+            />
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={selectFilteredUnpaid}
+                disabled={loading || deleting}
+                className="rounded-full border border-ink/15 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/70 transition hover:border-ink/30 disabled:opacity-40"
+              >
+                Select unpaid
+              </button>
+              <button
+                type="button"
+                onClick={clearSelection}
+                disabled={!selectedIds.size || deleting}
+                className="rounded-full border border-ink/15 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/70 transition hover:border-ink/30 disabled:opacity-40"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => void deleteSelected()}
+                disabled={!selectedIds.size || deleting}
+                className="rounded-full bg-red-600 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-red-700 disabled:opacity-40"
+              >
+                {deleting
+                  ? "Deleting…"
+                  : `Delete selected (${selectedIds.size})`}
+              </button>
+            </div>
+          </div>
+
+          {message ? (
+            <p className="text-sm text-ink/60">{message}</p>
+          ) : null}
         </motion.div>
 
         {loading ? (
@@ -288,31 +423,45 @@ export default function PreviewsAdmin() {
           <ul className="divide-y divide-ink/10 overflow-hidden rounded-3xl border border-ink/10 bg-white/70">
             {filtered.map((row) => (
               <li key={row.id}>
-                <button
-                  type="button"
-                  onClick={() => openDetail(row)}
-                  className={`flex w-full flex-col gap-2 px-4 py-4 text-left transition hover:bg-ink/[0.03] sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 ${
+                <div
+                  className={`flex items-stretch gap-0 transition hover:bg-ink/[0.03] ${
                     selectedId === row.id ? "bg-accent/5" : ""
                   }`}
                 >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-ink">{row.slug}</span>
-                      <Chip
-                        label={row.paid ? "Paid" : "Not paid"}
-                        tone={row.paid ? "paid" : "muted"}
-                      />
-                      <Chip label={row.status} tone={statusTone(row.status)} />
+                  <label className="flex shrink-0 cursor-pointer items-center px-3 sm:px-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(row.id)}
+                      onChange={() => toggleSelected(row.id)}
+                      disabled={deleting}
+                      className="h-4 w-4 accent-[var(--accent)]"
+                      aria-label={`Select ${row.slug}`}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => openDetail(row)}
+                    className="flex min-w-0 flex-1 flex-col gap-2 py-4 pr-4 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pr-5"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-ink">{row.slug}</span>
+                        <Chip
+                          label={row.paid ? "Paid" : "Not paid"}
+                          tone={row.paid ? "paid" : "muted"}
+                        />
+                        <Chip label={row.status} tone={statusTone(row.status)} />
+                      </div>
+                      <p className="mt-1 truncate text-sm text-ink/55">
+                        {row.email}
+                        {row.facebookUrl ? ` · ${row.facebookUrl}` : ""}
+                      </p>
                     </div>
-                    <p className="mt-1 truncate text-sm text-ink/55">
-                      {row.email}
-                      {row.facebookUrl ? ` · ${row.facebookUrl}` : ""}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-xs text-ink/40">
-                    {formatDate(row.createdAt)}
-                  </div>
-                </button>
+                    <div className="shrink-0 text-xs text-ink/40">
+                      {formatDate(row.createdAt)}
+                    </div>
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -406,10 +555,6 @@ export default function PreviewsAdmin() {
                 </p>
               ) : null}
 
-              {message ? (
-                <p className="mt-4 text-sm text-ink/60">{message}</p>
-              ) : null}
-
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
                   href={`/preview/${selected.slug}`}
@@ -439,12 +584,24 @@ export default function PreviewsAdmin() {
                     Facebook page
                   </a>
                 ) : null}
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => void deletePreview(selected)}
+                  className="inline-flex rounded-full bg-red-600 px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-red-700 disabled:opacity-40"
+                >
+                  {deleting ? "Deleting…" : "Delete preview + images"}
+                </button>
               </div>
 
               <p className="mt-4 text-xs leading-relaxed text-ink/40">
                 ZIP includes index.html, services.html, about.html, site-spec.json,
-                and a README — use it as the starting template for their custom
-                build. Image URLs stay remote in the HTML.
+                and a README. Delete removes the preview document and every Blob
+                file under <code className="text-ink/55">onboarding/{"{token}"}/</code>
+                {selected.onboardingToken
+                  ? ` (${selected.onboardingToken.slice(0, 8)}…)`
+                  : ""}
+                .
               </p>
             </motion.aside>
           ) : null}

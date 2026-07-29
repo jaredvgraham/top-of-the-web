@@ -32,7 +32,10 @@ import {
   normalizeLeadEmail,
   normalizeLeadPhone,
 } from "@/lib/preview/lead";
-import { sendPreviewReadyEmail } from "@/lib/mail";
+import {
+  sendAdminPreviewReadyEmail,
+  sendPreviewReadyEmail,
+} from "@/lib/mail";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -409,6 +412,29 @@ export async function POST(req: NextRequest) {
       }
     } catch (mailError) {
       console.error("[preview] ready email failed", mailError);
+    }
+
+    try {
+      if (process.env.EMAIL && process.env.EMAIL_PASS) {
+        await sendAdminPreviewReadyEmail({
+          email,
+          phone: phone || leadDoc?.phone || "",
+          name: leadDoc?.name || "",
+          businessName: siteSpec.business.name,
+          city: siteSpec.business.city || leadDoc?.city || "",
+          state: siteSpec.business.state || leadDoc?.state || "",
+          facebookUrl: urlCheck.normalizedUrl,
+          previewUrl,
+          slug: preview.slug,
+          leadToken: leadToken || leadDoc?.token || "",
+          previewId: String(preview._id),
+          elapsedMs: Date.now() - startedAt,
+          assetCount: assets.length,
+        });
+        console.log("[preview] admin notify sent");
+      }
+    } catch (adminMailError) {
+      console.error("[preview] admin notify failed", adminMailError);
     }
 
     console.log("[preview] ready", {
