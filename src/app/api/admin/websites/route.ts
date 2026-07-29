@@ -8,6 +8,10 @@ import {
   getSubscriptionInfoMap,
 } from "@/lib/stripeSubscription";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     await dbConnect();
@@ -92,7 +96,14 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ websites: data });
+    return NextResponse.json(
+      { websites: data },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        },
+      }
+    );
   } catch (error) {
     console.error("Failed to list websites:", error);
     return NextResponse.json(

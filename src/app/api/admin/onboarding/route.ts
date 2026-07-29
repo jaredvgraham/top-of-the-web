@@ -8,6 +8,10 @@ import {
   serializeOnboarding,
 } from "@/lib/onboarding";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
@@ -23,15 +27,22 @@ export async function GET(req: NextRequest) {
       .sort({ updatedAt: -1 })
       .limit(200);
 
-    return NextResponse.json({
-      sessions: sessions.map((session) => ({
-        ...serializeOnboarding(session),
-        url: onboardingPublicUrl(
-          session.token,
-          req.headers.get("origin") || undefined
-        ),
-      })),
-    });
+    return NextResponse.json(
+      {
+        sessions: sessions.map((session) => ({
+          ...serializeOnboarding(session),
+          url: onboardingPublicUrl(
+            session.token,
+            req.headers.get("origin") || undefined
+          ),
+        })),
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        },
+      }
+    );
   } catch (error) {
     console.error("Failed to list onboarding sessions", error);
     return NextResponse.json(

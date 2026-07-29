@@ -153,7 +153,7 @@ export default function WebsitesAdmin() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/websites");
+      const res = await fetch("/api/admin/websites", { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
       setWebsites(data.websites || []);
