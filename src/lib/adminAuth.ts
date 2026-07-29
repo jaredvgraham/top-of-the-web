@@ -1,5 +1,5 @@
 export const ADMIN_COOKIE = "admin_session";
-export const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+export const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
 function toHex(buffer: ArrayBuffer): string {
   return Array.from(new Uint8Array(buffer))
