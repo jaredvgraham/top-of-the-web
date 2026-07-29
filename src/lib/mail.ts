@@ -1,4 +1,7 @@
 import nodemailer from "nodemailer";
+import { siteOrigin } from "@/lib/siteOrigin";
+
+export { siteOrigin };
 
 export function getMailTransporter() {
   const user = process.env.EMAIL?.trim();
@@ -13,13 +16,6 @@ export function getMailTransporter() {
     secure: true,
     auth: { user, pass },
   });
-}
-
-export function siteOrigin() {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "https://www.bsites.io"
-  );
 }
 
 export type PurchaseConfirmationInput = {

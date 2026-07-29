@@ -118,14 +118,16 @@ export default function AdminLeadCard({
   onDelete,
   deleting = false,
 }: Props) {
-  const [copied, setCopied] = useState<"email" | "phone" | null>(null);
+  const [copied, setCopied] = useState<"email" | "phone" | "demo" | null>(null);
   const bought = lead.status === "purchased";
   const hasFb = Boolean(lead.facebookUrl?.trim());
   const phoneLink = telHref(lead.phone);
   const textLink = smsHref(lead.phone);
   const location = [lead.city, lead.state].filter(Boolean).join(", ");
+  const demoLink = lead.demoUrl || lead.continueUrl;
+  const demoLabel = lead.demoUrl ? "Demo" : lead.continueUrl ? "Make demo" : "";
 
-  async function copy(kind: "email" | "phone", value: string) {
+  async function copy(kind: "email" | "phone" | "demo", value: string) {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(kind);
@@ -168,8 +170,34 @@ export default function AdminLeadCard({
 
       <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/40">
         {statusLabel(lead.status)}
-        {lead.previewSlug ? ` · ${lead.previewSlug}` : ""}
       </p>
+
+      {demoLink ? (
+        <div className="mt-3 rounded-xl bg-ink/[0.03] px-3 py-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/40">
+            {demoLabel}
+          </p>
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <a
+              href={demoLink}
+              target="_blank"
+              rel="noreferrer"
+              className="min-w-0 truncate text-sm text-accent hover:underline"
+            >
+              {demoLink}
+            </a>
+            <button
+              type="button"
+              onClick={() => void copy("demo", demoLink)}
+              className="shrink-0 rounded-lg bg-ink/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/55"
+            >
+              {copied === "demo" ? "Copied" : "Copy"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-ink/40">No demo or continue link</p>
+      )}
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <ActionBtn
@@ -228,28 +256,16 @@ export default function AdminLeadCard({
         ) : null}
       </div>
 
-      {lead.previewSlug || onDelete ? (
+      {onDelete ? (
         <div className="mt-3 flex flex-wrap gap-2">
-          {lead.previewSlug ? (
-            <a
-              href={`/preview/${lead.previewSlug}`}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg border border-ink/10 px-3 py-2 text-xs font-medium text-ink/60"
-            >
-              Open preview
-            </a>
-          ) : null}
-          {onDelete ? (
-            <button
-              type="button"
-              disabled={deleting}
-              onClick={() => onDelete(lead.id)}
-              className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50"
-            >
-              {deleting ? "Deleting…" : "Delete"}
-            </button>
-          ) : null}
+          <button
+            type="button"
+            disabled={deleting}
+            onClick={() => onDelete(lead.id)}
+            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50"
+          >
+            {deleting ? "Deleting…" : "Delete"}
+          </button>
         </div>
       ) : null}
     </article>

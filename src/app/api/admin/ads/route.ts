@@ -153,7 +153,7 @@ export async function GET(req: NextRequest) {
           .sort({ createdAt: -1 })
           .limit(200)
           .select(
-            "name email phone businessName city state status previewSlug facebookUrl attribution createdAt updatedAt"
+            "name email phone businessName city state status token previewSlug facebookUrl attribution createdAt updatedAt"
           )
           .lean(),
       ]);

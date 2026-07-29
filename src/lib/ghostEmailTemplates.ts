@@ -1,4 +1,4 @@
-import { siteOrigin } from "@/lib/mail";
+import { siteOrigin } from "@/lib/siteOrigin";
 
 export type GhostTemplateId =
   | "continue_facebook"

@@ -1,4 +1,5 @@
 import { hasMetaAdClickAttribution } from "@/lib/preview/hasMetaAdClick";
+import { siteOrigin } from "@/lib/siteOrigin";
 
 /** Mongo filter for leads that arrived via a Meta ad click. */
 export const META_AD_LEAD_FILTER = {
@@ -32,7 +33,12 @@ export type AdminLeadRow = {
   city: string;
   state: string;
   status: string;
+  token: string;
   previewSlug: string;
+  /** Live demo when preview exists; otherwise empty. */
+  demoUrl: string;
+  /** Continue / generate demo when no preview yet; otherwise empty. */
+  continueUrl: string;
   facebookUrl: string;
   createdAt: string;
   updatedAt: string;
@@ -49,6 +55,7 @@ type LeanLead = {
   city?: string;
   state?: string;
   status?: string;
+  token?: string;
   previewSlug?: string;
   facebookUrl?: string;
   createdAt?: Date | string;
@@ -150,6 +157,13 @@ export function serializeAdminLead(doc: LeanLead): AdminLeadRow {
       attr.adId || paramFromLandingUrl(landingUrl, ["ad_id", "adId"]) || "",
   };
 
+  const token = doc.token || "";
+  const previewSlug = doc.previewSlug || "";
+  const origin = siteOrigin();
+  const demoUrl = previewSlug ? `${origin}/preview/${previewSlug}` : "";
+  const continueUrl =
+    !previewSlug && token ? `${origin}/preview/continue/${token}` : "";
+
   return {
     id: String(doc._id),
     name: doc.name || "",
@@ -159,7 +173,10 @@ export function serializeAdminLead(doc: LeanLead): AdminLeadRow {
     city: doc.city || "",
     state: doc.state || "",
     status: doc.status || "captured",
-    previewSlug: doc.previewSlug || "",
+    token,
+    previewSlug,
+    demoUrl,
+    continueUrl,
     facebookUrl: doc.facebookUrl || "",
     createdAt: iso(doc.createdAt),
     updatedAt: iso(doc.updatedAt),

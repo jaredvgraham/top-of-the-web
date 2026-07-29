@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { siteOrigin } from "@/lib/mail";
+import { siteOrigin } from "@/lib/siteOrigin";
 import { hasMetaAdClickAttribution } from "@/lib/preview/hasMetaAdClick";
 
 export { hasMetaAdClickAttribution };
