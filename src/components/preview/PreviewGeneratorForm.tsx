@@ -6,6 +6,7 @@ import PreviewLoadingState from "@/components/preview/PreviewLoadingState";
 import { resolveBrandPalette } from "@/lib/preview/brandColors";
 import { BRAND_COLOR_PRESETS } from "@/lib/preview/brandPreferences";
 import { trackMetaEvent } from "@/lib/preview/metaAttribution";
+import type { PreviewStreamEvent } from "@/lib/preview/generateProgress";
 
 type FormPhase =
   | "idle"
@@ -21,6 +22,113 @@ export type PreviewGeneratorFormProps = {
   initialEmail?: string;
   initialPhone?: string;
 };
+
+async function readGenerateStream(
+  response: Response,
+  onProgress: (percent: number, stageIndex: number) => void
+): Promise<PreviewStreamEvent> {
+  const contentType = response.headers.get("content-type") || "";
+
+  // Validation / early errors still return JSON
+  if (!contentType.includes("ndjson")) {
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return {
+        type: "error",
+        error: {
+          code: data?.error?.code || "request_failed",
+          message:
+            data?.error?.message ||
+            (response.status === 429
+              ? "Rate limit reached. Try again tomorrow."
+              : "We couldn’t generate your preview. Please try again."),
+        },
+      };
+    }
+    if (data?.status === "ready" && data?.slug) {
+      return {
+        type: "done",
+        slug: data.slug,
+        previewUrl: data.previewUrl || "",
+        status: "ready",
+        pagesComplete: true,
+        usedAi: data.usedAi,
+        percent: 100,
+      };
+    }
+    return {
+      type: "error",
+      error: {
+        code: "unexpected_response",
+        message: "Unexpected response from the generator.",
+      },
+    };
+  }
+
+  if (!response.body) {
+    return {
+      type: "error",
+      error: {
+        code: "empty_stream",
+        message: "No progress stream received. Please try again.",
+      },
+    };
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let lastEvent: PreviewStreamEvent | null = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const event = JSON.parse(trimmed) as PreviewStreamEvent;
+        lastEvent = event;
+        if (event.type === "progress") {
+          onProgress(event.percent, event.stageIndex);
+        } else if (event.type === "done") {
+          onProgress(100, 5);
+        }
+      } catch {
+        // skip malformed chunk
+      }
+    }
+  }
+
+  if (buffer.trim()) {
+    try {
+      const event = JSON.parse(buffer.trim()) as PreviewStreamEvent;
+      lastEvent = event;
+      if (event.type === "progress") {
+        onProgress(event.percent, event.stageIndex);
+      } else if (event.type === "done") {
+        onProgress(100, 5);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!lastEvent) {
+    return {
+      type: "error",
+      error: {
+        code: "empty_stream",
+        message: "Generation ended without a result. Please try again.",
+      },
+    };
+  }
+  return lastEvent;
+}
 
 export default function PreviewGeneratorForm({
   leadToken = "",
@@ -44,7 +152,8 @@ export default function PreviewGeneratorForm({
   const [accentColor, setAccentColor] = useState<string>(DEFAULT_PRESET.accentColor);
   const [phase, setPhase] = useState<FormPhase>("idle");
   const [error, setError] = useState("");
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [stageIndex, setStageIndex] = useState(0);
 
   useEffect(() => {
     setEmail(initialEmail);
@@ -62,15 +171,6 @@ export default function PreviewGeneratorForm({
       });
     }
   }, [leadToken]);
-
-  useEffect(() => {
-    if (phase !== "submitting") return;
-    const started = Date.now();
-    const id = window.setInterval(() => {
-      setElapsedMs(Date.now() - started);
-    }, 500);
-    return () => window.clearInterval(id);
-  }, [phase]);
 
   const applyPreset = (preset: (typeof BRAND_COLOR_PRESETS)[number]) => {
     setPrimaryColor(preset.primaryColor);
@@ -119,7 +219,8 @@ export default function PreviewGeneratorForm({
     }
 
     setPhase("submitting");
-    setElapsedMs(0);
+    setProgressPercent(4);
+    setStageIndex(0);
 
     try {
       trackMetaEvent("InitiateCheckout", {
@@ -128,7 +229,10 @@ export default function PreviewGeneratorForm({
 
       const response = await fetch("/api/preview/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/x-ndjson, application/json",
+        },
         body: JSON.stringify({
           email: email.trim(),
           phone: phone.trim(),
@@ -141,33 +245,30 @@ export default function PreviewGeneratorForm({
           accentColor,
         }),
       });
-      const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        const message =
-          data?.error?.message ||
-          (response.status === 429
-            ? "Rate limit reached. Try again tomorrow."
-            : "We couldn’t generate your preview. Please try again.");
-        setError(message);
+      const result = await readGenerateStream(response, (percent, stage) => {
+        setProgressPercent((p) => Math.max(p, percent));
+        setStageIndex((s) => Math.max(s, stage));
+      });
+
+      if (result.type === "error") {
+        setError(result.error.message);
         setPhase("failure");
         return;
       }
 
-      const slug = data.slug as string | undefined;
-      const ready =
-        data.status === "ready" && data.pagesComplete === true && !!slug;
-      if (!ready) {
+      if (result.type !== "done" || !result.slug) {
         setError(
-          data?.error?.message ||
-            "Preview isn’t finished yet. Please try again — don’t leave until generation completes."
+          "Preview isn’t finished yet. Please try again — don’t leave until generation completes."
         );
         setPhase("failure");
         return;
       }
 
+      setProgressPercent(100);
+      setStageIndex(5);
       setPhase("success");
-      router.push(`/preview/${slug}`);
+      router.push(`/preview/${result.slug}`);
     } catch {
       setError("Something went wrong. Check your connection and try again.");
       setPhase("failure");
@@ -180,7 +281,8 @@ export default function PreviewGeneratorForm({
     <>
       <PreviewLoadingState
         active={phase === "submitting" || phase === "success"}
-        elapsedMs={elapsedMs}
+        progressPercent={progressPercent}
+        stageIndex={stageIndex}
       />
 
       <form onSubmit={onSubmit} className="space-y-6">

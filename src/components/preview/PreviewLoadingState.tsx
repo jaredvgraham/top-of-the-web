@@ -2,15 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-
-const STAGES = [
-  "Collecting business information",
-  "Researching your company",
-  "Understanding your photos",
-  "Writing conversion copy",
-  "Designing the custom layout",
-  "Building home, services & about",
-] as const;
+import { PREVIEW_GENERATE_STAGES } from "@/lib/preview/generateProgress";
 
 const TIPS = [
   "We’re pulling real photos and copy from your Facebook page — not stock filler.",
@@ -25,18 +17,17 @@ const TIPS = [
 
 type Props = {
   active: boolean;
-  /** Elapsed ms since request started — used only for ambient messaging, not fake completion. */
-  elapsedMs: number;
+  /** Real percent from generate stream (0–100). */
+  progressPercent: number;
+  /** Current stage index from generate stream. */
+  stageIndex: number;
 };
 
-function formatElapsed(ms: number) {
-  const totalSec = Math.floor(ms / 1000);
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-export default function PreviewLoadingState({ active, elapsedMs }: Props) {
+export default function PreviewLoadingState({
+  active,
+  progressPercent,
+  stageIndex,
+}: Props) {
   const [tipIndex, setTipIndex] = useState(0);
 
   useEffect(() => {
@@ -50,24 +41,18 @@ export default function PreviewLoadingState({ active, elapsedMs }: Props) {
 
   if (!active) return null;
 
-  // Ambient stage index based on time — never claims a stage is "done"
-  const stageIndex = Math.min(
-    STAGES.length - 1,
-    Math.floor(elapsedMs / 22000)
+  const clampedStage = Math.max(
+    0,
+    Math.min(PREVIEW_GENERATE_STAGES.length - 1, stageIndex)
   );
-
-  // Soft progress that asymptotes (~90%) so we never imply 100% before ready
-  const progressPct = Math.min(
-    92,
-    Math.round(8 + (84 * elapsedMs) / (elapsedMs + 90_000))
-  );
+  const percent = Math.max(0, Math.min(100, Math.round(progressPercent)));
 
   return (
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/75 px-5 backdrop-blur-md"
       role="status"
       aria-live="polite"
-      aria-busy="true"
+      aria-busy={percent < 100}
     >
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -90,40 +75,49 @@ export default function PreviewLoadingState({ active, elapsedMs }: Props) {
               Generating your demo
             </p>
             <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
-              Stay with us — this is the hard part
+              {percent >= 100
+                ? "Demo ready — opening…"
+                : "Stay with us — this is the hard part"}
             </h2>
           </div>
-          <div className="shrink-0 rounded-full border border-ink/10 bg-ink/[0.03] px-3 py-1.5 font-mono text-sm tabular-nums text-ink/70">
-            {formatElapsed(elapsedMs)}
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/10 bg-ink/[0.03]"
+            aria-hidden
+          >
+            {percent >= 100 ? (
+              <span className="text-sm font-semibold text-accent">✓</span>
+            ) : (
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-ink/15 border-t-accent" />
+            )}
           </div>
         </div>
 
         <p className="relative mt-3 text-sm leading-relaxed text-ink/60">
-          Custom demos take a few minutes. Keep this tab open and we’ll open
-          the site when it’s ready. If you leave, we’ll email the link.
+          Progress updates as each real build step finishes. Keep this tab open
+          — if you leave, we’ll email the link when it’s ready.
         </p>
 
         <div className="relative mt-6">
           <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/40">
             <span>Progress</span>
-            <span>{progressPct}%</span>
+            <span>{percent}%</span>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink/10">
             <div
-              className="h-full rounded-full bg-accent transition-[width] duration-700 ease-out"
-              style={{ width: `${progressPct}%` }}
+              className="h-full rounded-full bg-accent transition-[width] duration-500 ease-out"
+              style={{ width: `${percent}%` }}
             />
           </div>
         </div>
 
         <ul className="relative mt-7 space-y-2.5">
-          {STAGES.map((label, index) => {
-            const isCurrent = index === stageIndex;
-            const isPast = index < stageIndex;
+          {PREVIEW_GENERATE_STAGES.map((stage, index) => {
+            const isCurrent = percent < 100 && index === clampedStage;
+            const isPast = percent >= 100 || index < clampedStage;
             return (
               <li
-                key={label}
-                className={`flex items-center gap-3 text-sm transition-colors duration-500 ${
+                key={stage.key}
+                className={`flex items-center gap-3 text-sm transition-colors duration-300 ${
                   isCurrent
                     ? "font-semibold text-ink"
                     : isPast
@@ -132,7 +126,7 @@ export default function PreviewLoadingState({ active, elapsedMs }: Props) {
                 }`}
               >
                 <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] transition-colors duration-500 ${
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] transition-colors duration-300 ${
                     isCurrent
                       ? "bg-accent text-paper"
                       : isPast
@@ -149,7 +143,7 @@ export default function PreviewLoadingState({ active, elapsedMs }: Props) {
                   )}
                 </span>
                 <span>
-                  {label}
+                  {stage.label}
                   {isCurrent ? "…" : ""}
                 </span>
               </li>

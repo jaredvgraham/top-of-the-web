@@ -36,9 +36,14 @@ import {
   sendAdminPreviewReadyEmail,
   sendPreviewReadyEmail,
 } from "@/lib/mail";
+import {
+  progressEvent,
+  type PreviewStreamEvent,
+} from "@/lib/preview/generateProgress";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
+export const dynamic = "force-dynamic";
 
 const RATE_LIMIT = 3;
 const RATE_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -64,6 +69,48 @@ async function ensureUniqueSlug(baseName: string) {
     if (!exists) return slug;
   }
   return `preview-${randomUUID().replace(/-/g, "").slice(0, 12)}`;
+}
+
+function ndjsonResponse(
+  run: (send: (event: PreviewStreamEvent) => void) => Promise<void>
+) {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const send = (event: PreviewStreamEvent) => {
+        controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+      };
+
+      void (async () => {
+        try {
+          await run(send);
+        } catch (error) {
+          console.error("[preview] stream failed", error);
+          send({
+            type: "error",
+            error: {
+              code: "generation_failed",
+              message:
+                "We couldn’t finish generating your website preview. Please try again.",
+            },
+          });
+        } finally {
+          try {
+            controller.close();
+          } catch {
+            // already closed
+          }
+        }
+      })();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+    },
+  });
 }
 
 export async function POST(req: NextRequest) {
@@ -181,280 +228,273 @@ export async function POST(req: NextRequest) {
     });
     previewId = String(preview._id);
 
-    preview.status = "scraping";
-    await preview.save();
-
-    const startedAt = Date.now();
-    const mark = (label: string) =>
-      console.log(`[preview] ${label} +${Date.now() - startedAt}ms`);
-
-    let page: FacebookPageImportData;
-    try {
-      page = await scrapeFacebookPage(urlCheck.normalizedUrl);
-      mark(`scrape done (${page.photoUrls.length} photos)`);
-    } catch (scrapeError) {
-      console.error("[preview] scrape failed", scrapeError);
-      if (facebookGraphConfigured()) {
-        try {
-          page = await fetchFacebookPageData(urlCheck.normalizedUrl);
-        } catch (graphError) {
-          console.error("[preview] graph fallback failed", graphError);
-          preview.status = "failed";
-          preview.error = {
-            code: "scrape_failed",
-            message:
-              "We couldn’t access that Facebook page. Check the URL and try again.",
-          };
-          await preview.save();
-          return publicError(
-            "scrape_failed",
-            preview.error.message,
-            422
-          );
-        }
-      } else {
+    return ndjsonResponse(async (send) => {
+      const fail = async (code: string, message: string) => {
         preview.status = "failed";
-        preview.error = {
-          code: "scrape_failed",
-          message:
-            "We couldn’t access that Facebook page. It may be blocked or unavailable.",
-        };
+        preview.error = { code, message };
         await preview.save();
-        return publicError("scrape_failed", preview.error.message, 422);
-      }
-    }
-
-    if (!page.name && !page.photoUrls.length && !page.about) {
-      preview.status = "failed";
-      preview.error = {
-        code: "insufficient_data",
-        message:
-          "Not enough public business information was found on that page to build a preview.",
+        send({ type: "error", error: { code, message } });
       };
+
+      const startedAt = Date.now();
+      const mark = (label: string) =>
+        console.log(`[preview] ${label} +${Date.now() - startedAt}ms`);
+
+      // Stage percents are real pipeline milestones (see generateProgress.ts)
+      send(progressEvent(0)); // Collecting business information
+      preview.status = "scraping";
       await preview.save();
-      return publicError("insufficient_data", preview.error.message, 422);
-    }
 
-    // Prefer a nicer slug once we know the name
-    if (page.name) {
-      const nicer = await ensureUniqueSlug(page.name);
-      if (nicer !== preview.slug) {
-        preview.slug = nicer;
+      let page: FacebookPageImportData;
+      try {
+        page = await scrapeFacebookPage(urlCheck.normalizedUrl);
+        mark(`scrape done (${page.photoUrls.length} photos)`);
+      } catch (scrapeError) {
+        console.error("[preview] scrape failed", scrapeError);
+        if (facebookGraphConfigured()) {
+          try {
+            page = await fetchFacebookPageData(urlCheck.normalizedUrl);
+          } catch (graphError) {
+            console.error("[preview] graph fallback failed", graphError);
+            await fail(
+              "scrape_failed",
+              "We couldn’t access that Facebook page. Check the URL and try again."
+            );
+            return;
+          }
+        } else {
+          await fail(
+            "scrape_failed",
+            "We couldn’t access that Facebook page. It may be blocked or unavailable."
+          );
+          return;
+        }
       }
-    }
 
-    const { fields } = await cleanFacebookDataForOnboarding(page, email);
-    mark("onboarding clean done");
+      if (!page.name && !page.photoUrls.length && !page.about) {
+        await fail(
+          "insufficient_data",
+          "Not enough public business information was found on that page to build a preview."
+        );
+        return;
+      }
 
-    let assets: Awaited<ReturnType<typeof importFacebookImagesToBlob>> = [];
-    try {
-      assets = await importFacebookImagesToBlob(page, blobToken);
-      mark(`image import done (${assets.length} assets)`);
-    } catch (assetError) {
-      console.warn("[preview] image import failed — continuing", assetError);
-    }
+      if (page.name) {
+        const nicer = await ensureUniqueSlug(page.name);
+        if (nicer !== preview.slug) {
+          preview.slug = nicer;
+        }
+      }
 
-    preview.status = "generating";
-    await preview.save();
+      const { fields } = await cleanFacebookDataForOnboarding(page, email);
+      mark("onboarding clean done");
 
-    const businessName = cleanBusinessName(
-      fields.contact.businessName || page.name || "Business",
-      fields.business.city || page.city,
-      fields.business.state || page.state
-    );
-    fields.contact.businessName = businessName;
+      send(progressEvent(1)); // Understanding your photos (import)
+      let assets: Awaited<ReturnType<typeof importFacebookImagesToBlob>> = [];
+      try {
+        assets = await importFacebookImagesToBlob(page, blobToken);
+        mark(`image import done (${assets.length} assets)`);
+      } catch (assetError) {
+        console.warn("[preview] image import failed — continuing", assetError);
+      }
 
-    const safeDescription = websiteSafeCopy(
-      fields.business.description || "",
-      websiteSafeCopy(page.about || "", websiteSafeCopy(page.description || "", ""))
-    );
+      preview.status = "generating";
+      await preview.save();
 
-    // Never let Facebook chrome leak into cleaned fields used downstream
-    fields.business.description = safeDescription;
-    fields.content.aboutCopy = websiteSafeCopy(fields.content.aboutCopy || "", "");
+      const businessName = cleanBusinessName(
+        fields.contact.businessName || page.name || "Business",
+        fields.business.city || page.city,
+        fields.business.state || page.state
+      );
+      fields.contact.businessName = businessName;
 
-    const [imageAnalyses, research] = await Promise.all([
-      analyzePreviewImages(assets, {
-        name: businessName,
-        category: page.category,
-        description: safeDescription,
-        city: fields.business.city || page.city,
-        state: fields.business.state || page.state,
-        servicesHint: fields.content.servicesProducts || page.category,
-      }),
-      researchCompany({
-        businessName,
-        category: page.category,
-        city: fields.business.city || page.city,
-        state: fields.business.state || page.state,
-        website: fields.business.existingSiteUrl || page.website,
-        facebookUrl: urlCheck.normalizedUrl,
-        about: safeDescription,
-        phone: fields.contact.phone || page.phone,
-      }),
-    ]);
-    mark(
-      `vision+research done (analyzed=${imageAnalyses.length}, web=${research.usedWeb})`
-    );
+      const safeDescription = websiteSafeCopy(
+        fields.business.description || "",
+        websiteSafeCopy(
+          page.about || "",
+          websiteSafeCopy(page.description || "", "")
+        )
+      );
 
-    const { siteSpec, usedAi: usedSiteSpecAi } = await generateSiteSpec({
-      fields,
-      page,
-      assets,
-      fallbackEmail: email,
-      brandPreferences,
-      imageAnalyses,
-      research,
-    });
-    mark("siteSpec done");
+      fields.business.description = safeDescription;
+      fields.content.aboutCopy = websiteSafeCopy(
+        fields.content.aboutCopy || "",
+        ""
+      );
 
-    // Prefer contact email from form for the preview owner
-    if (!siteSpec.business.email) {
-      siteSpec.business.email = email;
-    }
+      send(progressEvent(2)); // Researching + vision analysis
+      const [imageAnalyses, research] = await Promise.all([
+        analyzePreviewImages(assets, {
+          name: businessName,
+          category: page.category,
+          description: safeDescription,
+          city: fields.business.city || page.city,
+          state: fields.business.state || page.state,
+          servicesHint: fields.content.servicesProducts || page.category,
+        }),
+        researchCompany({
+          businessName,
+          category: page.category,
+          city: fields.business.city || page.city,
+          state: fields.business.state || page.state,
+          website: fields.business.existingSiteUrl || page.website,
+          facebookUrl: urlCheck.normalizedUrl,
+          about: safeDescription,
+          phone: fields.contact.phone || page.phone,
+        }),
+      ]);
+      mark(
+        `vision+research done (analyzed=${imageAnalyses.length}, web=${research.usedWeb})`
+      );
 
-    siteSpec.business.name = cleanBusinessName(
-      siteSpec.business.name,
-      siteSpec.business.city || fields.business.city || page.city,
-      siteSpec.business.state || fields.business.state || page.state
-    );
-
-    // Real logo from vision, or generate a branded initials mark — never FB profile
-    siteSpec.branding.logoUrl = await resolvePreviewLogo({
-      businessName: siteSpec.business.name,
-      existingLogoUrl: siteSpec.branding.logoUrl,
-      analyses: imageAnalyses,
-      primaryColor: siteSpec.branding.primaryColor,
-      accentColor: siteSpec.branding.accentColor,
-      token: blobToken,
-    });
-    mark("logo done");
-
-    let pages: Awaited<ReturnType<typeof generatePreviewHtml>>["pages"] | null =
-      null;
-    let htmlModel = "";
-    let usedHtmlAi = false;
-    try {
-      const htmlResult = await generatePreviewHtml({
+      send(progressEvent(3)); // Writing conversion copy
+      const { siteSpec, usedAi: usedSiteSpecAi } = await generateSiteSpec({
         fields,
         page,
         assets,
+        fallbackEmail: email,
+        brandPreferences,
         imageAnalyses,
         research,
-        brandPreferences,
-        businessName: siteSpec.business.name,
-        fallbackEmail: email,
       });
-      pages = htmlResult.pages;
-      htmlModel = htmlResult.model;
-      usedHtmlAi = htmlResult.usedAi;
-      mark("html pages done");
-    } catch (htmlError) {
-      console.error("[preview] custom HTML generation failed", htmlError);
-      preview.status = "failed";
-      preview.error = {
-        code: "html_generation_failed",
-        message:
-          "We couldn’t finish the custom website demo. Please try again in a moment.",
-      };
-      await preview.save();
-      return publicError(
-        "html_generation_failed",
-        preview.error.message,
-        500
-      );
-    }
+      mark("siteSpec done");
 
-    if (!previewPagesComplete(pages)) {
-      preview.status = "failed";
-      preview.error = {
-        code: "html_incomplete",
-        message:
-          "The website demo finished incompletely. Please try generating again.",
-      };
-      await preview.save();
-      return publicError(
-        "html_incomplete",
-        preview.error.message,
-        500
-      );
-    }
-
-    preview.siteSpec = siteSpec;
-    preview.pages = pages;
-    preview.generation = {
-      engine: "openai-html",
-      model: htmlModel,
-    };
-    preview.status = "ready";
-    preview.error = { code: "", message: "" };
-    await preview.save();
-
-    if (leadDoc) {
-      leadDoc.status = "preview_ready";
-      leadDoc.previewSlug = preview.slug;
-      leadDoc.email = email;
-      if (phone) leadDoc.phone = phone;
-      await leadDoc.save();
-    }
-
-    const previewUrl = previewPublicUrl(preview.slug, origin);
-
-    try {
-      if (process.env.EMAIL && process.env.EMAIL_PASS) {
-        await sendPreviewReadyEmail({
-          to: email,
-          previewUrl,
-          businessName: siteSpec.business.name,
-          name: leadDoc?.name || "",
-        });
-        console.log("[preview] ready email sent", email);
+      if (!siteSpec.business.email) {
+        siteSpec.business.email = email;
       }
-    } catch (mailError) {
-      console.error("[preview] ready email failed", mailError);
-    }
 
-    try {
-      if (process.env.EMAIL && process.env.EMAIL_PASS) {
-        await sendAdminPreviewReadyEmail({
-          email,
-          phone: phone || leadDoc?.phone || "",
-          name: leadDoc?.name || "",
+      siteSpec.business.name = cleanBusinessName(
+        siteSpec.business.name,
+        siteSpec.business.city || fields.business.city || page.city,
+        siteSpec.business.state || fields.business.state || page.state
+      );
+
+      send(progressEvent(4)); // Designing the custom layout
+      siteSpec.branding.logoUrl = await resolvePreviewLogo({
+        businessName: siteSpec.business.name,
+        existingLogoUrl: siteSpec.branding.logoUrl,
+        analyses: imageAnalyses,
+        primaryColor: siteSpec.branding.primaryColor,
+        accentColor: siteSpec.branding.accentColor,
+        token: blobToken,
+      });
+      mark("logo done");
+
+      send(progressEvent(5)); // Building home, services & about
+      let pages: Awaited<ReturnType<typeof generatePreviewHtml>>["pages"] | null =
+        null;
+      let htmlModel = "";
+      let usedHtmlAi = false;
+      try {
+        const htmlResult = await generatePreviewHtml({
+          fields,
+          page,
+          assets,
+          imageAnalyses,
+          research,
+          brandPreferences,
           businessName: siteSpec.business.name,
-          city: siteSpec.business.city || leadDoc?.city || "",
-          state: siteSpec.business.state || leadDoc?.state || "",
-          facebookUrl: urlCheck.normalizedUrl,
-          previewUrl,
-          slug: preview.slug,
-          leadToken: leadToken || leadDoc?.token || "",
-          previewId: String(preview._id),
-          elapsedMs: Date.now() - startedAt,
-          assetCount: assets.length,
+          fallbackEmail: email,
         });
-        console.log("[preview] admin notify sent");
+        pages = htmlResult.pages;
+        htmlModel = htmlResult.model;
+        usedHtmlAi = htmlResult.usedAi;
+        mark("html pages done");
+      } catch (htmlError) {
+        console.error("[preview] custom HTML generation failed", htmlError);
+        await fail(
+          "html_generation_failed",
+          "We couldn’t finish the custom website demo. Please try again in a moment."
+        );
+        return;
       }
-    } catch (adminMailError) {
-      console.error("[preview] admin notify failed", adminMailError);
-    }
 
-    console.log("[preview] ready", {
-      slug: preview.slug,
-      elapsedMs: Date.now() - startedAt,
-      usedSiteSpecAi,
-      usedHtmlAi,
-      htmlModel,
-      assetCount: assets.length,
-      analyzedImages: imageAnalyses.length,
-      researchedWeb: research.usedWeb,
-      brandPreferences,
-    });
+      if (!previewPagesComplete(pages)) {
+        await fail(
+          "html_incomplete",
+          "The website demo finished incompletely. Please try generating again."
+        );
+        return;
+      }
 
-    return NextResponse.json({
-      slug: preview.slug,
-      previewUrl,
-      status: "ready" as const,
-      pagesComplete: true,
-      usedAi: usedHtmlAi || usedSiteSpecAi,
+      preview.siteSpec = siteSpec;
+      preview.pages = pages;
+      preview.generation = {
+        engine: "openai-html",
+        model: htmlModel,
+      };
+      preview.status = "ready";
+      preview.error = { code: "", message: "" };
+      await preview.save();
+
+      if (leadDoc) {
+        leadDoc.status = "preview_ready";
+        leadDoc.previewSlug = preview.slug;
+        leadDoc.email = email;
+        if (phone) leadDoc.phone = phone;
+        await leadDoc.save();
+      }
+
+      const previewUrl = previewPublicUrl(preview.slug, origin);
+
+      try {
+        if (process.env.EMAIL && process.env.EMAIL_PASS) {
+          await sendPreviewReadyEmail({
+            to: email,
+            previewUrl,
+            businessName: siteSpec.business.name,
+            name: leadDoc?.name || "",
+          });
+          console.log("[preview] ready email sent", email);
+        }
+      } catch (mailError) {
+        console.error("[preview] ready email failed", mailError);
+      }
+
+      try {
+        if (process.env.EMAIL && process.env.EMAIL_PASS) {
+          await sendAdminPreviewReadyEmail({
+            email,
+            phone: phone || leadDoc?.phone || "",
+            name: leadDoc?.name || "",
+            businessName: siteSpec.business.name,
+            city: siteSpec.business.city || leadDoc?.city || "",
+            state: siteSpec.business.state || leadDoc?.state || "",
+            facebookUrl: urlCheck.normalizedUrl,
+            previewUrl,
+            slug: preview.slug,
+            leadToken: leadToken || leadDoc?.token || "",
+            previewId: String(preview._id),
+            elapsedMs: Date.now() - startedAt,
+            assetCount: assets.length,
+          });
+          console.log("[preview] admin notify sent");
+        }
+      } catch (adminMailError) {
+        console.error("[preview] admin notify failed", adminMailError);
+      }
+
+      console.log("[preview] ready", {
+        slug: preview.slug,
+        elapsedMs: Date.now() - startedAt,
+        usedSiteSpecAi,
+        usedHtmlAi,
+        htmlModel,
+        assetCount: assets.length,
+        analyzedImages: imageAnalyses.length,
+        researchedWeb: research.usedWeb,
+        brandPreferences,
+      });
+
+      send({
+        type: "done",
+        slug: preview.slug,
+        previewUrl,
+        status: "ready",
+        pagesComplete: true,
+        usedAi: usedHtmlAi || usedSiteSpecAi,
+        percent: 100,
+      });
     });
   } catch (error) {
     console.error("[preview] generate failed", error);
