@@ -89,7 +89,7 @@ export default function PreviewsAdmin() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/previews", { cache: "no-store" });
+      const res = await fetch("/api/admin/previews");
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
       setPreviews(data.previews || []);

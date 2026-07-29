@@ -5,8 +5,6 @@ import Preview from "@/models/Preview";
 import Website from "@/models/WebsiteModel";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -74,14 +72,7 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(
-      { previews: data },
-      {
-        headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-        },
-      }
-    );
+    return NextResponse.json({ previews: data });
   } catch (error) {
     console.error("[admin] list previews failed", error);
     return NextResponse.json(
