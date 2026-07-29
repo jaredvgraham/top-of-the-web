@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import dbConnect from "@/lib/db";
 import Lead from "@/models/Lead";
 import Preview from "@/models/Preview";
-import { hasMetaAdClickAttribution } from "@/lib/preview/lead";
+import { hasMetaAdClickAttribution } from "@/lib/preview/hasMetaAdClick";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 

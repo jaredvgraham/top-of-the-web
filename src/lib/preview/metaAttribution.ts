@@ -1,6 +1,6 @@
 /** Client helpers for Meta click + cookie attribution. */
 
-import { hasMetaAdClickAttribution } from "@/lib/preview/lead";
+import { hasMetaAdClickAttribution } from "@/lib/preview/hasMetaAdClick";
 
 export { hasMetaAdClickAttribution };
 
