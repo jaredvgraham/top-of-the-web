@@ -1,5 +1,9 @@
 /** Client helpers for Meta click + cookie attribution. */
 
+import { hasMetaAdClickAttribution } from "@/lib/preview/lead";
+
+export { hasMetaAdClickAttribution };
+
 export function getCookie(name: string): string {
   if (typeof document === "undefined") return "";
   const match = document.cookie.match(

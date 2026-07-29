@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import {
+  hasMetaAdClickAttribution,
   readMetaAttributionFromBrowser,
   trackMetaEvent,
 } from "@/lib/preview/metaAttribution";
@@ -99,10 +100,13 @@ export default function PreviewLeadCaptureForm() {
         return;
       }
 
-      // Reporting only — campaign optimizes for Purchase, not Lead
-      trackMetaEvent("Lead", {
-        content_name: "Website Preview Lead",
-      });
+      // Only credit Meta when this session has an ad click (fbclid / _fbc).
+      // Organic homepage/direct submits must not inflate pixel Lead counts.
+      if (hasMetaAdClickAttribution(attribution)) {
+        trackMetaEvent("Lead", {
+          content_name: "Website Preview Lead",
+        });
+      }
 
       setPhase("success");
     } catch {

@@ -35,3 +35,17 @@ export function buildFbcFromFbclid(fbclid: string, createdAt = new Date()) {
   // Meta fbc format: fb.1.<timestamp_ms>.<fbclid>
   return `fb.1.${createdAt.getTime()}.${cleaned}`;
 }
+
+/**
+ * True only with evidence of a Meta ad click.
+ * `_fbp` alone does not count — the pixel sets that on any organic visit.
+ */
+export function hasMetaAdClickAttribution(attr?: {
+  fbclid?: string;
+  fbc?: string;
+}) {
+  const fbclid = attr?.fbclid?.trim() || "";
+  const fbc = attr?.fbc?.trim() || "";
+  // fbc looks like: fb.1.<timestamp>.<fbclid>
+  return Boolean(fbclid || /^fb\.\d+\.\d+\./.test(fbc));
+}

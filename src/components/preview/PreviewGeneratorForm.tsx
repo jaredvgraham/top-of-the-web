@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import PreviewLoadingState from "@/components/preview/PreviewLoadingState";
 import { resolveBrandPalette } from "@/lib/preview/brandColors";
 import { BRAND_COLOR_PRESETS } from "@/lib/preview/brandPreferences";
-import { trackMetaEvent } from "@/lib/preview/metaAttribution";
+import {
+  hasMetaAdClickAttribution,
+  readMetaAttributionFromBrowser,
+  trackMetaEvent,
+} from "@/lib/preview/metaAttribution";
 import type { PreviewStreamEvent } from "@/lib/preview/generateProgress";
 
 type FormPhase =
@@ -223,9 +227,12 @@ export default function PreviewGeneratorForm({
     setStageIndex(0);
 
     try {
-      trackMetaEvent("InitiateCheckout", {
-        content_name: "Website Preview Generate",
-      });
+      // Only credit Meta when this session has an ad click (fbclid / _fbc).
+      if (hasMetaAdClickAttribution(readMetaAttributionFromBrowser())) {
+        trackMetaEvent("InitiateCheckout", {
+          content_name: "Website Preview Generate",
+        });
+      }
 
       const response = await fetch("/api/preview/generate", {
         method: "POST",
