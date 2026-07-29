@@ -195,26 +195,58 @@ export default function WebsitesAdmin() {
       const res = await fetch(`/api/admin/websites/${selectedId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          url: form.url,
+          description: form.description,
+          pack: form.pack,
+          plan: form.plan,
+          phone: form.phone,
+          progress: form.progress,
+        }),
       });
 
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setMessage(data.error || "Save failed");
+        setMessage(data.error || `Save failed (${res.status})`);
         return;
       }
 
-      const data = await res.json();
+      const saved = data.website;
+      if (!saved?.id) {
+        setMessage("Save failed — empty response");
+        return;
+      }
+
       setWebsites((prev) =>
         prev.map((w) =>
           w.id === selectedId
-            ? { ...w, ...data.website, subscription: w.subscription }
+            ? {
+                ...w,
+                ...saved,
+                // Keep Stripe subscription + fall back if side updates omitted them
+                subscription: w.subscription,
+                customer: saved.customer ?? w.customer,
+                order: saved.order ?? w.order,
+              }
             : w
         )
       );
+      setForm((f) => ({
+        ...f,
+        name: saved.name ?? f.name,
+        email: saved.email ?? f.email,
+        url: saved.url ?? f.url,
+        description: saved.description ?? f.description,
+        pack: saved.pack ?? f.pack,
+        plan: saved.plan ?? f.plan,
+        phone: saved.customer?.phone || saved.order?.phone || f.phone,
+        progress: saved.order?.progress ?? f.progress,
+      }));
       setMessage("Saved");
     } catch {
-      setMessage("Save failed");
+      setMessage("Save failed — network error");
     } finally {
       setSaving(false);
     }
