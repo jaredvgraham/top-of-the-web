@@ -41,6 +41,7 @@ export type MetaInsightRow = {
   ctr: number | null;
   purchases: number;
   leads: number;
+  initiateCheckouts: number;
   purchaseValue: number;
   dateStart: string;
   dateStop: string;
@@ -60,6 +61,7 @@ export type MetaAdsDashboard = {
     clicks: number;
     purchases: number;
     leads: number;
+    initiateCheckouts: number;
     purchaseValue: number;
     cpc: number | null;
     cpm: number | null;
@@ -271,6 +273,11 @@ function mapInsight(row: GraphInsight, level: MetaInsightLevel): MetaInsightRow 
     "lead",
     "onsite_conversion.lead_grouped",
   ]);
+  const initiateCheckouts = actionPick(row.actions, [
+    "offsite_conversion.fb_pixel_initiate_checkout",
+    "initiate_checkout",
+    "omni_initiated_checkout",
+  ]);
   const purchaseValue = actionPick(row.action_values, [
     "offsite_conversion.fb_pixel_purchase",
     "purchase",
@@ -306,6 +313,7 @@ function mapInsight(row: GraphInsight, level: MetaInsightLevel): MetaInsightRow 
     ctr: row.ctr != null ? asNumber(row.ctr) : null,
     purchases,
     leads,
+    initiateCheckouts,
     purchaseValue,
     dateStart: row.date_start || "",
     dateStop: row.date_stop || "",
@@ -413,6 +421,7 @@ export async function loadMetaAdsDashboard(input: {
   const clicks = accountRow?.clicks ?? 0;
   const purchases = accountRow?.purchases ?? 0;
   const leads = accountRow?.leads ?? 0;
+  const initiateCheckouts = accountRow?.initiateCheckouts ?? 0;
   const purchaseValue = accountRow?.purchaseValue ?? 0;
 
   return {
@@ -431,6 +440,7 @@ export async function loadMetaAdsDashboard(input: {
       clicks,
       purchases,
       leads,
+      initiateCheckouts,
       purchaseValue,
       cpc: accountRow?.cpc ?? (clicks > 0 ? spend / clicks : null),
       cpm:

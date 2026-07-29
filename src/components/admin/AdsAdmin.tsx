@@ -18,6 +18,7 @@ type InsightRow = {
   ctr: number | null;
   purchases: number;
   leads: number;
+  initiateCheckouts: number;
   purchaseValue: number;
   dateStart: string;
   dateStop: string;
@@ -50,6 +51,7 @@ type Dashboard = {
     clicks: number;
     purchases: number;
     leads: number;
+    initiateCheckouts: number;
     purchaseValue: number;
     cpc: number | null;
     cpm: number | null;
@@ -319,7 +321,7 @@ export default function AdsAdmin() {
           </p>
         ) : data ? (
           <>
-            <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
               <MetaStat
                 label="Spend"
                 value={money(data.summary.spend, currency)}
@@ -328,6 +330,11 @@ export default function AdsAdmin() {
               <MetaStat
                 label="Pixel leads"
                 value={num(data.summary.leads)}
+              />
+              <MetaStat
+                label="Initiate checkout"
+                value={num(data.summary.initiateCheckouts)}
+                hint="Demo generates"
               />
               <MetaStat
                 label="Meta form leads"
@@ -441,6 +448,14 @@ export default function AdsAdmin() {
                               Leads
                             </p>
                             <p className="tabular-nums">{num(row.leads)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-[0.12em] text-ink/40">
+                              Checkout
+                            </p>
+                            <p className="tabular-nums">
+                              {num(row.initiateCheckouts)}
+                            </p>
                           </div>
                           <div>
                             <p className="text-[10px] uppercase tracking-[0.12em] text-ink/40">
