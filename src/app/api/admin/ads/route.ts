@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Lead from "@/models/Lead";
 import {
+  META_AD_LEAD_FILTER,
+  serializeAdminLead,
+} from "@/lib/adminLeads";
+import {
   loadMetaAdsDashboard,
   metaAdsConfigured,
   type MetaDatePreset,
@@ -137,88 +141,29 @@ export async function GET(req: NextRequest) {
     let siteLeads = 0;
     let sitePurchased = 0;
     let siteWithFbclid = 0;
-    let leads: Array<{
-      id: string;
-      name: string;
-      email: string;
-      phone: string;
-      businessName: string;
-      city: string;
-      state: string;
-      status: string;
-      previewSlug: string;
-      facebookUrl: string;
-      createdAt: string;
-      updatedAt: string;
-      attribution: {
-        fbclid: string;
-        fbp: string;
-        fbc: string;
-        landingUrl: string;
-        utmSource: string;
-        utmMedium: string;
-        utmCampaign: string;
-        utmContent: string;
-        utmTerm: string;
-      };
-    }> = [];
+    let leads: ReturnType<typeof serializeAdminLead>[] = [];
 
     if (range) {
       const createdAt = { $gte: range.since, $lte: range.until };
-      const [leadCount, purchasedCount, fbclidCount, leadDocs] =
-        await Promise.all([
-          Lead.countDocuments({ createdAt }),
-          Lead.countDocuments({ createdAt, status: "purchased" }),
-          Lead.countDocuments({
-            createdAt,
-            "attribution.fbclid": { $exists: true, $nin: ["", null] },
-          }),
-          Lead.find({ createdAt })
-            .sort({ createdAt: -1 })
-            .limit(200)
-            .select(
-              "name email phone businessName city state status previewSlug facebookUrl attribution createdAt updatedAt"
-            )
-            .lean(),
-        ]);
+      const metaInWindow = { createdAt, ...META_AD_LEAD_FILTER };
+      const [leadCount, purchasedCount, leadDocs] = await Promise.all([
+        Lead.countDocuments(metaInWindow),
+        Lead.countDocuments({ ...metaInWindow, status: "purchased" }),
+        Lead.find(metaInWindow)
+          .sort({ createdAt: -1 })
+          .limit(200)
+          .select(
+            "name email phone businessName city state status previewSlug facebookUrl attribution createdAt updatedAt"
+          )
+          .lean(),
+      ]);
 
       siteLeads = leadCount;
       sitePurchased = purchasedCount;
-      siteWithFbclid = fbclidCount;
-      leads = leadDocs.map((doc) => {
-        const attr = (doc.attribution || {}) as Record<string, string>;
-        return {
-          id: String(doc._id),
-          name: doc.name || "",
-          email: doc.email || "",
-          phone: doc.phone || "",
-          businessName: doc.businessName || "",
-          city: doc.city || "",
-          state: doc.state || "",
-          status: doc.status || "captured",
-          previewSlug: doc.previewSlug || "",
-          facebookUrl: doc.facebookUrl || "",
-          createdAt:
-            doc.createdAt instanceof Date
-              ? doc.createdAt.toISOString()
-              : String(doc.createdAt || ""),
-          updatedAt:
-            doc.updatedAt instanceof Date
-              ? doc.updatedAt.toISOString()
-              : String(doc.updatedAt || ""),
-          attribution: {
-            fbclid: attr.fbclid || "",
-            fbp: attr.fbp || "",
-            fbc: attr.fbc || "",
-            landingUrl: attr.landingUrl || "",
-            utmSource: attr.utmSource || "",
-            utmMedium: attr.utmMedium || "",
-            utmCampaign: attr.utmCampaign || "",
-            utmContent: attr.utmContent || "",
-            utmTerm: attr.utmTerm || "",
-          },
-        };
-      });
+      siteWithFbclid = leadCount;
+      leads = leadDocs
+        .map((doc) => serializeAdminLead(doc))
+        .filter((lead) => lead.fromMeta);
     }
 
     return NextResponse.json(
