@@ -4,11 +4,12 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import CheckoutButton from "@/components/checkout/CheckoutButton";
 
 const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/#start", label: "Demo" },
+  { href: "/#how", label: "How" },
   { href: "/#offer", label: "Offer" },
-  { href: "/#process", label: "Process" },
   { href: "/pricing", label: "Pricing" },
   { href: "/contact", label: "Contact" },
 ];
@@ -40,10 +41,13 @@ const Navbar = () => {
 
   if (isAdminPage) return null;
 
-  // Hide marketing chrome on generated preview sites so SiteSpec renders full-bleed.
   const isGeneratedPreview =
     pathname.startsWith("/preview/") && pathname !== "/preview";
   if (isGeneratedPreview) return null;
+
+  // The homepage opens on a full-bleed dark hero, so the bar floats over it
+  // until the user scrolls past.
+  const onDarkHero = pathname === "/" && !scrolled && !isMenuOpen;
 
   return (
     <>
@@ -51,19 +55,24 @@ const Navbar = () => {
         className={`fixed inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
           isMenuOpen
             ? "border-transparent bg-transparent"
-            : scrolled
-            ? "border-ink/10 bg-paper/90 backdrop-blur-md"
-            : "border-transparent bg-transparent"
+            : onDarkHero
+              ? "border-transparent bg-transparent"
+              : scrolled
+                ? "border-ink/10 bg-paper/90 backdrop-blur-md"
+                : "border-ink/10 bg-paper/80 backdrop-blur-md"
         }`}
       >
         <nav className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 sm:px-8">
           <Link
             href="/"
             className={`font-display text-2xl font-semibold tracking-tight transition-colors ${
-              isMenuOpen ? "text-paper" : "text-ink"
+              isMenuOpen || onDarkHero ? "text-paper" : "text-ink"
             }`}
           >
-            Bsites<span className="text-accent">.io</span>
+            Bsites
+            <span className={onDarkHero ? "text-accentSoft" : "text-accent"}>
+              .io
+            </span>
           </Link>
 
           <div className="hidden items-center gap-8 lg:flex">
@@ -71,21 +80,42 @@ const Navbar = () => {
               <Link
                 key={link.href}
                 href={link.href}
-                className="link-underline text-[13px] font-medium uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink"
+                className={`link-underline text-[13px] font-medium uppercase tracking-[0.18em] transition-colors ${
+                  onDarkHero
+                    ? "text-paper/75 hover:text-paper"
+                    : "text-ink/70 hover:text-ink"
+                }`}
               >
                 {link.label}
               </Link>
             ))}
-            <CheckoutButton className="group relative overflow-hidden rounded-full bg-ink px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.14em] text-paper">
-              <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
-              <span className="relative">Start Checkout</span>
-            </CheckoutButton>
+            <Link
+              href="/#start"
+              className={`group relative overflow-hidden rounded-full px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.14em] transition-colors ${
+                onDarkHero
+                  ? "border border-paper/35 text-paper"
+                  : "bg-ink text-paper"
+              }`}
+            >
+              <span
+                className={`absolute inset-0 translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0 ${
+                  onDarkHero ? "bg-paper" : "bg-accent"
+                }`}
+              />
+              <span
+                className={`relative ${
+                  onDarkHero ? "group-hover:text-ink" : ""
+                }`}
+              >
+                Free demo
+              </span>
+            </Link>
           </div>
 
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className={`flex h-11 w-11 flex-col items-center justify-center gap-[5px] rounded-full border transition-colors lg:hidden ${
-              isMenuOpen ? "border-paper/25" : "border-ink/15"
+              isMenuOpen || onDarkHero ? "border-paper/25" : "border-ink/15"
             }`}
             aria-label="Toggle navigation menu"
           >
@@ -93,14 +123,18 @@ const Navbar = () => {
               className={`h-[1.5px] w-5 transition-all duration-300 ${
                 isMenuOpen
                   ? "translate-y-[3.25px] rotate-45 bg-paper"
-                  : "bg-ink"
+                  : onDarkHero
+                    ? "bg-paper"
+                    : "bg-ink"
               }`}
             />
             <span
               className={`h-[1.5px] w-5 transition-all duration-300 ${
                 isMenuOpen
                   ? "-translate-y-[3.25px] -rotate-45 bg-paper"
-                  : "bg-ink"
+                  : onDarkHero
+                    ? "bg-paper"
+                    : "bg-ink"
               }`}
             />
           </button>
@@ -140,10 +174,13 @@ const Navbar = () => {
               transition={{ delay: 0.45, duration: 0.4 }}
               className="space-y-4"
             >
-              <CheckoutButton
-                label="Start Checkout — $84/mo"
+              <Link
+                href="/#start"
+                onClick={() => setIsMenuOpen(false)}
                 className="block w-full rounded-full bg-accent px-6 py-5 text-center text-sm font-semibold uppercase tracking-[0.18em] text-paper"
-              />
+              >
+                See my free demo
+              </Link>
               <Link
                 href="/contact"
                 onClick={() => setIsMenuOpen(false)}
@@ -152,7 +189,7 @@ const Navbar = () => {
                 Contact Us
               </Link>
               <p className="text-center text-xs uppercase tracking-[0.2em] text-paper/50">
-                Checkout to subscribe · Contact for questions
+                Free Facebook demo · Contact anytime
               </p>
             </motion.div>
           </motion.div>

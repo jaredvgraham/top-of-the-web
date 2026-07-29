@@ -12,6 +12,8 @@ const config: Config = {
         paper: "#F5F5FB",
         ink: "#1A1433",
         accent: "#5B2E9E",
+        // Legible violet for accent text/marks on the dark ink background
+        accentSoft: "#B79BF7",
         aqua: "#1FB6D6",
       },
       fontFamily: {
