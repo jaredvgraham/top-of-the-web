@@ -15,6 +15,11 @@ export type FacebookPageImportData = {
   coverPhotoUrl: string;
   photoUrls: string[];
   postSnippets: string[];
+  photoBinaries?: Array<{
+    url: string;
+    contentType: string;
+    base64: string;
+  }>;
 };
 
 export type WebsitePageDump = {

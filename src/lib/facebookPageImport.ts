@@ -21,6 +21,15 @@ export type FacebookPageImportData = {
   coverPhotoUrl: string;
   photoUrls: string[];
   postSnippets: string[];
+  /**
+   * Optional image bytes captured during Playwright (avoids re-fetching CDN
+   * URLs that sometimes return 315×315 stubs to the app server).
+   */
+  photoBinaries?: Array<{
+    url: string;
+    contentType: string;
+    base64: string;
+  }>;
 };
 
 type GraphErrorBody = {
@@ -360,12 +369,43 @@ export type ImportedBlobAsset = {
 };
 
 /**
- * FB CDN URLs are signed (oh/oe). Changing `_n` → `_o` or stripping path
- * segments invalidates the signature and downloads 404. Keep the URL as-is;
- * pick the best already-signed size via `pickBestFacebookPhotoUrls`.
+ * FB CDN URLs are signed (oh/oe). Rewriting the path / `_n`→`_o` breaks auth.
+ * Safe upgrade: when `cstp=mxWxH` advertises a larger max than `ctp=`, bump `ctp`
+ * to that max via string replace (preserve query order / signature params).
  */
 export function upgradeFacebookImageUrl(url: string) {
-  return url;
+  const trimmed = url.trim();
+  if (!trimmed) return trimmed;
+
+  const mx = trimmed.match(/[?&]cstp=mx(\d+)x(\d+)/i);
+  if (!mx) return trimmed;
+  const maxW = Number(mx[1]);
+  const maxH = Number(mx[2]);
+  if (!maxW || !maxH) return trimmed;
+
+  const targetCtp = `ctp=s${maxW}x${maxH}`;
+  const ctpMatch = trimmed.match(/[?&]ctp=((?:s|p)(\d+)x(\d+))/i);
+  if (ctpMatch) {
+    const curW = Number(ctpMatch[2]);
+    const curH = Number(ctpMatch[3]);
+    if (Math.min(curW, curH) >= Math.min(maxW, maxH)) return trimmed;
+    return trimmed.replace(/ctp=(?:s|p)\d+x\d+/i, targetCtp);
+  }
+
+  // No ctp yet — insert after cstp without reshuffling other params.
+  return trimmed.replace(/(cstp=mx\d+x\d+)/i, `$1&${targetCtp}`);
+}
+
+/** Min edge implied by ctp/stp size tokens; 0 if unknown. */
+export function facebookPhotoMinEdge(url: string) {
+  const lower = url.toLowerCase();
+  const ctp = lower.match(/ctp=(?:s|p)(\d+)x(\d+)/);
+  if (ctp) return Math.min(Number(ctp[1]), Number(ctp[2]));
+  const stpSize = lower.match(/_(?:fb\d+_)?s(\d+)x(\d+)/);
+  if (stpSize) return Math.min(Number(stpSize[1]), Number(stpSize[2]));
+  const cstp = lower.match(/cstp=mx(\d+)x(\d+)/);
+  if (cstp) return Math.min(Number(cstp[1]), Number(cstp[2]));
+  return 0;
 }
 
 /** Stable id for deduping the same photo at many sizes. */
@@ -389,14 +429,27 @@ export function scoreFacebookPhotoUrl(url: string) {
   if (!/\.(jpe?g|png|webp)(\?|$)/i.test(lower)) return -5000;
 
   let score = 0;
+  const edge = facebookPhotoMinEdge(url);
+  if (edge) score += edge;
   const ctp = lower.match(/ctp=(?:s|p)(\d+)x(\d+)/);
-  if (ctp) score += Math.min(Number(ctp[1]), Number(ctp[2]));
+  if (ctp) score += Math.min(Number(ctp[1]), Number(ctp[2])) * 0.25;
   const stpSize = lower.match(/_(?:fb\d+_)?s(\d+)x(\d+)/);
   if (stpSize) score += Math.min(Number(stpSize[1]), Number(stpSize[2])) * 0.5;
-  if (/ctp=s2048|ctp=p960|ctp=s960/i.test(lower)) score += 200;
+  if (/ctp=s2048|ctp=p960|ctp=s960|ctp=s1536/i.test(lower)) score += 200;
   if (/ctp=s(?:64|80|100|120|200)x/i.test(lower)) score -= 800;
   if (/t39\.30808-6\//i.test(lower)) score += 80; // feed/album photos
   if (/t39\.30808-1\//i.test(lower)) score += 40; // profile-ish
+  // Prefer URLs already bumped toward cstp max
+  const mx = lower.match(/cstp=mx(\d+)x(\d+)/);
+  const ctpExact = lower.match(/ctp=s(\d+)x(\d+)/);
+  if (
+    mx &&
+    ctpExact &&
+    mx[1] === ctpExact[1] &&
+    mx[2] === ctpExact[2]
+  ) {
+    score += 400;
+  }
   return score;
 }
 
@@ -406,10 +459,16 @@ export function pickBestFacebookPhotoUrls(urls: string[], limit = 40) {
     const trimmed = url.trim();
     if (!trimmed || isFacebookChromeImageUrl(trimmed)) continue;
     if (scoreFacebookPhotoUrl(trimmed) < 0) continue;
-    const id = facebookImageAssetId(trimmed);
+    // Prefer upgraded CDN size when cstp advertises a larger max.
+    const upgraded = upgradeFacebookImageUrl(trimmed);
+    const candidate =
+      scoreFacebookPhotoUrl(upgraded) > scoreFacebookPhotoUrl(trimmed)
+        ? upgraded
+        : trimmed;
+    const id = facebookImageAssetId(candidate);
     const prev = bestById.get(id);
-    if (!prev || scoreFacebookPhotoUrl(trimmed) > scoreFacebookPhotoUrl(prev)) {
-      bestById.set(id, trimmed);
+    if (!prev || scoreFacebookPhotoUrl(candidate) > scoreFacebookPhotoUrl(prev)) {
+      bestById.set(id, candidate);
     }
   }
   return Array.from(bestById.values())
@@ -435,19 +494,101 @@ export function isFacebookChromeImageUrl(url: string) {
     /\.kf(\?|$)/i.test(lower) ||
     /\.css(\?|$)/i.test(lower) ||
     /\.js(\?|$)/i.test(lower) ||
-    // tiny icon size folders only (not all sNNNxNNN — those can be real photos)
-    /\/s(?:[1-9]|[1-4]\d)x(?:[1-9]|[1-4]\d)\//i.test(url)
+    // Path-style size folders under 600px are thumbs / icons (incl. s315x315)
+    (() => {
+      const pathSize = url.match(/\/s(\d+)x(\d+)\//i);
+      if (!pathSize) return false;
+      return Math.min(Number(pathSize[1]), Number(pathSize[2])) < 600;
+    })()
   );
 }
 
 function isTinyFacebookVariant(url: string) {
+  const edge = facebookPhotoMinEdge(url);
   return (
-    /\/s(?:5|6|7|8|9|\d{2}|1\d{2}|2\d{2})x(?:5|6|7|8|9|\d{2}|1\d{2}|2\d{2})\//i.test(
+    /\/s(?:5|6|7|8|9|\d{2}|1\d{2}|2\d{2}|3\d{2}|4\d{2}|5\d{2})x(?:5|6|7|8|9|\d{2}|1\d{2}|2\d{2}|3\d{2}|4\d{2}|5\d{2})\//i.test(
       url
     ) ||
     /_[sp]\.(jpe?g|png|webp)(?:\?|$)/i.test(url) ||
-    /stp=[^&]*p(?:5|6|7|8|9|\d{2}|1\d{2})x/i.test(url)
+    /stp=[^&]*p(?:5|6|7|8|9|\d{2}|1\d{2}|2\d{2}|3\d{2}|4\d{2}|5\d{2})x/i.test(
+      url
+    ) ||
+    (edge > 0 && edge < 600)
   );
+}
+
+/** Read pixel size from JPEG/PNG/WebP headers. Returns 0×0 if unknown. */
+export function readImageDimensions(buffer: Buffer): {
+  width: number;
+  height: number;
+} {
+  if (!buffer?.length) return { width: 0, height: 0 };
+
+  // JPEG
+  if (buffer[0] === 0xff && buffer[1] === 0xd8) {
+    let i = 2;
+    while (i < buffer.length - 9) {
+      if (buffer[i] !== 0xff) {
+        i += 1;
+        continue;
+      }
+      const marker = buffer[i + 1];
+      if (marker === 0xc0 || marker === 0xc2) {
+        return {
+          height: buffer.readUInt16BE(i + 5),
+          width: buffer.readUInt16BE(i + 7),
+        };
+      }
+      const len = buffer.readUInt16BE(i + 2);
+      i += 2 + len;
+    }
+  }
+
+  // PNG
+  if (
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47
+  ) {
+    return {
+      width: buffer.readUInt32BE(16),
+      height: buffer.readUInt32BE(20),
+    };
+  }
+
+  // WebP (VP8X / VP8 / VP8L)
+  if (
+    buffer.toString("ascii", 0, 4) === "RIFF" &&
+    buffer.toString("ascii", 8, 12) === "WEBP"
+  ) {
+    const chunk = buffer.toString("ascii", 12, 16);
+    if (chunk === "VP8X" && buffer.length >= 30) {
+      const width =
+        1 + buffer[24] + (buffer[25] << 8) + ((buffer[26] & 0xff) << 16);
+      const height =
+        1 + buffer[27] + (buffer[28] << 8) + ((buffer[29] & 0xff) << 16);
+      return { width, height };
+    }
+    if (chunk === "VP8 " && buffer.length >= 30) {
+      return {
+        width: buffer.readUInt16LE(26) & 0x3fff,
+        height: buffer.readUInt16LE(28) & 0x3fff,
+      };
+    }
+    if (chunk === "VP8L" && buffer.length >= 25) {
+      const b0 = buffer[21];
+      const b1 = buffer[22];
+      const b2 = buffer[23];
+      const b3 = buffer[24];
+      const width = 1 + (((b1 & 0x3f) << 8) | b0);
+      const height =
+        1 + (((b3 & 0xf) << 10) | (b2 << 2) | ((b1 & 0xc0) >> 6));
+      return { width, height };
+    }
+  }
+
+  return { width: 0, height: 0 };
 }
 
 async function downloadAndStoreImage(options: {
@@ -456,6 +597,10 @@ async function downloadAndStoreImage(options: {
   kind: OnboardingAssetKind;
   filenameHint: string;
   caption?: string;
+  /** Prefer these bytes (from Playwright) over re-fetching the CDN. */
+  binary?: { contentType: string; base64: string } | null;
+  /** Minimum acceptable short edge in pixels (profile can be lower). */
+  minEdge?: number;
 }): Promise<ImportedBlobAsset | null> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     throw new Error(
@@ -463,6 +608,7 @@ async function downloadAndStoreImage(options: {
     );
   }
 
+  const minEdge = options.minEdge ?? 700;
   const upgraded = upgradeFacebookImageUrl(options.sourceUrl);
   if (
     isFacebookChromeImageUrl(options.sourceUrl) ||
@@ -474,24 +620,61 @@ async function downloadAndStoreImage(options: {
     return null;
   }
 
-  // Prefer the original signed URL first — rewriting path breaks CDN auth.
+  const urlEdge = facebookPhotoMinEdge(options.sourceUrl);
+  if (urlEdge > 0 && urlEdge < minEdge && !options.binary) {
+    console.log(
+      `[fb-import] skip small URL (${urlEdge}px): ${options.sourceUrl.slice(0, 120)}`
+    );
+    return null;
+  }
+
+  // Largest first: upgraded ctp (when cstp allows) before the thumbnail URL.
   const candidates = uniqueUrls(
-    [options.sourceUrl, upgraded].filter(
+    [upgraded, options.sourceUrl].filter(
       (url) =>
         url && !isFacebookChromeImageUrl(url) && scoreFacebookPhotoUrl(url) >= 0
     )
-  );
+  ).sort((a, b) => scoreFacebookPhotoUrl(b) - scoreFacebookPhotoUrl(a));
 
   try {
     let buffer: Buffer | null = null;
     let contentType = "image/jpeg";
     const failReasons: string[] = [];
 
+    if (options.binary?.base64) {
+      try {
+        const bytes = Buffer.from(options.binary.base64, "base64");
+        const { width, height } = readImageDimensions(bytes);
+        const edge = Math.min(width, height);
+        if (
+          bytes.length >= 8 * 1024 &&
+          bytes.length <= 20 * 1024 * 1024 &&
+          (edge === 0 || edge >= minEdge)
+        ) {
+          buffer = bytes;
+          contentType =
+            options.binary.contentType.split(";")[0].trim() || "image/jpeg";
+          console.log(
+            `[fb-import] using scrape binary ${width || "?"}x${height || "?"} (${bytes.length}b)`
+          );
+        } else {
+          failReasons.push(
+            `binary-too-small:${width}x${height}:${bytes.length}`
+          );
+        }
+      } catch (error) {
+        failReasons.push(
+          `binary-err:${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    }
+
     for (const candidate of candidates) {
+      if (buffer) break;
       try {
         const response = await fetch(candidate, {
           headers: {
-            Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+            Accept: "image/jpeg,image/png,image/webp,image/*,*/*;q=0.8",
             "User-Agent":
               "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
             Referer: "https://www.facebook.com/",
@@ -517,8 +700,23 @@ async function downloadAndStoreImage(options: {
           continue;
         }
 
+        const { width, height } = readImageDimensions(bytes);
+        const edge = Math.min(width, height);
+        if (width && height && edge < minEdge) {
+          failReasons.push(`too-small:${width}x${height}`);
+          console.log(
+            `[fb-import] reject ${width}x${height} from ${candidate.slice(0, 100)}`
+          );
+          continue;
+        }
+
         buffer = bytes;
         contentType = type.split(";")[0].trim() || "image/jpeg";
+        if (width && height) {
+          console.log(
+            `[fb-import] fetched ${width}x${height} (${bytes.length}b)`
+          );
+        }
         break;
       } catch (error) {
         failReasons.push(
@@ -530,7 +728,7 @@ async function downloadAndStoreImage(options: {
     if (!buffer) {
       if (failReasons.length) {
         console.log(
-          `[fb-import] download failed: ${failReasons.slice(0, 3).join(" | ")}`
+          `[fb-import] download failed: ${failReasons.slice(0, 4).join(" | ")}`
         );
       }
       return null;
@@ -573,6 +771,17 @@ export async function importFacebookImagesToBlob(
   onboardingToken: string
 ) {
   const assets: ImportedBlobAsset[] = [];
+  const binariesById = new Map<
+    string,
+    { url: string; contentType: string; base64: string }
+  >();
+  for (const binary of data.photoBinaries || []) {
+    if (!binary?.url || !binary.base64) continue;
+    binariesById.set(facebookImageAssetId(binary.url), binary);
+  }
+
+  const findBinary = (url: string) =>
+    binariesById.get(facebookImageAssetId(url)) || null;
 
   if (data.profilePictureUrl) {
     // Save as photo — vision decides if it's a real logo. Profile portraits
@@ -583,6 +792,8 @@ export async function importFacebookImagesToBlob(
       kind: "photo",
       filenameHint: "profile",
       caption: "Facebook profile picture",
+      binary: findBinary(data.profilePictureUrl),
+      minEdge: 200,
     });
     if (profile) {
       console.log(`[fb-import] saved profile photo`);
@@ -599,6 +810,8 @@ export async function importFacebookImagesToBlob(
       kind: "about",
       filenameHint: "cover",
       caption: "Facebook cover photo",
+      binary: findBinary(data.coverPhotoUrl),
+      minEdge: 600,
     });
     if (about) {
       console.log(`[fb-import] saved cover`);
@@ -613,15 +826,21 @@ export async function importFacebookImagesToBlob(
       (url) => url !== data.profilePictureUrl && url !== data.coverPhotoUrl
     ),
     16
-  );
+  ).filter((url) => {
+    const edge = facebookPhotoMinEdge(url);
+    // Keep unknown-size URLs (edge=0); drop known thumbs under 700px.
+    return edge === 0 || edge >= 700 || Boolean(findBinary(url));
+  });
 
-  const galleryResults = await mapPool(gallerySources, 6, async (sourceUrl, i) => {
+  const galleryResults = await mapPool(gallerySources, 3, async (sourceUrl, i) => {
     const imported = await downloadAndStoreImage({
       sourceUrl,
       token: onboardingToken,
       kind: "photo",
       filenameHint: `gallery-${i + 1}`,
       caption: "Imported from Facebook",
+      binary: findBinary(sourceUrl),
+      minEdge: 700,
     });
     if (imported) {
       console.log(
@@ -638,7 +857,8 @@ export async function importFacebookImagesToBlob(
   }
 
   console.log(
-    `[fb-import] done — saved ${assets.length} assets from ${data.photoUrls.length} candidate URLs`
+    `[fb-import] done — saved ${assets.length} assets from ${data.photoUrls.length} candidate URLs` +
+      (binariesById.size ? ` (${binariesById.size} scrape binaries)` : "")
   );
 
   return assets;

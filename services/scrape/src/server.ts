@@ -60,7 +60,7 @@ app.post("/scrape/facebook", requireAuth, async (req, res) => {
     const started = Date.now();
     const page = await scrapeFacebookPage(url);
     console.log(
-      `[scrape-service] facebook scrape done in ${Date.now() - started}ms — name=${page.name} photos=${page.photoUrls.length}`
+      `[scrape-service] facebook scrape done in ${Date.now() - started}ms — name=${page.name} photos=${page.photoUrls.length} binaries=${page.photoBinaries?.length || 0}`
     );
     res.json(page);
   } catch (error) {

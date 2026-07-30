@@ -2,6 +2,9 @@ import type { FacebookPageImportData } from "./types.js";
 import {
   isFacebookChromeImageUrl,
   pickBestFacebookPhotoUrls,
+  countHighQualityFacebookPhotos,
+  upgradeFacebookImageUrl,
+  facebookImageAssetId,
 } from "./facebookPhotoHelpers.js";
 import { patchPlaywrightContext } from "./playwrightCompat.js";
 
@@ -380,7 +383,13 @@ export async function scrapeFacebookPage(
   const page = await context.newPage();
 
   // Capture every image-like network response — most reliable on FB.
+  // Also keep the response body for large images so the app can store those
+  // bytes instead of re-fetching CDN URLs (which sometimes return 315px stubs).
   const networkImages: string[] = [];
+  const capturedBodies = new Map<
+    string,
+    { url: string; contentType: string; buffer: Buffer }
+  >();
   page.on("response", async (response) => {
     try {
       const url = response.url();
@@ -391,8 +400,25 @@ export async function scrapeFacebookPage(
         type.startsWith("image/") ||
         /scontent|fbcdn\.net|external\./i.test(url)
       ) {
-        if (isUsefulPhotoUrl(url)) {
-          networkImages.push(cleanCapturedUrl(url));
+        if (!isUsefulPhotoUrl(url)) return;
+        const cleaned = cleanCapturedUrl(url);
+        if (!cleaned) return;
+        networkImages.push(cleaned);
+
+        if (!type.startsWith("image/")) return;
+        const body = await response.body().catch(() => null);
+        if (!body || body.byteLength < 40_000 || body.byteLength > 6_000_000) {
+          return;
+        }
+        const buffer = Buffer.from(body);
+        const id = facebookImageAssetId(cleaned);
+        const prev = capturedBodies.get(id);
+        if (!prev || buffer.length > prev.buffer.length) {
+          capturedBodies.set(id, {
+            url: cleaned,
+            contentType: type.split(";")[0].trim() || "image/jpeg",
+            buffer,
+          });
         }
       }
     } catch {
@@ -418,7 +444,11 @@ export async function scrapeFacebookPage(
     const before = imagePool.length;
     for (const raw of urls) {
       const url = cleanCapturedUrl(raw);
-      if (url && isUsefulPhotoUrl(url)) imagePool.push(url);
+      if (!url || !isUsefulPhotoUrl(url)) continue;
+      // Prefer larger cstp-backed variant when present so pickBest sees it.
+      const upgraded = upgradeFacebookImageUrl(url);
+      imagePool.push(upgraded !== url ? upgraded : url);
+      if (upgraded !== url) imagePool.push(url);
     }
     const added = imagePool.length - before;
     console.log(
@@ -518,13 +548,20 @@ export async function scrapeFacebookPage(
 
     const usefulCount = () =>
       pickBestFacebookPhotoUrls([...imagePool, ...networkImages], 24).length;
+    const highQualityCount = () =>
+      countHighQualityFacebookPhotos([...imagePool, ...networkImages], 1200, 24);
 
     // Datacenter IPs often get login-walled on mbasic/photo deep-links.
-    // If www already yielded enough CDN photos, finish early (avoids Render OOM/502).
-    if (usefulCount() >= 10 && name) {
+    // Only early-exit when we already have enough *high-res* CDN photos —
+    // feed thumbs (~960) alone are not enough for demos.
+    const hasEnoughQuality =
+      highQualityCount() >= 8 || (usefulCount() >= 14 && highQualityCount() >= 5);
+
+    if (hasEnoughQuality && name) {
       logSection("EARLY EXIT", {
-        reason: "enough photos from www/network",
+        reason: "enough high-quality photos from www/network",
         usefulPhotos: usefulCount(),
+        highQualityPhotos: highQualityCount(),
         name,
       });
     } else {
@@ -546,31 +583,33 @@ export async function scrapeFacebookPage(
       };
 
       const aboutOk = await tryPage("mbasic/about", aboutUrl);
-      if (aboutOk && usefulCount() < 10) {
+      if (aboutOk && highQualityCount() < 8) {
         await tryPage("mbasic/home", mbasicUrl);
       }
-      if (usefulCount() < 10) {
+      if (highQualityCount() < 8) {
         await tryPage("mbasic/photos", photosUrl);
       }
 
+      // Follow individual photo pages until we have enough large CDN variants.
       const photoLinks =
-        usefulCount() >= 10
+        highQualityCount() >= 8
           ? []
           : unique(photoLinkPool)
               .map((href) => absolutize(href, wwwUrl))
               .filter(Boolean)
-              .slice(0, 4);
+              .slice(0, 10);
 
       logSection("PHOTO LINKS TO FOLLOW", {
         totalFound: unique(photoLinkPool).length,
         following: photoLinks.length,
         usefulSoFar: usefulCount(),
+        highQualitySoFar: highQualityCount(),
         links: photoLinks,
       });
 
       let loginWallHits = 0;
       for (let index = 0; index < photoLinks.length; index += 1) {
-        if (usefulCount() >= 12 || loginWallHits >= 2) break;
+        if (highQualityCount() >= 10 || loginWallHits >= 2) break;
         const link = photoLinks[index];
         try {
           await page.goto(link, {
@@ -597,18 +636,81 @@ export async function scrapeFacebookPage(
         }
       }
     }
+
+    pushImages(networkImages, "network-responses");
+    logSection("NETWORK IMAGE CAPTURE", summarizeUrls(networkImages, 20));
+
+    const provisionalPhotoUrls = pickBestFacebookPhotoUrls(
+      [...imagePool, ...networkImages],
+      24
+    );
+
+    // Download top photos while the browser context is still alive.
+    const contextRequest = page.context().request;
+    for (const url of provisionalPhotoUrls.slice(0, 14)) {
+      const id = facebookImageAssetId(url);
+      const existing = capturedBodies.get(id);
+      if (existing && existing.buffer.length >= 80_000) continue;
+      try {
+        const resp = await contextRequest.get(url, {
+          headers: {
+            Referer: "https://www.facebook.com/",
+            Accept: "image/jpeg,image/png,image/webp,image/*,*/*;q=0.8",
+          },
+          timeout: 20000,
+        });
+        if (!resp.ok()) continue;
+        const type = (resp.headers()["content-type"] || "").toLowerCase();
+        if (!type.startsWith("image/")) continue;
+        const buffer = Buffer.from(await resp.body());
+        if (buffer.length < 25_000 || buffer.length > 6_000_000) continue;
+        const prev = capturedBodies.get(id);
+        if (!prev || buffer.length > prev.buffer.length) {
+          capturedBodies.set(id, {
+            url,
+            contentType: type.split(";")[0].trim() || "image/jpeg",
+            buffer,
+          });
+        }
+      } catch (error) {
+        console.log(
+          `[fb-scrape] active image fetch failed: ${url.slice(0, 100)}`,
+          error instanceof Error ? error.message : error
+        );
+      }
+    }
   } finally {
     await browser.close().catch(() => undefined);
   }
-
-  pushImages(networkImages, "network-responses");
-  logSection("NETWORK IMAGE CAPTURE", summarizeUrls(networkImages, 20));
 
   const { city, state } = parseCityState(addressLine);
 
   const photoUrls = pickBestFacebookPhotoUrls(
     [...imagePool, ...networkImages],
     24
+  );
+
+  const photoBinaries: Array<{
+    url: string;
+    contentType: string;
+    base64: string;
+  }> = [];
+  let binaryBytes = 0;
+  for (const url of photoUrls.slice(0, 16)) {
+    const id = facebookImageAssetId(url);
+    const hit = capturedBodies.get(id);
+    if (!hit) continue;
+    if (binaryBytes + hit.buffer.length > 8_000_000) break;
+    binaryBytes += hit.buffer.length;
+    photoBinaries.push({
+      url: hit.url,
+      contentType: hit.contentType,
+      base64: hit.buffer.toString("base64"),
+    });
+  }
+
+  console.log(
+    `[fb-scrape] captured ${capturedBodies.size} image bodies, attaching ${photoBinaries.length} binaries (${Math.round(binaryBytes / 1024)}kb)`
   );
 
   if (profilePictureUrl && !isUsefulPhotoUrl(profilePictureUrl)) {
@@ -649,6 +751,7 @@ export async function scrapeFacebookPage(
     profilePictureUrl,
     coverPhotoUrl,
     photoUrls,
+    photoBinaries,
     postSnippets: unique(postSnippets)
       .filter((s) => !isLoginWallText(s))
       .slice(0, 10),
@@ -665,6 +768,7 @@ export async function scrapeFacebookPage(
     profilePictureUrl: result.profilePictureUrl,
     coverPhotoUrl: result.coverPhotoUrl,
     photoUrlCount: result.photoUrls.length,
+    photoBinaryCount: result.photoBinaries?.length || 0,
     photoUrls: result.photoUrls,
     aboutPreview: result.about.slice(0, 300),
   });
