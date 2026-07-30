@@ -4,9 +4,15 @@ import type { FacebookPageImportData } from "@/lib/facebookPageImport";
 import type { ImportedBlobAsset } from "@/lib/facebookPageImport";
 import type { PreviewBrandPreferences } from "@/lib/preview/brandPreferences";
 import type { PreviewImageAnalysis } from "@/lib/preview/analyzePreviewImages";
+import {
+  enforcePagePrimaryImage,
+  resolveHtmlPageImageRoles,
+  type HtmlPageImageRoles,
+} from "@/lib/preview/assignHtmlPageImages";
 import { resolveOpenAiHtmlModel } from "@/lib/preview/openaiModels";
 import type { CompanyResearch } from "@/lib/preview/researchCompany";
 import { websiteSafeCopy } from "@/lib/preview/sanitizeCopy";
+import { sanitizePreviewViewportUnits } from "@/lib/preview/sanitizePreviewViewportUnits";
 
 export type PreviewHtmlPages = {
   home: string;
@@ -63,6 +69,7 @@ QUALITY BAR (non-negotiable):
   Good: “Algae-stained siding to bright again — usually in a day, with clear pricing before we spray.”
 - Headlines sell a result + locality when natural. Body copy sounds like a trusted local pro, not a brochure bot.
 - Study every attached photo. Hero = flattering FINISHED/AFTER only. Never a dirty before as hero.
+- IMAGE ROLES: The brief’s homeHeroUrl is for the HOME page hero ONLY. Services and About must use their own assigned primary URLs — never reuse homeHeroUrl as their page hero / primary photo.
 - Before/after pairs: labeled side-by-side in a dedicated section when those photos exist.
 - Nav brand = exact businessName only. Never append city/town unless already inside businessName.
 - City/state belong in trust lines / service area / footer — not the logo wordmark.
@@ -80,7 +87,9 @@ HTML RULES:
 - One COMPLETE HTML5 document: <!DOCTYPE html>, <html>, <head>, <body>, closing tags.
 - Tailwind CDN + optional Google Fonts + minimal <script> for mobile nav.
 - Only real https image URLs from the brief/attachments.
-- No lorem, TODO, Coming soon, or Facebook UI chrome.`;
+- No lorem, TODO, Coming soon, or Facebook UI chrome.
+- HERO HEIGHT: use a FIXED min-height only (min-h-[720px] or min-h-[800px]). NEVER 100vh, h-screen, min-h-screen, dvh, or calc(100vh…). Demos render in an iframe that grows to page height — vh then equals the full document and the hero balloons.
+- HERO MEDIA: full-bleed via CSS background-size:cover (prefer inline background-size:cover with background-image) OR an absolutely positioned img with inset-0 h-full w-full object-cover inside overflow-hidden. Never a normal flow <img> for the hero (intrinsic size breaks the layout).`;
 
 export async function generatePreviewHtml(input: {
   fields: CleanedOnboardingFields;
@@ -119,6 +128,16 @@ export async function generatePreviewHtml(input: {
     .filter((img) => /^https?:\/\//i.test(img.url))
     .slice(0, 8);
 
+  const imageRoles = resolveHtmlPageImageRoles(
+    input.imageAnalyses,
+    images.map((img) => img.url),
+  );
+  console.log("[preview-html] page image roles", {
+    homeHero: imageRoles.homeHeroUrl.slice(0, 80),
+    servicesHero: imageRoles.servicesHeroUrl.slice(0, 80),
+    about: imageRoles.aboutImageUrl.slice(0, 80),
+  });
+
   const brief = {
     businessName: input.businessName,
     phone: input.fields.contact.phone || input.page.phone || "",
@@ -133,7 +152,7 @@ export async function generatePreviewHtml(input: {
     description: websiteSafeCopy(input.fields.business.description || "", ""),
     servicesText: websiteSafeCopy(
       input.fields.content.servicesProducts || "",
-      input.page.category || ""
+      input.page.category || "",
     ),
     aboutHint: websiteSafeCopy(input.fields.content.aboutCopy || "", ""),
     brandPreferences: input.brandPreferences || null,
@@ -145,6 +164,17 @@ export async function generatePreviewHtml(input: {
           serviceAreas: input.research.serviceAreas,
         }
       : null,
+    imageAssignments: {
+      homeHeroUrl: imageRoles.homeHeroUrl,
+      servicesHeroUrl: imageRoles.servicesHeroUrl,
+      aboutImageUrl: imageRoles.aboutImageUrl,
+      rules: [
+        "homeHeroUrl is for the HOME page full-bleed hero ONLY.",
+        "servicesHeroUrl is for the SERVICES page hero/banner ONLY — never use homeHeroUrl there.",
+        "aboutImageUrl is the ABOUT page primary story/portrait photo — never use homeHeroUrl as that primary.",
+        "Other photos may appear in secondary sections (gallery, service cards).",
+      ],
+    },
     imageGuide: input.imageAnalyses.slice(0, 12).map((a) => ({
       url: a.url,
       classification: a.classification || a.subject,
@@ -163,9 +193,12 @@ export async function generatePreviewHtml(input: {
   const shared = {
     brief,
     design,
+    imageRoles,
   };
 
-  console.log(`[preview-html] pages (home/services/about) via ${model} in parallel`);
+  console.log(
+    `[preview-html] pages (home/services/about) via ${model} in parallel`,
+  );
   const [home, services, about] = await Promise.all([
     generateOnePage(client, model, "home", shared, images),
     generateOnePage(client, model, "services", shared, images),
@@ -185,7 +218,7 @@ async function generateDesignSystem(
   client: OpenAI,
   model: string,
   brief: unknown,
-  images: Array<{ url: string }>
+  images: Array<{ url: string }>,
 ) {
   const content: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [
     {
@@ -228,12 +261,33 @@ Pick expressive font pair names (Google Fonts), a tight palette, and sharp hero 
   return JSON.parse(text) as Record<string, string>;
 }
 
+function pageImageInstructions(page: PageKind, roles: HtmlPageImageRoles) {
+  if (page === "home") {
+    return `HOME IMAGE RULES:
+- Full-bleed hero MUST use this exact URL: ${roles.homeHeroUrl || "(best finished-work photo from attachments)"}
+- Do not use aboutImageUrl as the home hero.`;
+  }
+  if (page === "services") {
+    return `SERVICES IMAGE RULES:
+- Page hero / banner MUST use this exact URL: ${roles.servicesHeroUrl || "(a gallery/service photo)"}
+- NEVER use homeHeroUrl (${roles.homeHeroUrl || "n/a"}) as the services page hero.
+- Match service card images to finished work for that service when possible.`;
+  }
+  return `ABOUT IMAGE RULES:
+- Primary story / portrait photo MUST use this exact URL: ${roles.aboutImageUrl || roles.servicesHeroUrl || "(owner/team or non-hero photo)"}
+- NEVER use homeHeroUrl (${roles.homeHeroUrl || "n/a"}) as the about page primary photo.`;
+}
+
 async function generateOnePage(
   client: OpenAI,
   model: string,
   page: PageKind,
-  shared: { brief: unknown; design: Record<string, string> },
-  images: Array<{ url: string; [key: string]: unknown }>
+  shared: {
+    brief: unknown;
+    design: Record<string, string>;
+    imageRoles: HtmlPageImageRoles;
+  },
+  images: Array<{ url: string; [key: string]: unknown }>,
 ): Promise<string> {
   const pageBrief =
     page === "home"
@@ -249,6 +303,8 @@ async function generateOnePage(
 
 ${pageBrief}
 
+${pageImageInstructions(page, shared.imageRoles)}
+
 Use this design system exactly (fonts, colors, voice, hero lines):
 ${JSON.stringify(shared.design, null, 2)}
 
@@ -259,6 +315,7 @@ CRITICAL:
 - Finish the entire document including </html>.
 - Working mobile nav JS required.
 - Copy must be specific and premium — rewrite anything generic.
+- Follow IMAGE RULES above for the primary/hero photo on this page.
 - businessName in nav: "${(shared.brief as { businessName?: string }).businessName || ""}" with NO extra town.`,
     },
   ];
@@ -303,12 +360,17 @@ CRITICAL:
       const text = completion.choices[0]?.message?.content || "";
       if (!text) throw new Error(`Empty ${page} HTML response`);
       const parsed = JSON.parse(text) as { html: string };
-      return assertCompletePage(parsed.html, page);
+      const enforced = enforcePagePrimaryImage(
+        parsed.html,
+        page,
+        shared.imageRoles,
+      );
+      return assertCompletePage(enforced, page);
     } catch (error) {
       lastError = error;
       console.warn(
         `[preview-html] ${page} attempt ${attempt} failed`,
-        error instanceof Error ? error.message : error
+        error instanceof Error ? error.message : error,
       );
     }
   }
@@ -323,7 +385,7 @@ function assertCompletePage(value: string, label: string): string {
   if (reason) {
     throw new Error(`Invalid ${label} HTML: ${reason}`);
   }
-  return (value || "").trim();
+  return sanitizePreviewViewportUnits((value || "").trim());
 }
 
 export function incompletePageReason(value: string): string | null {
@@ -333,15 +395,17 @@ export function incompletePageReason(value: string): string | null {
     [/<!DOCTYPE html>/i.test(html), "missing doctype"],
     [/<html[\s>]/i.test(html), "missing <html>"],
     [/<\/html>/i.test(html), "missing </html> — unfinished output"],
-    [/<nav[\s>]/i.test(html) || /role=["']navigation["']/i.test(html), "missing nav"],
     [
-      /index\.html|\/preview\//i.test(html),
-      "missing home nav link",
+      /<nav[\s>]/i.test(html) || /role=["']navigation["']/i.test(html),
+      "missing nav",
     ],
+    [/index\.html|\/preview\//i.test(html), "missing home nav link"],
     [/services\.html|\/services/i.test(html), "missing services nav link"],
     [/about\.html|\/about/i.test(html), "missing about nav link"],
     [
-      /aria-expanded|classList\.toggle|getElementById|querySelector/i.test(html),
+      /aria-expanded|classList\.toggle|getElementById|querySelector/i.test(
+        html,
+      ),
       "missing mobile nav JS",
     ],
   ];
@@ -353,7 +417,7 @@ export function incompletePageReason(value: string): string | null {
 }
 
 export function previewPagesComplete(
-  pages: PreviewHtmlPages | null | undefined
+  pages: PreviewHtmlPages | null | undefined,
 ): boolean {
   if (!pages) return false;
   return (
@@ -366,10 +430,10 @@ export function previewPagesComplete(
 /** Rewrite demo-relative links to preview app routes (navigate top window). */
 export function rewritePreviewHtmlLinks(
   html: string,
-  basePath: string
+  basePath: string,
 ): string {
   const root = basePath.replace(/\/$/, "");
-  let out = html
+  let out = sanitizePreviewViewportUnits(html)
     .replace(/(href=["'])index\.html(["'])/gi, `$1${root}$2`)
     .replace(/(href=["'])\.\/index\.html(["'])/gi, `$1${root}$2`)
     .replace(/(href=["'])services\.html(["'])/gi, `$1${root}/services$2`)
@@ -380,7 +444,7 @@ export function rewritePreviewHtmlLinks(
   // Force top-window navigation so iframe sandbox doesn't trap demo links
   out = out.replace(
     new RegExp(`(href=["']${root}(?:/services|/about)?["'])`, "gi"),
-    "$1 target=\"_top\""
+    '$1 target="_top"',
   );
 
   const navScript = `<script>(function(){document.addEventListener("click",function(e){var t=e.target;if(!t||!t.closest)return;var a=t.closest("a");if(!a)return;var href=a.getAttribute("href")||"";if(href.indexOf("${root}")!==0)return;if(window.top&&window.top!==window){e.preventDefault();window.top.location.href=href;}});})();</script>`;
