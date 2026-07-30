@@ -6,9 +6,10 @@ import PreviewLoadingState from "@/components/preview/PreviewLoadingState";
 import { resolveBrandPalette } from "@/lib/preview/brandColors";
 import { BRAND_COLOR_PRESETS } from "@/lib/preview/brandPreferences";
 import {
-  hasMetaAdClickAttribution,
-  readMetaAttributionFromBrowser,
+  restoreMetaClickCookies,
+  shouldCreditMetaClick,
   trackMetaEvent,
+  type MetaClickAttribution,
 } from "@/lib/preview/metaAttribution";
 import type { PreviewStreamEvent } from "@/lib/preview/generateProgress";
 
@@ -25,6 +26,8 @@ export type PreviewGeneratorFormProps = {
   leadToken?: string;
   initialEmail?: string;
   initialPhone?: string;
+  /** Stored Lead click ids — used when continue link lost cookies. */
+  leadMetaAttribution?: MetaClickAttribution | null;
 };
 
 async function readGenerateStream(
@@ -138,6 +141,7 @@ export default function PreviewGeneratorForm({
   leadToken = "",
   initialEmail = "",
   initialPhone = "",
+  leadMetaAttribution = null,
 }: PreviewGeneratorFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState(initialEmail);
@@ -166,6 +170,10 @@ export default function PreviewGeneratorForm({
   useEffect(() => {
     setPhone(initialPhone);
   }, [initialPhone]);
+
+  useEffect(() => {
+    restoreMetaClickCookies(leadMetaAttribution);
+  }, [leadMetaAttribution]);
 
   useEffect(() => {
     if (leadToken) {
@@ -227,8 +235,10 @@ export default function PreviewGeneratorForm({
     setStageIndex(0);
 
     try {
-      // Only credit Meta when this session has an ad click (fbclid / _fbc).
-      if (hasMetaAdClickAttribution(readMetaAttributionFromBrowser())) {
+      // Credit Meta when this browser still has an ad click, or the Lead was
+      // captured from Meta (email continue often drops iOS / in-app cookies).
+      restoreMetaClickCookies(leadMetaAttribution);
+      if (shouldCreditMetaClick(leadMetaAttribution)) {
         trackMetaEvent("InitiateCheckout", {
           content_name: "Website Preview Generate",
         });

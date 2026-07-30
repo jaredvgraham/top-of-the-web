@@ -87,6 +87,11 @@ export default async function PreviewContinuePage({ params }: Props) {
               leadToken={lead.token}
               initialEmail={lead.email}
               initialPhone={lead.phone}
+              leadMetaAttribution={{
+                fbclid: lead.attribution?.fbclid || "",
+                fbp: lead.attribution?.fbp || "",
+                fbc: lead.attribution?.fbc || "",
+              }}
             />
           </div>
         </div>

@@ -4,12 +4,45 @@ import { hasMetaAdClickAttribution } from "@/lib/preview/hasMetaAdClick";
 
 export { hasMetaAdClickAttribution };
 
+export type MetaClickAttribution = {
+  fbclid?: string;
+  fbp?: string;
+  fbc?: string;
+};
+
 export function getCookie(name: string): string {
   if (typeof document === "undefined") return "";
   const match = document.cookie.match(
     new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]*)`)
   );
   return match ? decodeURIComponent(match[1]) : "";
+}
+
+function setCookie(name: string, value: string, maxAgeSeconds = 90 * 24 * 60 * 60) {
+  if (typeof document === "undefined" || !value) return;
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax`;
+}
+
+/**
+ * When someone returns via email continue link, fbclid is gone from the URL and
+ * iOS / Facebook in-app browsers often drop `_fbc` / `_fbp`. Re-seed cookies from
+ * the Lead record so pixel events (InitiateCheckout, Purchase) can still attribute.
+ */
+export function restoreMetaClickCookies(attr?: MetaClickAttribution | null) {
+  if (typeof document === "undefined" || !attr) return;
+  const fbc = (attr.fbc || "").trim();
+  const fbp = (attr.fbp || "").trim();
+  const fbclid = (attr.fbclid || "").trim();
+
+  if (fbc && !getCookie("_fbc")) {
+    setCookie("_fbc", fbc);
+  } else if (!getCookie("_fbc") && fbclid) {
+    setCookie("_fbc", `fb.1.${Date.now()}.${fbclid}`);
+  }
+
+  if (fbp && !getCookie("_fbp")) {
+    setCookie("_fbp", fbp);
+  }
 }
 
 export function readMetaAttributionFromBrowser() {
@@ -62,4 +95,15 @@ export function trackMetaEvent(
 ) {
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
   window.fbq("track", event, params);
+}
+
+/** Browser cookies/URL, or durable Lead-stored click ids. */
+export function shouldCreditMetaClick(
+  leadAttr?: MetaClickAttribution | null
+) {
+  if (hasMetaAdClickAttribution(readMetaAttributionFromBrowser())) return true;
+  return hasMetaAdClickAttribution({
+    fbclid: leadAttr?.fbclid || "",
+    fbc: leadAttr?.fbc || "",
+  });
 }
