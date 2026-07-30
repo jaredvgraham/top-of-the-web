@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
         .sort({ createdAt: -1 })
         .limit(limit)
         .select(
-          "name email phone businessName city state status token previewSlug facebookUrl attribution createdAt updatedAt"
+          "name email phone businessName city state status token previewSlug facebookUrl attribution demoViewCount demoFirstViewedAt demoLastViewedAt createdAt updatedAt"
         )
         .lean(),
     ]);

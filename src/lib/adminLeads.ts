@@ -43,6 +43,10 @@ export type AdminLeadRow = {
   createdAt: string;
   updatedAt: string;
   fromMeta: boolean;
+  /** Client demo views (admin sessions excluded). */
+  demoViewCount: number;
+  demoFirstViewedAt: string;
+  demoLastViewedAt: string;
   attribution: AdminLeadAttribution;
 };
 
@@ -60,6 +64,9 @@ type LeanLead = {
   facebookUrl?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  demoViewCount?: number;
+  demoFirstViewedAt?: Date | string;
+  demoLastViewedAt?: Date | string;
   attribution?: Partial<AdminLeadAttribution> | null;
 };
 
@@ -181,6 +188,12 @@ export function serializeAdminLead(doc: LeanLead): AdminLeadRow {
     createdAt: iso(doc.createdAt),
     updatedAt: iso(doc.updatedAt),
     fromMeta: hasMetaAdClickAttribution(attribution),
+    demoViewCount:
+      typeof doc.demoViewCount === "number" && Number.isFinite(doc.demoViewCount)
+        ? doc.demoViewCount
+        : 0,
+    demoFirstViewedAt: iso(doc.demoFirstViewedAt),
+    demoLastViewedAt: iso(doc.demoLastViewedAt),
     attribution,
   };
 }

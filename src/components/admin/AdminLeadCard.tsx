@@ -165,11 +165,26 @@ export default function AdminLeadCard({
           {showSource ? <SourceFlag fromMeta={lead.fromMeta} /> : null}
           <Flag yes={bought} yesLabel="Bought" noLabel="No buy" />
           <Flag yes={hasFb} yesLabel="FB in" noLabel="No FB" />
+          <Flag
+            yes={lead.demoViewCount > 0}
+            yesLabel={
+              lead.demoViewCount === 1
+                ? "Viewed 1×"
+                : `Viewed ${lead.demoViewCount}×`
+            }
+            noLabel="Not viewed"
+          />
         </div>
       </div>
 
       <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/40">
         {statusLabel(lead.status)}
+        {lead.demoViewCount > 0 && lead.demoLastViewedAt ? (
+          <span className="normal-case tracking-normal font-normal text-ink/35">
+            {" "}
+            · last demo view {formatWhen(lead.demoLastViewedAt)}
+          </span>
+        ) : null}
       </p>
 
       {demoLink ? (

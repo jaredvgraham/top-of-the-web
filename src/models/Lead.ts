@@ -40,6 +40,10 @@ export interface ILead extends Document {
   previewSlug?: string;
   facebookUrl?: string;
   authorized?: boolean;
+  /** Client demo page views (admin sessions excluded). */
+  demoViewCount: number;
+  demoFirstViewedAt?: Date;
+  demoLastViewedAt?: Date;
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -131,6 +135,17 @@ const LeadSchema = new Schema<ILead>(
     authorized: {
       type: Boolean,
       default: false,
+    },
+    demoViewCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    demoFirstViewedAt: {
+      type: Date,
+    },
+    demoLastViewedAt: {
+      type: Date,
     },
     expiresAt: {
       type: Date,
