@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Onboarding from "@/models/Onboarding";
+import Lead, { leadExpiresAt } from "@/models/Lead";
 import { sendAdminInquiryEmail } from "@/lib/mail";
 import {
   createOnboardingToken,
@@ -8,6 +9,18 @@ import {
   normalizeOwnerNames,
   onboardingPublicUrl,
 } from "@/lib/onboarding";
+import {
+  createLeadToken,
+  normalizeLeadEmail,
+  normalizeLeadPhone,
+} from "@/lib/preview/lead";
+import { siteOrigin } from "@/lib/siteOrigin";
+
+function clientIp(req: NextRequest) {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0]?.trim() || "";
+  return req.headers.get("x-real-ip") || "";
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -91,6 +104,34 @@ export async function POST(req: NextRequest) {
 
     const origin = req.headers.get("origin") || undefined;
     const onboardingUrl = onboardingPublicUrl(session.token, origin);
+
+    // Also create an admin Lead so contact inquiries appear under /admin/leads.
+    // Failures here must not break the inquiry / onboarding redirect.
+    try {
+      const landingBase = (origin || siteOrigin()).replace(/\/$/, "");
+      await Lead.create({
+        token: createLeadToken(),
+        email: normalizeLeadEmail(email),
+        phone: normalizeLeadPhone(phone) || phone,
+        name: name.slice(0, 80),
+        businessName: "",
+        city: "",
+        state: "",
+        status: "captured",
+        source: "contact",
+        notes: inquiry.slice(0, 4000),
+        onboardingToken: session.token,
+        authorized: true,
+        attribution: {
+          landingUrl: `${landingBase}/contact`,
+          userAgent: (req.headers.get("user-agent") || "").slice(0, 500),
+          ip: clientIp(req).slice(0, 64),
+        },
+        expiresAt: leadExpiresAt(),
+      });
+    } catch (leadError) {
+      console.error("Inquiry saved but lead create failed:", leadError);
+    }
 
     const notifyTo = process.env.EMAIL?.trim();
     if (notifyTo) {

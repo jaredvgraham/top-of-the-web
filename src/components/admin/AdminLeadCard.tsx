@@ -52,7 +52,20 @@ function Flag({
   );
 }
 
-function SourceFlag({ fromMeta }: { fromMeta: boolean }) {
+function SourceFlag({
+  source,
+  fromMeta,
+}: {
+  source: AdminLeadRow["source"];
+  fromMeta: boolean;
+}) {
+  if (source === "contact") {
+    return (
+      <span className="inline-flex items-center rounded-full bg-sky-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-sky-900">
+        Contact
+      </span>
+    );
+  }
   return (
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${
@@ -118,7 +131,9 @@ export default function AdminLeadCard({
   onDelete,
   deleting = false,
 }: Props) {
-  const [copied, setCopied] = useState<"email" | "phone" | "demo" | null>(null);
+  const [copied, setCopied] = useState<
+    "email" | "phone" | "demo" | "brief" | null
+  >(null);
   const bought = lead.status === "purchased";
   const hasFb = Boolean(lead.facebookUrl?.trim());
   const phoneLink = telHref(lead.phone);
@@ -126,8 +141,13 @@ export default function AdminLeadCard({
   const location = [lead.city, lead.state].filter(Boolean).join(", ");
   const demoLink = lead.demoUrl || lead.continueUrl;
   const demoLabel = lead.demoUrl ? "Demo" : lead.continueUrl ? "Make demo" : "";
+  const briefLink = lead.onboardingUrl;
+  const notes = lead.notes?.trim() || "";
 
-  async function copy(kind: "email" | "phone" | "demo", value: string) {
+  async function copy(
+    kind: "email" | "phone" | "demo" | "brief",
+    value: string
+  ) {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(kind);
@@ -162,18 +182,22 @@ export default function AdminLeadCard({
           </div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
-          {showSource ? <SourceFlag fromMeta={lead.fromMeta} /> : null}
+          {showSource ? (
+            <SourceFlag source={lead.source} fromMeta={lead.fromMeta} />
+          ) : null}
           <Flag yes={bought} yesLabel="Bought" noLabel="No buy" />
           <Flag yes={hasFb} yesLabel="FB in" noLabel="No FB" />
-          <Flag
-            yes={lead.demoViewCount > 0}
-            yesLabel={
-              lead.demoViewCount === 1
-                ? "Viewed 1×"
-                : `Viewed ${lead.demoViewCount}×`
-            }
-            noLabel="Not viewed"
-          />
+          {lead.source !== "contact" ? (
+            <Flag
+              yes={lead.demoViewCount > 0}
+              yesLabel={
+                lead.demoViewCount === 1
+                  ? "Viewed 1×"
+                  : `Viewed ${lead.demoViewCount}×`
+              }
+              noLabel="Not viewed"
+            />
+          ) : null}
         </div>
       </div>
 
@@ -186,6 +210,37 @@ export default function AdminLeadCard({
           </span>
         ) : null}
       </p>
+
+      {notes ? (
+        <p className="mt-3 whitespace-pre-wrap rounded-xl bg-ink/[0.03] px-3 py-2.5 text-sm leading-6 text-ink/70">
+          {notes}
+        </p>
+      ) : null}
+
+      {briefLink ? (
+        <div className="mt-3 rounded-xl bg-ink/[0.03] px-3 py-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/40">
+            Onboarding brief
+          </p>
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <a
+              href={briefLink}
+              target="_blank"
+              rel="noreferrer"
+              className="min-w-0 truncate text-sm text-accent hover:underline"
+            >
+              {briefLink}
+            </a>
+            <button
+              type="button"
+              onClick={() => void copy("brief", briefLink)}
+              className="shrink-0 rounded-lg bg-ink/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/55"
+            >
+              {copied === "brief" ? "Copied" : "Copy"}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {demoLink ? (
         <div className="mt-3 rounded-xl bg-ink/[0.03] px-3 py-2.5">
@@ -210,9 +265,9 @@ export default function AdminLeadCard({
             </button>
           </div>
         </div>
-      ) : (
+      ) : !briefLink ? (
         <p className="mt-3 text-xs text-ink/40">No demo or continue link</p>
-      )}
+      ) : null}
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <ActionBtn
