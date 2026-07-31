@@ -160,6 +160,7 @@ export async function POST(req: NextRequest) {
       city: city.slice(0, 80),
       state,
       status: "captured",
+      source: "preview",
       authorized: true,
       attribution: {
         fbclid,

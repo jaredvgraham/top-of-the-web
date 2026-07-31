@@ -8,6 +8,9 @@ export type LeadStatus =
   | "purchased"
   | "expired";
 
+/** How the lead entered the pipeline. */
+export type LeadSource = "preview" | "contact";
+
 export interface ILeadAttribution {
   fbclid?: string;
   fbp?: string;
@@ -36,6 +39,12 @@ export interface ILead extends Document {
   city: string;
   state: string;
   status: LeadStatus;
+  /** preview = homepage/preview capture; contact = /contact inquiry form. */
+  source: LeadSource;
+  /** Contact-form message (and similar free-text notes). */
+  notes?: string;
+  /** Linked onboarding brief token when source is contact. */
+  onboardingToken?: string;
   attribution: ILeadAttribution;
   previewSlug?: string;
   facebookUrl?: string;
@@ -105,6 +114,22 @@ const LeadSchema = new Schema<ILead>(
         "expired",
       ],
       default: "captured",
+      index: true,
+    },
+    source: {
+      type: String,
+      enum: ["preview", "contact"],
+      default: "preview",
+      index: true,
+    },
+    notes: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    onboardingToken: {
+      type: String,
+      default: "",
       index: true,
     },
     attribution: {

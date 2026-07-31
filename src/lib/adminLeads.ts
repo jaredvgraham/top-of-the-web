@@ -1,11 +1,23 @@
 import { hasMetaAdClickAttribution } from "@/lib/preview/hasMetaAdClick";
 import { siteOrigin } from "@/lib/siteOrigin";
+import { onboardingPublicUrl } from "@/lib/onboarding";
 
 /** Mongo filter for leads that arrived via a Meta ad click. */
 export const META_AD_LEAD_FILTER = {
   $or: [
     { "attribution.fbclid": { $type: "string", $ne: "" } },
     { "attribution.fbc": { $regex: /^fb\.\d+\.\d+\./ } },
+  ],
+};
+
+/** Contact-form inquiries written into the Lead collection. */
+export const CONTACT_LEAD_FILTER = { source: "contact" as const };
+
+/** Preview-capture leads that are not Meta-attributed. */
+export const ORGANIC_LEAD_FILTER = {
+  $and: [
+    { $nor: [META_AD_LEAD_FILTER] },
+    { source: { $ne: "contact" } },
   ],
 };
 
@@ -33,6 +45,11 @@ export type AdminLeadRow = {
   city: string;
   state: string;
   status: string;
+  source: "preview" | "contact";
+  notes: string;
+  onboardingToken: string;
+  /** Brief URL when this lead came from the contact form. */
+  onboardingUrl: string;
   token: string;
   previewSlug: string;
   /** Live demo when preview exists; otherwise empty. */
@@ -59,6 +76,9 @@ type LeanLead = {
   city?: string;
   state?: string;
   status?: string;
+  source?: string;
+  notes?: string;
+  onboardingToken?: string;
   token?: string;
   previewSlug?: string;
   facebookUrl?: string;
@@ -168,8 +188,18 @@ export function serializeAdminLead(doc: LeanLead): AdminLeadRow {
   const previewSlug = doc.previewSlug || "";
   const origin = siteOrigin();
   const demoUrl = previewSlug ? `${origin}/preview/${previewSlug}` : "";
+  const source = doc.source === "contact" ? "contact" : "preview";
+  const onboardingToken = doc.onboardingToken || "";
+  const onboardingUrl = onboardingToken
+    ? onboardingPublicUrl(onboardingToken, origin)
+    : "";
+  // Contact leads use the onboarding brief, not the preview continue flow.
   const continueUrl =
-    !previewSlug && token ? `${origin}/preview/continue/${token}` : "";
+    source === "contact"
+      ? ""
+      : !previewSlug && token
+        ? `${origin}/preview/continue/${token}`
+        : "";
 
   return {
     id: String(doc._id),
@@ -180,6 +210,10 @@ export function serializeAdminLead(doc: LeanLead): AdminLeadRow {
     city: doc.city || "",
     state: doc.state || "",
     status: doc.status || "captured",
+    source,
+    notes: doc.notes || "",
+    onboardingToken,
+    onboardingUrl,
     token,
     previewSlug,
     demoUrl,

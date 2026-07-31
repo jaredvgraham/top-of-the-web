@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import AdminLeadCard from "@/components/admin/AdminLeadCard";
 import type { AdminLeadRow } from "@/lib/adminLeads";
 
-type SourceFilter = "all" | "meta" | "organic";
+type SourceFilter = "all" | "meta" | "organic" | "contact";
 
 type Payload = {
   source: SourceFilter;
@@ -14,6 +14,7 @@ type Payload = {
     total: number;
     meta: number;
     organic: number;
+    contact: number;
     shown: number;
   };
 };
@@ -24,6 +25,7 @@ const FILTERS: Array<[SourceFilter, string]> = [
   ["all", "All"],
   ["meta", "Meta ad"],
   ["organic", "Organic"],
+  ["contact", "Contact"],
 ];
 
 export default function LeadsAdmin() {
@@ -109,8 +111,11 @@ export default function LeadsAdmin() {
         if (!prev) return prev;
         const removed = new Set(ids);
         const nextLeads = prev.leads.filter((l) => !removed.has(l.id));
-        const meta = nextLeads.filter((l) => l.fromMeta).length;
-        const organic = nextLeads.length - meta;
+        const contact = nextLeads.filter((l) => l.source === "contact").length;
+        const meta = nextLeads.filter(
+          (l) => l.source !== "contact" && l.fromMeta
+        ).length;
+        const organic = nextLeads.length - meta - contact;
         return {
           ...prev,
           leads: nextLeads,
@@ -122,15 +127,21 @@ export default function LeadsAdmin() {
             meta:
               source === "meta"
                 ? nextLeads.length
-                : source === "organic"
-                  ? prev.counts.meta
-                  : meta,
+                : source === "all"
+                  ? meta
+                  : prev.counts.meta,
             organic:
               source === "organic"
                 ? nextLeads.length
-                : source === "meta"
-                  ? prev.counts.organic
-                  : organic,
+                : source === "all"
+                  ? organic
+                  : prev.counts.organic,
+            contact:
+              source === "contact"
+                ? nextLeads.length
+                : source === "all"
+                  ? contact
+                  : prev.counts.contact,
           },
         };
       });
@@ -162,10 +173,10 @@ export default function LeadsAdmin() {
             Leads
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-ink/55">
-            Every preview form lead. Meta ad = stored{" "}
+            Preview captures and contact-form inquiries. Meta ad = stored{" "}
             <code className="text-ink/70">fbclid</code>/
-            <code className="text-ink/70">fbc</code> from an ad click. Organic =
-            everything else.
+            <code className="text-ink/70">fbc</code> from an ad click. Contact =
+            /contact form. Organic = other preview leads.
           </p>
         </motion.div>
 
@@ -188,7 +199,9 @@ export default function LeadsAdmin() {
                       ? data.counts.total
                       : id === "meta"
                         ? data.counts.meta
-                        : data.counts.organic
+                        : id === "contact"
+                          ? data.counts.contact
+                          : data.counts.organic
                   }`
                 : ""}
             </button>
