@@ -3,8 +3,10 @@ import dbConnect from "@/lib/db";
 import Lead from "@/models/Lead";
 import {
   META_AD_LEAD_FILTER,
+  applyPreviewRevisionStats,
   serializeAdminLead,
 } from "@/lib/adminLeads";
+import { loadRevisionStatsForSlugs } from "@/lib/preview/loadRevisionStatsForSlugs";
 import {
   loadMetaAdsDashboard,
   metaAdsConfigured,
@@ -161,9 +163,13 @@ export async function GET(req: NextRequest) {
       siteLeads = leadCount;
       sitePurchased = purchasedCount;
       siteWithFbclid = leadCount;
-      leads = leadDocs
+      const serialized = leadDocs
         .map((doc) => serializeAdminLead(doc))
         .filter((lead) => lead.fromMeta);
+      const revisionBySlug = await loadRevisionStatsForSlugs(
+        serialized.map((l) => l.previewSlug)
+      );
+      leads = applyPreviewRevisionStats(serialized, revisionBySlug);
     }
 
     return NextResponse.json(

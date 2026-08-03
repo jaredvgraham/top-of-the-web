@@ -57,6 +57,17 @@ export async function GET() {
         error: doc.error?.code
           ? { code: doc.error.code, message: doc.error.message || "" }
           : null,
+        revisionsBeforePayUsed: Number(doc.revisionsBeforePayUsed) || 0,
+        revisionsAfterPayUsed: Number(doc.revisionsAfterPayUsed) || 0,
+        revisionLog: Array.isArray(doc.revisionLog)
+          ? doc.revisionLog.map((entry) => ({
+              at: entry.at,
+              phase: entry.phase,
+              targets: entry.targets || [],
+              note: entry.note || "",
+              pagesUpdated: entry.pagesUpdated || [],
+            }))
+          : [],
         expiresAt: doc.expiresAt,
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt,

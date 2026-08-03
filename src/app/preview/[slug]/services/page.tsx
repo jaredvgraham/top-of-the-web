@@ -42,7 +42,7 @@ export default async function PreviewServicesRoute({ params }: Props) {
 
   return (
     <>
-      <PreviewDemoRibbon slug={loaded.slug} />
+      <PreviewDemoRibbon slug={loaded.slug} page="services" />
       <div className="pb-44 sm:pb-36">
         {loaded.pages?.services ? (
           <CustomPreviewFrame

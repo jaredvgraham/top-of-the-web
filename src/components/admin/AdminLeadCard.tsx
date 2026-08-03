@@ -198,6 +198,20 @@ export default function AdminLeadCard({
               noLabel="Not viewed"
             />
           ) : null}
+          {lead.previewSlug ? (
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${
+                (lead.revisionsBeforePayUsed ?? 0) > 0 ||
+                (lead.revisionsAfterPayUsed ?? 0) > 0
+                  ? "bg-accent/15 text-accent"
+                  : "bg-ink/5 text-ink/45"
+              }`}
+              title="AI revisions used (pre-pay / post-pay)"
+            >
+              AI {lead.revisionsBeforePayUsed ?? 0}/2 ·{" "}
+              {lead.revisionsAfterPayUsed ?? 0}/2
+            </span>
+          ) : null}
         </div>
       </div>
 
@@ -209,7 +223,24 @@ export default function AdminLeadCard({
             · last demo view {formatWhen(lead.demoLastViewedAt)}
           </span>
         ) : null}
+        {lead.previewSlug ? (
+          <span className="normal-case tracking-normal font-normal text-ink/35">
+            {" "}
+            · AI revisions {lead.revisionsBeforePayUsed ?? 0}/2 pre ·{" "}
+            {lead.revisionsAfterPayUsed ?? 0}/2 post
+          </span>
+        ) : null}
       </p>
+
+      {lead.lastRevisionNote ? (
+        <p className="mt-3 whitespace-pre-wrap rounded-xl border border-accent/15 bg-accent/[0.05] px-3 py-2.5 text-sm leading-6 text-ink/75">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-accent">
+            Last AI revision note
+          </span>
+          <br />
+          {lead.lastRevisionNote}
+        </p>
+      ) : null}
 
       {notes ? (
         <p className="mt-3 whitespace-pre-wrap rounded-xl bg-ink/[0.03] px-3 py-2.5 text-sm leading-6 text-ink/70">

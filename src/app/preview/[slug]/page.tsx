@@ -80,7 +80,7 @@ function PreviewShell({
 
   return (
     <>
-      <PreviewDemoRibbon slug={slug} />
+      <PreviewDemoRibbon slug={slug} page={page} />
       <div className="pb-44 sm:pb-36">
         {html ? (
           <CustomPreviewFrame html={html} slug={slug} page={page} />

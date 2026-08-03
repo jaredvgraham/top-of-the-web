@@ -3,6 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
+type RevisionLogEntry = {
+  at?: string;
+  phase?: "pre" | "post";
+  targets?: string[];
+  note?: string;
+  pagesUpdated?: string[];
+};
+
 type PreviewRow = {
   id: string;
   slug: string;
@@ -13,6 +21,9 @@ type PreviewRow = {
   leadToken?: string;
   generation: { engine?: string; model?: string } | null;
   error: { code: string; message: string } | null;
+  revisionsBeforePayUsed?: number;
+  revisionsAfterPayUsed?: number;
+  revisionLog?: RevisionLogEntry[];
   expiresAt?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -24,8 +35,8 @@ type PreviewRow = {
     hasWebsite: boolean;
     pack: string;
     plan: string;
-    websiteName: string;
     websiteUrl: string;
+    websiteName: string;
   };
 };
 
@@ -451,6 +462,13 @@ export default function PreviewsAdmin() {
                           tone={row.paid ? "paid" : "muted"}
                         />
                         <Chip label={row.status} tone={statusTone(row.status)} />
+                        {(row.revisionsBeforePayUsed ||
+                          row.revisionsAfterPayUsed) ? (
+                          <Chip
+                            label={`rev ${row.revisionsBeforePayUsed ?? 0}/${row.revisionsAfterPayUsed ?? 0}`}
+                            tone="muted"
+                          />
+                        ) : null}
                       </div>
                       <p className="mt-1 truncate text-sm text-ink/55">
                         {row.email}
@@ -547,7 +565,57 @@ export default function PreviewsAdmin() {
                   }
                 />
                 <Field label="Preview ID" value={selected.id} mono />
+                <Field
+                  label="AI revisions (pre-pay)"
+                  value={`${selected.revisionsBeforePayUsed ?? 0} / 2 used`}
+                />
+                <Field
+                  label="AI revisions (post-pay)"
+                  value={`${selected.revisionsAfterPayUsed ?? 0} / 2 used`}
+                />
               </dl>
+
+              {selected.revisionLog && selected.revisionLog.length > 0 ? (
+                <div className="mt-6">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/40">
+                    Revision notes
+                  </p>
+                  <ul className="mt-3 space-y-3">
+                    {[...selected.revisionLog]
+                      .slice()
+                      .reverse()
+                      .slice(0, 8)
+                      .map((entry, i) => (
+                        <li
+                          key={`${entry.at || i}-${i}`}
+                          className="rounded-2xl border border-ink/10 bg-paper/60 px-4 py-3 text-sm"
+                        >
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-ink/45">
+                            <span>{formatDate(entry.at)}</span>
+                            <span className="uppercase tracking-[0.12em]">
+                              {entry.phase || "pre"}
+                            </span>
+                            {entry.pagesUpdated?.length ? (
+                              <span>
+                                pages: {entry.pagesUpdated.join(", ")}
+                              </span>
+                            ) : null}
+                          </div>
+                          {entry.targets?.length ? (
+                            <p className="mt-1.5 text-ink/60">
+                              {entry.targets.join(" · ")}
+                            </p>
+                          ) : null}
+                          {entry.note ? (
+                            <p className="mt-1 text-ink/80">{entry.note}</p>
+                          ) : (
+                            <p className="mt-1 text-ink/40">(no note)</p>
+                          )}
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              ) : null}
 
               {selected.error ? (
                 <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

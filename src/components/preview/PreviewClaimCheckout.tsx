@@ -11,6 +11,10 @@ import {
   type MetaClickAttribution,
 } from "@/lib/preview/metaAttribution";
 import type { CheckoutOffer } from "@/lib/checkoutOffers";
+import {
+  claimPageRevisionBlurb,
+  revisionCountBadge,
+} from "@/lib/preview/revisionCopy";
 
 const ease = [0.65, 0, 0.35, 1] as const;
 
@@ -45,10 +49,54 @@ export default function PreviewClaimCheckout({
   const [offer, setOffer] = useState<CheckoutOffer>("one_time");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [revisionBlurb, setRevisionBlurb] = useState("");
+  const [revisionBadge, setRevisionBadge] = useState<{
+    count: string;
+    depleted: boolean;
+  } | null>(null);
 
   useEffect(() => {
     restoreMetaClickCookies(leadMetaAttribution);
   }, [leadMetaAttribution]);
+
+  useEffect(() => {
+    if (!slug) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/preview/${encodeURIComponent(slug)}/revise`,
+          { cache: "no-store" }
+        );
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const max = Number(data.max) || 2;
+        const used =
+          typeof data.used === "number"
+            ? data.used
+            : Math.max(0, max - (Number(data.remaining) || 0));
+        const quota = {
+          remaining: Number(data.remaining) || 0,
+          used,
+          purchased: Boolean(data.purchased),
+          max,
+          phase: (data.phase === "post" ? "post" : "pre") as "pre" | "post",
+        };
+        const badge = revisionCountBadge(quota);
+        setRevisionBadge({
+          count: `AI ${badge.count}`,
+          depleted: badge.depleted,
+        });
+        setRevisionBlurb(claimPageRevisionBlurb(quota));
+      } catch {
+        // non-blocking
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
 
   // Meta InitiateCheckout = viewing the claim page (not demo generation).
   useEffect(() => {
@@ -196,6 +244,24 @@ export default function PreviewClaimCheckout({
             One customer pays for the life of your website. Custom site +
             hosting included.
           </p>
+          {revisionBadge || revisionBlurb ? (
+            <div className="mt-4 rounded-2xl border border-accent/20 bg-accent/[0.06] px-4 py-3">
+              {revisionBadge ? (
+                <p
+                  className={`text-[11px] font-bold uppercase tracking-[0.12em] ${
+                    revisionBadge.depleted ? "text-ink/50" : "text-accent"
+                  }`}
+                >
+                  {revisionBadge.count}
+                </p>
+              ) : null}
+              {revisionBlurb ? (
+                <p className="mt-1 text-sm leading-relaxed text-ink/70">
+                  {revisionBlurb}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           <div
             className="mt-7 grid gap-3"
@@ -312,6 +378,16 @@ export default function PreviewClaimCheckout({
                   100% satisfaction guarantee
                 </strong>{" "}
                 — we work it until you’re happy.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="mt-0.5 font-semibold text-accent">→</span>
+              <span>
+                <strong className="font-semibold text-ink">
+                  2 more AI + unlimited human revisions
+                </strong>{" "}
+                — quick AI polish after checkout, then a person revises with
+                you until you’re happy.
               </span>
             </li>
           </ul>

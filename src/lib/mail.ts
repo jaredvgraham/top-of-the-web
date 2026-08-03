@@ -66,17 +66,37 @@ export async function sendPurchaseConfirmationEmail(
   const nextSteps = oneTime
     ? [
         `1. Keep this email — your Website ID is your order reference.`,
-        `2. We'll call or text you for a short brief on the custom updates you want.`,
-        `3. Your site goes live within about 24 hours of checkout.`,
-        `4. 100% satisfaction — we work it until you're happy.`,
-      ]
+        previewUrl
+          ? `2. Open your demo for 2 more AI polish passes (optional): ${previewUrl}`
+          : `2. We'll call or text you for a short brief on the custom updates you want.`,
+        previewUrl
+          ? `3. We'll also call/text for your custom brief — then unlimited human revisions until you're happy.`
+          : `3. Your site goes live within about 24 hours of checkout.`,
+        previewUrl
+          ? `4. Your site goes live within about 24 hours of checkout.`
+          : `4. 100% satisfaction — we work it until you're happy.`,
+        previewUrl
+          ? `5. 100% satisfaction — we work it until you're happy.`
+          : null,
+      ].filter((line): line is string => Boolean(line))
     : [
         `1. Keep this email — your Website ID is how you sign into billing (and future updates).`,
-        `2. We'll call or text you for a short brief on the custom updates you want.`,
-        `3. Your site goes live within about 24 hours of checkout.`,
-        `4. After you're live, you can cancel anytime from the billing portal.`,
-        `5. 100% satisfaction — we work it until you're happy.`,
-      ];
+        previewUrl
+          ? `2. Open your demo for 2 more AI polish passes (optional): ${previewUrl}`
+          : `2. We'll call or text you for a short brief on the custom updates you want.`,
+        previewUrl
+          ? `3. We'll also call/text for your custom brief — then unlimited human revisions until you're happy.`
+          : `3. Your site goes live within about 24 hours of checkout.`,
+        previewUrl
+          ? `4. Your site goes live within about 24 hours of checkout.`
+          : `4. After you're live, you can cancel anytime from the billing portal.`,
+        previewUrl
+          ? `5. After you're live, you can cancel anytime from the billing portal.`
+          : `5. 100% satisfaction — we work it until you're happy.`,
+        previewUrl
+          ? `6. 100% satisfaction — we work it until you're happy.`
+          : null,
+      ].filter((line): line is string => Boolean(line));
 
   const text = [
     `Thanks for your purchase${nameLine}!`,
@@ -97,7 +117,11 @@ export async function sendPurchaseConfirmationEmail(
     `WHAT HAPPENS NEXT`,
     ...nextSteps,
     previewUrl ? `` : null,
-    previewUrl ? `Your demo preview: ${previewUrl}` : null,
+    previewUrl ? `YOUR DEMO (2 more AI polish passes included)` : null,
+    previewUrl ? previewUrl : null,
+    previewUrl
+      ? `Use Request changes on the demo for up to 2 AI polish passes. After that, a real person revises with you until you're happy.`
+      : null,
     ``,
     `Questions? Reply to this email or write bsitesioteam@gmail.com.`,
     ``,
@@ -117,11 +141,21 @@ export async function sendPurchaseConfirmationEmail(
 
   const htmlSteps = oneTime
     ? `<li>Save your Website ID as your order reference.</li>
-      <li>We’ll call/text for your custom brief.</li>
+      ${
+        previewUrl
+          ? `<li>Optional: open your demo for <strong>2 more AI polish passes</strong>.</li>`
+          : ""
+      }
+      <li>We’ll call/text for your custom brief — then <strong>unlimited human revisions</strong> until you’re happy.</li>
       <li>Site goes live within ~24 hours.</li>
       <li>100% satisfaction guarantee.</li>`
     : `<li>Save your Website ID for billing access.</li>
-      <li>We’ll call/text for your custom brief.</li>
+      ${
+        previewUrl
+          ? `<li>Optional: open your demo for <strong>2 more AI polish passes</strong>.</li>`
+          : ""
+      }
+      <li>We’ll call/text for your custom brief — then <strong>unlimited human revisions</strong> until you’re happy.</li>
       <li>Site goes live within ~24 hours.</li>
       <li>Cancel anytime once you’re live · 100% satisfaction guarantee.</li>`;
 
@@ -162,7 +196,16 @@ export async function sendPurchaseConfirmationEmail(
     </p>
     ${
       previewUrl
-        ? `<p style="margin:16px 0 0;font-family:system-ui,sans-serif;font-size:13px;"><a href="${previewUrl}" style="color:#5B2E9E;">View your demo preview</a></p>`
+        ? `<div style="background:#fff;border:1px solid rgba(91,46,158,0.25);border-radius:16px;padding:20px 22px;margin:20px 0;font-family:system-ui,sans-serif;">
+      <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#5B2E9E;font-weight:600;">Your demo · 2 more AI polish passes</p>
+      <p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:#3D3654;">
+        Use <strong>Request changes</strong> on your demo for up to 2 AI polish passes. After that, a real person revises with you until you’re happy.
+      </p>
+      <a href="${previewUrl}" style="display:inline-block;background:#5B2E9E;color:#fff;text-decoration:none;padding:12px 20px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;">Open my demo</a>
+      <p style="margin:12px 0 0;font-size:12px;line-height:1.45;color:#6B6578;word-break:break-all;">
+        <a href="${previewUrl}" style="color:#5B2E9E;">${escapeHtml(previewUrl)}</a>
+      </p>
+    </div>`
         : ""
     }
     <p style="margin:28px 0 0;font-family:system-ui,sans-serif;font-size:13px;color:#6B6578;">

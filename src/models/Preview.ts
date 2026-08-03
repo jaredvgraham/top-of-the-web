@@ -15,6 +15,16 @@ export type PreviewPages = {
   about: string;
 };
 
+export type PreviewRevisionPhase = "pre" | "post";
+
+export type PreviewRevisionLogEntry = {
+  at: Date;
+  phase: PreviewRevisionPhase;
+  targets: string[];
+  note: string;
+  pagesUpdated: string[];
+};
+
 export interface IPreview extends Document {
   _id: mongoose.Types.ObjectId;
   slug: string;
@@ -36,6 +46,13 @@ export interface IPreview extends Document {
     engine: string;
     model: string;
   };
+  /** Free AI revisions used before purchase (max 2). */
+  revisionsBeforePayUsed: number;
+  /** AI polish revisions used after purchase (max 2). */
+  revisionsAfterPayUsed: number;
+  revisionLog: PreviewRevisionLogEntry[];
+  /** Set while a revision job is running (ISO / Date). */
+  revisingAt?: Date | null;
   error?: {
     code: string;
     message: string;
@@ -103,6 +120,32 @@ const PreviewSchema = new Schema<IPreview>(
       type: Schema.Types.Mixed,
       default: undefined,
     },
+    revisionsBeforePayUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    revisionsAfterPayUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    revisionLog: {
+      type: [
+        {
+          at: { type: Date, required: true },
+          phase: { type: String, enum: ["pre", "post"], required: true },
+          targets: { type: [String], default: [] },
+          note: { type: String, default: "" },
+          pagesUpdated: { type: [String], default: [] },
+        },
+      ],
+      default: [],
+    },
+    revisingAt: {
+      type: Date,
+      default: null,
+    },
     error: {
       code: { type: String, default: "" },
       message: { type: String, default: "" },
@@ -115,6 +158,9 @@ const PreviewSchema = new Schema<IPreview>(
   },
   { timestamps: true }
 );
+
+export const REVISIONS_BEFORE_PAY_MAX = 2;
+export const REVISIONS_AFTER_PAY_MAX = 2;
 
 if (mongoose.models.Preview) {
   delete mongoose.models.Preview;

@@ -64,6 +64,12 @@ export type AdminLeadRow = {
   demoViewCount: number;
   demoFirstViewedAt: string;
   demoLastViewedAt: string;
+  /** AI revisions used before purchase (from linked Preview). */
+  revisionsBeforePayUsed: number;
+  /** AI polish revisions used after purchase (from linked Preview). */
+  revisionsAfterPayUsed: number;
+  /** Last client revision note, if any. */
+  lastRevisionNote: string;
   attribution: AdminLeadAttribution;
 };
 
@@ -228,6 +234,29 @@ export function serializeAdminLead(doc: LeanLead): AdminLeadRow {
         : 0,
     demoFirstViewedAt: iso(doc.demoFirstViewedAt),
     demoLastViewedAt: iso(doc.demoLastViewedAt),
+    revisionsBeforePayUsed: 0,
+    revisionsAfterPayUsed: 0,
+    lastRevisionNote: "",
     attribution,
   };
+}
+
+export type PreviewRevisionStats = {
+  revisionsBeforePayUsed: number;
+  revisionsAfterPayUsed: number;
+  lastRevisionNote: string;
+};
+
+/** Attach Preview AI revision usage onto serialized leads (by previewSlug). */
+export function applyPreviewRevisionStats(
+  leads: AdminLeadRow[],
+  bySlug: Map<string, PreviewRevisionStats>
+): AdminLeadRow[] {
+  return leads.map((lead) => {
+    const slug = (lead.previewSlug || "").trim();
+    if (!slug) return lead;
+    const stats = bySlug.get(slug);
+    if (!stats) return lead;
+    return { ...lead, ...stats };
+  });
 }

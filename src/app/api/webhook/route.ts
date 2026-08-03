@@ -140,8 +140,31 @@ export async function POST(req: NextRequest) {
 
       if (!order.confirmationEmailSent) {
         let businessName = "";
-        if (previewSlug) {
-          const preview = await Preview.findOne({ slug: previewSlug })
+        let resolvedPreviewSlug = previewSlug;
+
+        // If checkout lacked previewSlug, recover from the newest lead with a demo
+        if (!resolvedPreviewSlug) {
+          try {
+            const leadWithDemo = await Lead.findOne({
+              email,
+              previewSlug: { $type: "string", $ne: "" },
+            })
+              .sort({ createdAt: -1 })
+              .select("previewSlug")
+              .lean();
+            if (leadWithDemo?.previewSlug) {
+              resolvedPreviewSlug = leadWithDemo.previewSlug;
+            }
+          } catch (lookupError) {
+            console.warn(
+              "[webhook] previewSlug lead lookup failed",
+              lookupError
+            );
+          }
+        }
+
+        if (resolvedPreviewSlug) {
+          const preview = await Preview.findOne({ slug: resolvedPreviewSlug })
             .select("siteSpec leadToken email")
             .lean();
           const siteSpec = preview?.siteSpec as
@@ -153,7 +176,7 @@ export async function POST(req: NextRequest) {
             if (preview?.leadToken) {
               await Lead.findOneAndUpdate(
                 { token: preview.leadToken },
-                { $set: { status: "purchased" } }
+                { $set: { status: "purchased", previewSlug: resolvedPreviewSlug } }
               );
             } else if (preview?.email || email) {
               await Lead.findOneAndUpdate(
@@ -161,7 +184,12 @@ export async function POST(req: NextRequest) {
                   email: preview?.email || email,
                   status: { $in: ["preview_ready", "generating", "continued"] },
                 },
-                { $set: { status: "purchased", previewSlug } },
+                {
+                  $set: {
+                    status: "purchased",
+                    previewSlug: resolvedPreviewSlug,
+                  },
+                },
                 { sort: { createdAt: -1 } }
               );
             }
@@ -178,7 +206,7 @@ export async function POST(req: NextRequest) {
             plan: order.plan || productName || "Managed Website Plan",
             phone,
             businessName,
-            previewSlug: previewSlug || undefined,
+            previewSlug: resolvedPreviewSlug || undefined,
             offer: offer || undefined,
           });
           order.confirmationEmailSent = true;

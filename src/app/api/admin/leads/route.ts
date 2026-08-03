@@ -5,8 +5,10 @@ import {
   CONTACT_LEAD_FILTER,
   META_AD_LEAD_FILTER,
   ORGANIC_LEAD_FILTER,
+  applyPreviewRevisionStats,
   serializeAdminLead,
 } from "@/lib/adminLeads";
+import { loadRevisionStatsForSlugs } from "@/lib/preview/loadRevisionStatsForSlugs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,7 +57,11 @@ export async function GET(req: NextRequest) {
           .lean(),
       ]);
 
-    const leads = docs.map((doc) => serializeAdminLead(doc));
+    const serialized = docs.map((doc) => serializeAdminLead(doc));
+    const revisionBySlug = await loadRevisionStatsForSlugs(
+      serialized.map((l) => l.previewSlug)
+    );
+    const leads = applyPreviewRevisionStats(serialized, revisionBySlug);
 
     return NextResponse.json(
       {
