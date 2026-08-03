@@ -46,6 +46,7 @@ export default async function PreviewClaimPage({ params }: Props) {
       defaultEmail={loaded.checkoutEmail}
       defaultPhone={loaded.phone}
       previewPath={`/preview/${loaded.slug}`}
+      leadMetaAttribution={loaded.leadMetaAttribution}
     />
   );
 }

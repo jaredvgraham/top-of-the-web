@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import {
+  restoreMetaClickCookies,
+  shouldCreditMetaClick,
+  trackMetaEvent,
+  type MetaClickAttribution,
+} from "@/lib/preview/metaAttribution";
 
 const ease = [0.65, 0, 0.35, 1] as const;
 
@@ -21,6 +27,7 @@ type Props = {
   defaultEmail: string;
   defaultPhone: string;
   previewPath: string;
+  leadMetaAttribution?: MetaClickAttribution | null;
 };
 
 export default function PreviewClaimCheckout({
@@ -29,12 +36,42 @@ export default function PreviewClaimCheckout({
   defaultEmail,
   defaultPhone,
   previewPath,
+  leadMetaAttribution,
 }: Props) {
   const router = useRouter();
   const [email, setEmail] = useState(defaultEmail);
   const [phone, setPhone] = useState(defaultPhone);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    restoreMetaClickCookies(leadMetaAttribution);
+  }, [leadMetaAttribution]);
+
+  // Meta InitiateCheckout = viewing the claim page (not demo generation).
+  useEffect(() => {
+    if (!slug) return;
+
+    const key = `meta_initiate_checkout_${slug}`;
+    try {
+      if (sessionStorage.getItem(key) === "1") return;
+    } catch {
+      // private mode — continue
+    }
+
+    if (!shouldCreditMetaClick(leadMetaAttribution)) return;
+
+    try {
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // private mode — still fire once this mount
+    }
+
+    trackMetaEvent("InitiateCheckout", {
+      content_name: "Website Claim Page",
+      content_category: "website_preview",
+    });
+  }, [slug, leadMetaAttribution]);
 
   const readyToCheckout = useMemo(
     () => isValidEmail(email) && isValidPhone(phone),

@@ -7,7 +7,6 @@ import { resolveBrandPalette } from "@/lib/preview/brandColors";
 import { BRAND_COLOR_PRESETS } from "@/lib/preview/brandPreferences";
 import {
   restoreMetaClickCookies,
-  shouldCreditMetaClick,
   trackMetaEvent,
   type MetaClickAttribution,
 } from "@/lib/preview/metaAttribution";
@@ -235,15 +234,6 @@ export default function PreviewGeneratorForm({
     setStageIndex(0);
 
     try {
-      // Credit Meta when this browser still has an ad click, or the Lead was
-      // captured from Meta (email continue often drops iOS / in-app cookies).
-      restoreMetaClickCookies(leadMetaAttribution);
-      if (shouldCreditMetaClick(leadMetaAttribution)) {
-        trackMetaEvent("InitiateCheckout", {
-          content_name: "Website Preview Generate",
-        });
-      }
-
       const response = await fetch("/api/preview/generate", {
         method: "POST",
         headers: {

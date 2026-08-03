@@ -1,10 +1,17 @@
 import dbConnect from "@/lib/db";
+import Lead from "@/models/Lead";
 import Preview, {
   isPreviewExpired,
   type PreviewPages,
 } from "@/models/Preview";
 import { previewPagesComplete } from "@/lib/preview/generatePreviewHtml";
 import { siteSpecSchema, type SiteSpec } from "@/lib/preview/siteSpecSchema";
+
+export type PreviewLeadMetaAttribution = {
+  fbclid: string;
+  fbp: string;
+  fbc: string;
+};
 
 export type LoadedPreview =
   | {
@@ -19,6 +26,8 @@ export type LoadedPreview =
       /** Phone from FB / site spec when available. */
       phone: string;
       facebookUrl: string;
+      /** Lead click ids for Meta pixel attribution on claim / purchase. */
+      leadMetaAttribution: PreviewLeadMetaAttribution;
     }
   | {
       ok: false;
@@ -109,6 +118,51 @@ function minimalSiteFromPages(
   }
 }
 
+async function resolveLeadMetaAttribution(input: {
+  leadToken?: string;
+  email?: string;
+  previewSlug?: string;
+}): Promise<PreviewLeadMetaAttribution> {
+  const empty = { fbclid: "", fbp: "", fbc: "" };
+  try {
+    let lead: {
+      attribution?: { fbclid?: string; fbp?: string; fbc?: string };
+    } | null = null;
+
+    const leadToken = (input.leadToken || "").trim();
+    if (leadToken) {
+      lead = await Lead.findOne({ token: leadToken })
+        .select("attribution")
+        .lean();
+    }
+
+    const previewSlug = (input.previewSlug || "").trim();
+    if (!lead && previewSlug) {
+      lead = await Lead.findOne({ previewSlug })
+        .sort({ createdAt: -1 })
+        .select("attribution")
+        .lean();
+    }
+
+    const email = (input.email || "").trim().toLowerCase();
+    if (!lead && email) {
+      lead = await Lead.findOne({ email })
+        .sort({ createdAt: -1 })
+        .select("attribution")
+        .lean();
+    }
+
+    const attr = lead?.attribution || {};
+    return {
+      fbclid: attr.fbclid || "",
+      fbp: attr.fbp || "",
+      fbc: attr.fbc || "",
+    };
+  } catch {
+    return empty;
+  }
+}
+
 export async function loadPreviewSite(slugRaw: string): Promise<LoadedPreview> {
   const slug = (slugRaw || "").trim();
   if (!slug) return { ok: false, kind: "not_found", message: "Not found" };
@@ -175,6 +229,12 @@ export async function loadPreviewSite(slugRaw: string): Promise<LoadedPreview> {
         message: "This demo couldn’t be rendered. Please generate a new one.",
       };
     }
+    const leadMetaAttribution = await resolveLeadMetaAttribution({
+      leadToken: doc.leadToken,
+      email: doc.email,
+      previewSlug: doc.slug,
+    });
+
     return {
       ok: true,
       slug: doc.slug,
@@ -187,6 +247,7 @@ export async function loadPreviewSite(slugRaw: string): Promise<LoadedPreview> {
       ),
       phone: (doc.phone || site.business.phone || "").trim(),
       facebookUrl: doc.source?.url || "",
+      leadMetaAttribution,
     };
   }
 
@@ -200,6 +261,12 @@ export async function loadPreviewSite(slugRaw: string): Promise<LoadedPreview> {
     };
   }
 
+  const leadMetaAttribution = await resolveLeadMetaAttribution({
+    leadToken: doc.leadToken,
+    email: doc.email,
+    previewSlug: doc.slug,
+  });
+
   return {
     ok: true,
     slug: doc.slug,
@@ -211,5 +278,6 @@ export async function loadPreviewSite(slugRaw: string): Promise<LoadedPreview> {
     ),
     phone: (doc.phone || parsed.data.business.phone || "").trim(),
     facebookUrl: doc.source?.url || "",
+    leadMetaAttribution,
   };
 }
