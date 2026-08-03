@@ -105,7 +105,7 @@ export function DynamicBody({
   );
 }
 
-/** Disabled preview-only contact form — never submits. */
+/** Disabled preview-only quote form — never submits. */
 export function PreviewContactForm({
   primaryColor,
   accentColor,
@@ -127,14 +127,14 @@ export function PreviewContactForm({
       }}
     >
       <p
-        className="rounded-xl px-4 py-3 text-sm"
+        className="rounded-xl px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em]"
         style={{
           backgroundColor: `${accentColor}14`,
           color: primaryColor,
           border: `1px solid ${accentColor}33`,
         }}
       >
-        Preview only — form submission unlocks on your real custom site.
+        Not functional in demo preview
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <input
@@ -145,14 +145,26 @@ export function PreviewContactForm({
         />
         <input
           disabled
-          placeholder="Your email"
+          placeholder="Phone"
           className="w-full rounded-none border-b bg-transparent px-0 py-3 text-sm opacity-70 outline-none"
           style={{ borderColor: `${primaryColor}33`, color: primaryColor }}
         />
       </div>
+      <input
+        disabled
+        placeholder="Email"
+        className="w-full rounded-none border-b bg-transparent px-0 py-3 text-sm opacity-70 outline-none"
+        style={{ borderColor: `${primaryColor}33`, color: primaryColor }}
+      />
+      <input
+        disabled
+        placeholder="Service needed"
+        className="w-full rounded-none border-b bg-transparent px-0 py-3 text-sm opacity-70 outline-none"
+        style={{ borderColor: `${primaryColor}33`, color: primaryColor }}
+      />
       <textarea
         disabled
-        placeholder="What do you need done?"
+        placeholder="Project details / what do you need done?"
         rows={4}
         className="w-full rounded-none border-b bg-transparent px-0 py-3 text-sm opacity-70 outline-none"
         style={{
@@ -167,7 +179,7 @@ export function PreviewContactForm({
         className="w-full px-8 py-4 text-[12px] font-semibold uppercase tracking-[0.18em] opacity-70 sm:w-auto"
         style={{ backgroundColor: accentColor || primaryColor, color: label }}
       >
-        Send message
+        Request a free quote
       </button>
     </form>
   );

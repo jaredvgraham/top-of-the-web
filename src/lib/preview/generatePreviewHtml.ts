@@ -88,8 +88,17 @@ HTML RULES:
 - Tailwind CDN + optional Google Fonts + minimal <script> for mobile nav.
 - Only real https image URLs from the brief/attachments.
 - No lorem, TODO, Coming soon, or Facebook UI chrome.
-- HERO HEIGHT: use a FIXED min-height only (min-h-[720px] or min-h-[800px]). NEVER 100vh, h-screen, min-h-screen, dvh, or calc(100vh…). Demos render in an iframe that grows to page height — vh then equals the full document and the hero balloons.
-- HERO MEDIA: full-bleed via CSS background-size:cover (prefer inline background-size:cover with background-image) OR an absolutely positioned img with inset-0 h-full w-full object-cover inside overflow-hidden. Never a normal flow <img> for the hero (intrinsic size breaks the layout).`;
+- HERO HEIGHT: use a FIXED min-height only (min-h-[720px] or min-h-[800px]). NEVER 100vh, h-screen, min-h-screen, dvh, vh units, or calc(…vh…). Demos render in an iframe that grows to page height — vh then equals the full document and the hero balloons.
+- HERO MEDIA: full-bleed via CSS background-size:cover (prefer inline background-size:cover with background-image) OR an absolutely positioned img with inset-0 h-full w-full object-cover inside overflow-hidden. Never a normal flow <img> for the hero (intrinsic size breaks the layout).
+
+QUOTE / LEAD FORM (required on HOME; strongly preferred on services/about CTAs):
+- Include a real quote/estimate request form tailored to THIS trade (e.g. “Request a free estimate”, “Get a quote”, “Schedule a free consult” — match the business).
+- Fields that make sense for the trade (name, phone, email, service needed / project details, optional address or preferred date).
+- Form must NOT submit anywhere (action="#", onsubmit return false, or button type="button"). No backend.
+- Directly above the form, include this exact headline text as a visible notice:
+  "Not functional in demo preview"
+- Style the notice clearly (small uppercase / banner) so visitors know it’s demo-only.
+- Still include tel: / mailto: CTAs that work; only the form is inert.`;
 
 export async function generatePreviewHtml(input: {
   fields: CleanedOnboardingFields;
@@ -291,10 +300,16 @@ async function generateOnePage(
 ): Promise<string> {
   const pageBrief =
     page === "home"
-      ? "HOME: full-bleed hero, services teaser (3–6), before/after if pairs exist, about teaser, gallery of finished work, contact/CTA. Sticky working navbar."
+      ? "HOME: full-bleed hero, services teaser (3–6), before/after if pairs exist, about teaser, gallery of finished work, contact section with trade-specific quote form + exact notice headline “Not functional in demo preview”. Sticky working navbar."
       : page === "services"
-        ? "SERVICES: page hero, full services list with matched finished-work images + specific copy/benefits each, process, CTA. Same sticky working navbar + visual system as home."
-        : "ABOUT: story page with owner/team photo when available, trust, service area, CTA. Same sticky working navbar + visual system as home.";
+        ? "SERVICES: page hero, full services list with matched finished-work images + specific copy/benefits each, process, CTA + quote form with “Not functional in demo preview”. Same sticky working navbar + visual system as home."
+        : "ABOUT: story page with owner/team photo when available, trust, service area, CTA + quote form with “Not functional in demo preview”. Same sticky working navbar + visual system as home.";
+
+  const briefBusinessName =
+    typeof (shared.brief as { businessName?: unknown }).businessName ===
+    "string"
+      ? String((shared.brief as { businessName?: string }).businessName)
+      : "";
 
   const content: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [
     {
@@ -314,9 +329,10 @@ ${JSON.stringify(shared.brief, null, 2)}
 CRITICAL:
 - Finish the entire document including </html>.
 - Working mobile nav JS required.
+- Include the quote form with the exact notice headline: Not functional in demo preview
 - Copy must be specific and premium — rewrite anything generic.
 - Follow IMAGE RULES above for the primary/hero photo on this page.
-- businessName in nav: "${(shared.brief as { businessName?: string }).businessName || ""}" with NO extra town.`,
+- businessName in nav: "${briefBusinessName}" with NO extra town.`,
     },
   ];
 
@@ -427,6 +443,62 @@ export function previewPagesComplete(
   );
 }
 
+const DEMO_FORM_NOTICE = "Not functional in demo preview";
+
+function extractBusinessName(html: string): string {
+  const title = html.match(/<title[^>]*>([^|<]+)/i)?.[1]?.trim() || "";
+  const cleaned = title
+    .replace(/\s*[—|–-].*$/, "")
+    .replace(/\s+Demo.*$/i, "")
+    .trim();
+  return cleaned || "your business";
+}
+
+/** Inject a trade-generic quote form when the page has none (covers older demos). */
+function ensureDemoQuoteForm(html: string): string {
+  if (/not functional in demo preview/i.test(html)) return html;
+  if (/<form[\s>]/i.test(html) && /quote|estimate|consult|contact/i.test(html)) {
+    // Existing form — prepend the required notice once near the first form
+    return html.replace(
+      /(<form\b[^>]*>)/i,
+      `<p class="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">${DEMO_FORM_NOTICE}</p>$1`,
+    );
+  }
+
+  const name = extractBusinessName(html);
+  const section = `
+<section id="contact" data-bsites-demo-quote="1" class="w-full px-4 py-16 sm:px-8 sm:py-20 bg-slate-50 border-t border-slate-200">
+  <div class="mx-auto max-w-xl">
+    <p class="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-5">${DEMO_FORM_NOTICE}</p>
+    <h2 class="text-3xl font-semibold tracking-tight text-slate-900 text-center">Request a free quote</h2>
+    <p class="mt-3 text-center text-sm leading-relaxed text-slate-600">Tell ${escapeHtmlAttr(name)} what you need — this form is a preview of your real site.</p>
+    <form class="mt-8 space-y-4" action="#" method="get" onsubmit="return false;">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <input disabled type="text" placeholder="Your name" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 opacity-80" />
+        <input disabled type="tel" placeholder="Phone" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 opacity-80" />
+      </div>
+      <input disabled type="email" placeholder="Email" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 opacity-80" />
+      <input disabled type="text" placeholder="Service needed" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 opacity-80" />
+      <textarea disabled rows="4" placeholder="Project details" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 opacity-80"></textarea>
+      <button type="button" disabled class="w-full rounded-full bg-slate-900 px-6 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] text-white opacity-70">Send quote request</button>
+    </form>
+  </div>
+</section>`;
+
+  if (/<\/body>/i.test(html)) {
+    return html.replace(/<\/body>/i, `${section}</body>`);
+  }
+  return `${html}${section}`;
+}
+
+function escapeHtmlAttr(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 /** Rewrite demo-relative links to preview app routes (navigate top window). */
 export function rewritePreviewHtmlLinks(
   html: string,
@@ -441,13 +513,17 @@ export function rewritePreviewHtmlLinks(
     .replace(/(href=["'])about\.html(["'])/gi, `$1${root}/about$2`)
     .replace(/(href=["'])\.\/about\.html(["'])/gi, `$1${root}/about$2`);
 
+  out = ensureDemoQuoteForm(out);
+
   // Force top-window navigation so iframe sandbox doesn't trap demo links
   out = out.replace(
     new RegExp(`(href=["']${root}(?:/services|/about)?["'])`, "gi"),
     '$1 target="_top"',
   );
 
-  const navScript = `<script>(function(){document.addEventListener("click",function(e){var t=e.target;if(!t||!t.closest)return;var a=t.closest("a");if(!a)return;var href=a.getAttribute("href")||"";if(href.indexOf("${root}")!==0)return;if(window.top&&window.top!==window){e.preventDefault();window.top.location.href=href;}});})();</script>`;
+  const navScript = `<script>(function(){document.addEventListener("click",function(e){var t=e.target;if(!t||!t.closest)return;var a=t.closest("a");if(!a)return;var href=a.getAttribute("href")||"";
+if(href.charAt(0)==="#"){var id=href.slice(1);if(!id)return;var el=document.getElementById(id);if(!el)return;e.preventDefault();try{var topWin=window.top||window;var iframe=window.frameElement;var rect=el.getBoundingClientRect();var iframeTop=iframe?iframe.getBoundingClientRect().top:0;var y=(topWin.scrollY||topWin.pageYOffset||0)+iframeTop+rect.top-16;topWin.scrollTo({top:Math.max(0,y),behavior:"smooth"});}catch(err){el.scrollIntoView({behavior:"smooth",block:"start"});}return;}
+if(href.indexOf("${root}")!==0)return;if(window.top&&window.top!==window){e.preventDefault();window.top.location.href=href;}});})();</script>`;
 
   if (/<\/body>/i.test(out)) {
     out = out.replace(/<\/body>/i, `${navScript}</body>`);
