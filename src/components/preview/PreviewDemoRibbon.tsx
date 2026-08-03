@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import PreviewViewTracker from "@/components/preview/PreviewViewTracker";
 import PreviewRevisePanel from "@/components/preview/PreviewRevisePanel";
+import PreviewRevisionDoneToast from "@/components/preview/PreviewRevisionDoneToast";
 import {
   REVISE_OPEN_EVENT,
   revisionCountBadge,
@@ -158,6 +159,7 @@ export default function PreviewDemoRibbon({
           })
         }
       />
+      <PreviewRevisionDoneToast slug={slug} />
     </>
   );
 }

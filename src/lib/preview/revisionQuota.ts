@@ -72,39 +72,16 @@ export function snapshotRevisionQuota(input: {
   };
 }
 
-/** Chip ids that imply a sitewide visual/tone pass. */
-const SITEWIDE_TARGETS = new Set([
-  "more_professional",
-  "more_bold",
-  "adjust_colors",
-  "punchier_copy",
-]);
-
+/**
+ * Every revision is sitewide so home / services / about stay consistent.
+ * The HTML prompt enforces surgical edits — only change what they asked for.
+ */
 export function inferRevisionScope(
-  targets: string[],
-  note: string,
-  focusPage: "home" | "services" | "about" | "all"
+  _targets: string[],
+  _note: string,
+  _focusPage: "home" | "services" | "about" | "all"
 ): "focused" | "sitewide" {
-  if (focusPage === "all") return "sitewide";
-  if (targets.some((t) => SITEWIDE_TARGETS.has(t))) return "sitewide";
-  // Service list / offering corrections usually appear on home + services
-  if (targets.includes("emphasize_service")) return "sitewide";
-  const n = note.toLowerCase();
-  if (
-    /\b(whole site|entire site|all pages|everywhere|brand|colors?|tone|overall|vibe|throughout)\b/.test(
-      n
-    )
-  ) {
-    return "sitewide";
-  }
-  if (
-    /\b(services? we (do|offer)|we (only |also )?(do|offer)|remove .+ service|wrong service|list of services|our services are)\b/.test(
-      n
-    )
-  ) {
-    return "sitewide";
-  }
-  return "focused";
+  return "sitewide";
 }
 
 const CUSTOM_BUILD_ONLY =

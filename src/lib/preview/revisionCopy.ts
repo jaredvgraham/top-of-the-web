@@ -116,8 +116,44 @@ export function claimPageRevisionBlurb(
 }
 
 export const REVISE_OPEN_EVENT = "bsites:open-revise";
+export const REVISE_DONE_STORAGE_KEY = "bsites:revision-done";
+
+export type ReviseDonePayload = {
+  slug: string;
+  message: string;
+  used: number;
+  max: number;
+  at: number;
+};
 
 export function openRevisePanel() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(REVISE_OPEN_EVENT));
+}
+
+export function stashReviseDoneNotification(payload: ReviseDonePayload) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(REVISE_DONE_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // private mode
+  }
+}
+
+export function consumeReviseDoneNotification(
+  slug: string
+): ReviseDonePayload | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(REVISE_DONE_STORAGE_KEY);
+    if (!raw) return null;
+    sessionStorage.removeItem(REVISE_DONE_STORAGE_KEY);
+    const parsed = JSON.parse(raw) as ReviseDonePayload;
+    if (!parsed?.slug || parsed.slug !== slug) return null;
+    // Ignore stale payloads older than 10 minutes
+    if (parsed.at && Date.now() - parsed.at > 10 * 60 * 1000) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
 }

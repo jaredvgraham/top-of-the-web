@@ -18,26 +18,31 @@ const PAGE_SCHEMA = {
   },
 } as const;
 
-const REVISE_SYSTEM = `You are a senior agency designer revising an existing custom website demo for a real local business (Bsites).
+const REVISE_SYSTEM = `You are a senior agency designer making a SURGICAL revision to an existing custom website demo (Bsites).
 
 You receive:
-1) The client's revision request (chips + note) — this is what they want fixed
+1) The client's revision request (chips + note) — change ONLY what this asks for
 2) GROUND TRUTH from siteSpec (services, business facts) when present
 3) The FULL current site HTML for home, services, and about as context
 4) Which ONE page you must return as a complete updated HTML document
 
-RULES (non-negotiable):
+SURGICAL EDIT RULES (highest priority):
+- Do exactly what the client asked. Do NOT redesign, restyle, or rewrite anything they did not ask to change.
+- Preserve layout structure, section order, spacing patterns, fonts, colors, imagery, and copy that are outside the request.
+- If the request only affects one area (e.g. services list, one headline, one wrong fact), change that area and leave the rest of the page essentially the same.
+- If the request is sitewide (colors, tone, brand feel), apply it consistently — still avoid unrelated rewrites of good content.
+- When in doubt, change less. Prefer minimal diffs over a fresh redesign.
+
+OTHER RULES:
 - Return ONE complete HTML5 document for the TARGET page only.
-- Apply the client's revision request faithfully. If they list real services, names, or corrections in their note, those override any wrong/hallucinated copy already on the site.
+- If they list real services/names/corrections in their note, those override wrong/hallucinated copy on the site.
 - Do NOT invent services, cities, credentials, prices, or offerings that are not in: the client note, siteSpec ground truth, or the existing site HTML.
-- If the demo currently lists wrong services, REPLACE them with what the client said (or siteSpec). Do not keep hallucinated services "for flavor."
-- Keep existing image https URLs exactly as they appear. Never invent, swap, or invent new photo URLs. New/different photos are a custom-build task, not this revision.
+- Keep existing image https URLs exactly as they appear. Never invent or swap photo URLs.
 - Keep logo, business name (unless client corrects it), phone, email, and form notice: Not functional in demo preview
 - Keep working sticky nav + mobile hamburger JS. Nav hrefs must stay as index.html | services.html | about.html (or existing /preview/ paths).
 - HERO HEIGHT: fixed min-height only (min-h-[720px] / min-h-[800px]). NEVER vh/dvh/svh/h-screen.
-- Elevate copy: specific, sharp, local, sales-ready. No lorem, TODO, or generic filler.
 - Do not add ecommerce/booking/new pages.
-- Use the other pages as context for consistency (nav wording, services list, tone) but only rewrite the TARGET page.
+- Use the other pages as context so related facts stay consistent when the request requires it.
 - Finish the entire document including </html>.`;
 
 const CHIP_LABELS: Record<string, string> = {
@@ -88,15 +93,15 @@ function formatRevisionRequest(targets: string[], note: string): string {
     .map((t) => CHIP_LABELS[t] || t)
     .filter(Boolean);
   return [
-    "CLIENT REVISION REQUEST (follow this closely — this is why you are revising):",
+    "CLIENT REVISION REQUEST — change ONLY this; leave everything else alone:",
     chipLines.length
       ? `- Selected changes: ${chipLines.join("; ")}`
       : "- Selected changes: (none — follow the note)",
     note.trim()
-      ? `- Client note (authoritative corrections):\n"""\n${note.trim()}\n"""`
+      ? `- Client note (authoritative):\n"""\n${note.trim()}\n"""`
       : "- Client note: (none)",
     "",
-    "If the note names specific services, remove/replace anything on the site that contradicts it.",
+    "Do not invent extra improvements. If the note names specific services/facts, fix those and keep the rest of the page intact.",
   ].join("\n");
 }
 
@@ -119,20 +124,20 @@ async function reviseOnePage(input: {
     )
     .join("\n\n");
 
-  const userText = `Revise the TARGET page: ${input.page.toUpperCase()}.
-Return ONLY the complete updated HTML for that page.
+  const userText = `Surgically revise the TARGET page: ${input.page.toUpperCase()}.
+Return the complete HTML for that page. Change ONLY what the client requested; keep everything else the same.
 
 BUSINESS: ${input.businessHint || "Local business demo"}
 
 ${input.siteSpecBrief
-  ? `GROUND TRUTH (siteSpec — prefer this over invented content):\n${input.siteSpecBrief}\n`
+  ? `GROUND TRUTH (use only if needed for the requested fix):\n${input.siteSpecBrief}\n`
   : ""}
 ${formatRevisionRequest(input.targets, input.note)}
 
 ${input.consistencyNote ? `CONSISTENCY: ${input.consistencyNote}\n` : ""}
-FULL SITE CONTEXT — use all three pages so services, nav, and facts stay accurate:
+FULL SITE CONTEXT — apply the request on this page; use other pages only so related facts stay aligned when the request requires it:
 
-===== ${input.page.toUpperCase()} PAGE (TARGET — rewrite this and return it) =====
+===== ${input.page.toUpperCase()} PAGE (TARGET — return this page, surgically edited) =====
 ${input.sitePages[input.page]}
 
 ${otherPages}`;
@@ -239,9 +244,7 @@ export async function revisePreviewPages(input: {
       businessHint: input.businessHint || "",
       siteSpecBrief,
       consistencyNote:
-        total > 1
-          ? "Match services list, nav labels, brand colors, and voice with the other pages in FULL SITE CONTEXT (including any already refreshed in this pass)."
-          : "Match services list, nav labels, and voice with the other pages in FULL SITE CONTEXT.",
+        "Only change what the client asked for. If the request affects shared facts (services, colors, brand wording), keep those consistent with other pages — but do not rewrite unrelated sections.",
     });
     next[page] = html;
     updated.push(page);
@@ -265,9 +268,8 @@ export async function revisePreviewPages(input: {
 }
 
 export function pagesForScope(
-  scope: "focused" | "sitewide",
-  focusPage: RevisePageKey
+  _scope: "focused" | "sitewide",
+  _focusPage: RevisePageKey
 ): RevisePageKey[] {
-  if (scope === "sitewide") return ["home", "services", "about"];
-  return [focusPage];
+  return ["home", "services", "about"];
 }

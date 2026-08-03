@@ -2,7 +2,10 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { revisionAfterSuccessMessage } from "@/lib/preview/revisionCopy";
+import {
+  revisionAfterSuccessMessage,
+  stashReviseDoneNotification,
+} from "@/lib/preview/revisionCopy";
 import {
   REVISE_LOADING_TIPS,
   type ReviseStreamEvent,
@@ -139,16 +142,23 @@ export default function PreviewRevisePanel({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const targetPercentRef = useRef(0);
+  const wasOpenRef = useRef(false);
+  const reloadTimerRef = useRef<number | null>(null);
 
+  // Reset form state only when the panel newly opens — not when submit ends
   useEffect(() => {
-    if (!open) return;
-    setError("");
-    setSuccess("");
-    if (!submitting) {
+    if (open && !wasOpenRef.current) {
+      setError("");
+      setSuccess("");
       setProgress(null);
       setDisplayPercent(0);
+      if (reloadTimerRef.current) {
+        window.clearTimeout(reloadTimerRef.current);
+        reloadTimerRef.current = null;
+      }
     }
-  }, [open, submitting]);
+    wasOpenRef.current = open;
+  }, [open]);
 
   // Soft progress creep so long model waits don’t feel frozen
   useEffect(() => {
@@ -173,6 +183,20 @@ export default function PreviewRevisePanel({
     }, 6500);
     return () => window.clearInterval(id);
   }, [submitting, success]);
+
+  // Auto-open the updated demo after a short celebration beat
+  useEffect(() => {
+    if (!success) return;
+    reloadTimerRef.current = window.setTimeout(() => {
+      window.location.reload();
+    }, 2200);
+    return () => {
+      if (reloadTimerRef.current) {
+        window.clearTimeout(reloadTimerRef.current);
+        reloadTimerRef.current = null;
+      }
+    };
+  }, [success]);
 
   const toggleChip = useCallback((id: string) => {
     setTargets((prev) =>
@@ -242,6 +266,13 @@ export default function PreviewRevisePanel({
       }
 
       if (result.type === "done") {
+        const nextUsed = Math.max(0, max - result.revisionsRemaining);
+        const message = revisionAfterSuccessMessage(
+          result.revisionsRemaining,
+          result.phase,
+          nextUsed,
+          max
+        );
         targetPercentRef.current = 100;
         setDisplayPercent(100);
         setProgress({
@@ -256,19 +287,16 @@ export default function PreviewRevisePanel({
           phase: result.phase,
           purchased: result.purchased,
         });
-        setSuccess(
-          revisionAfterSuccessMessage(
-            result.revisionsRemaining,
-            result.phase,
-            Math.max(0, max - result.revisionsRemaining),
-            max
-          )
-        );
+        setSuccess(message);
         setTargets([]);
         setNote("");
-        window.setTimeout(() => {
-          window.location.reload();
-        }, 1100);
+        stashReviseDoneNotification({
+          slug,
+          message,
+          used: nextUsed,
+          max,
+          at: Date.now(),
+        });
       }
     } catch {
       setError(
@@ -292,6 +320,10 @@ export default function PreviewRevisePanel({
         aria-label="Close request changes"
         className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
         onClick={() => {
+          if (success) {
+            window.location.reload();
+            return;
+          }
           if (!submitting) onClose();
         }}
       />
@@ -299,7 +331,7 @@ export default function PreviewRevisePanel({
         role="dialog"
         aria-modal="true"
         aria-labelledby="revise-panel-title"
-        aria-busy={submitting}
+        aria-busy={submitting && !success}
         className="relative flex h-full w-full max-w-md flex-col border-l border-ink/10 bg-paper shadow-[-12px_0_40px_rgba(26,20,51,0.18)]"
       >
         <div className="flex items-start justify-between gap-3 border-b border-ink/10 px-5 py-4">
@@ -311,7 +343,11 @@ export default function PreviewRevisePanel({
               id="revise-panel-title"
               className="font-display mt-1 text-2xl font-semibold tracking-tight text-ink"
             >
-              {showLoading ? "Refreshing your demo" : "Request changes"}
+              {success
+                ? "Revision done"
+                : showLoading
+                  ? "Refreshing your demo"
+                  : "Request changes"}
             </h2>
             {!showLoading ? (
               <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -339,47 +375,90 @@ export default function PreviewRevisePanel({
             ) : (
               <p className="mt-1 text-sm text-ink/55">
                 {success
-                  ? "Almost there — reloading…"
+                  ? "Opening your updated demo…"
                   : "Premium rewrite in progress — keep this open"}
               </p>
             )}
           </div>
           <button
             type="button"
-            disabled={submitting}
-            onClick={onClose}
+            disabled={submitting && !success}
+            onClick={() => {
+              if (success) {
+                window.location.reload();
+                return;
+              }
+              onClose();
+            }}
             className="rounded-full px-2 py-1 text-sm text-ink/45 hover:text-ink disabled:opacity-40"
           >
-            Close
+            {success ? "View" : "Close"}
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          {showLoading ? (
+          {success ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.65, 0, 0.35, 1] }}
+              className="flex h-full flex-col"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="relative overflow-hidden rounded-3xl border border-accent/20 bg-gradient-to-b from-accent/[0.08] to-transparent px-5 py-8 text-center">
+                <motion.div
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.08, duration: 0.4, ease: "easeOut" }}
+                  className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent text-2xl font-semibold text-paper shadow-[0_10px_30px_rgba(91,46,158,0.35)]"
+                  aria-hidden
+                >
+                  ✓
+                </motion.div>
+                <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+                  Revision done
+                </p>
+                <h3 className="font-display mt-2 text-2xl font-semibold tracking-tight text-ink">
+                  Your demo is updated
+                </h3>
+                <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink/60">
+                  {success}
+                </p>
+                <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/40">
+                  AI {used}/{max} used
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-6 w-full rounded-full bg-accent px-5 py-3.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-paper transition hover:opacity-90"
+              >
+                View updated demo
+              </button>
+              <p className="mt-3 text-center text-[11px] text-ink/40">
+                Refreshing automatically in a moment…
+              </p>
+            </motion.div>
+          ) : showLoading ? (
             <div className="space-y-6" role="status" aria-live="polite">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-display text-xl font-medium leading-snug text-ink">
-                    {success ||
-                      (progress?.stageKey === "reading"
-                        ? "Reading your feedback"
-                        : "Updating and redesigning your website")}
+                    {progress?.stageKey === "reading"
+                      ? "Reading your feedback"
+                      : "Updating and redesigning your website"}
                   </p>
-                  {!success ? (
-                    <p className="mt-2 text-sm text-ink/50">
-                      This can take a few minutes — keep this open.
-                    </p>
-                  ) : null}
+                  <p className="mt-2 text-sm text-ink/50">
+                    This can take a few minutes — keep this open.
+                  </p>
                 </div>
                 <div
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/10 bg-ink/[0.03]"
                   aria-hidden
                 >
-                  {success ? (
-                    <span className="text-sm font-semibold text-accent">✓</span>
-                  ) : (
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-ink/15 border-t-accent" />
-                  )}
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-ink/15 border-t-accent" />
                 </div>
               </div>
 
@@ -404,15 +483,13 @@ export default function PreviewRevisePanel({
                     key: "reading",
                     label: "Reading your feedback",
                     done:
-                      Boolean(success) ||
-                      (progress?.stageKey !== "reading" && Boolean(progress)),
+                      progress?.stageKey !== "reading" && Boolean(progress),
                     current: progress?.stageKey === "reading",
                   },
                   {
                     key: "redesigning",
                     label: "Updating and redesigning your website",
                     done:
-                      Boolean(success) ||
                       progress?.stageKey === "updating" ||
                       progress?.stageKey === "ready",
                     current:
@@ -455,27 +532,23 @@ export default function PreviewRevisePanel({
                 ))}
               </ul>
 
-              {!success ? (
-                <div className="min-h-[5.5rem] rounded-2xl border border-accent/15 bg-accent/[0.07] px-4 py-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
-                    While you wait
-                  </p>
-                  <AnimatePresence mode="wait">
-                    <motion.p
-                      key={tipIndex}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.35 }}
-                      className="mt-1.5 text-sm leading-relaxed text-ink/75"
-                    >
-                      {REVISE_LOADING_TIPS[tipIndex]}
-                    </motion.p>
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <p className="text-sm text-ink/60">Opening your updated demo…</p>
-              )}
+              <div className="min-h-[5.5rem] rounded-2xl border border-accent/15 bg-accent/[0.07] px-4 py-3.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
+                  While you wait
+                </p>
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={tipIndex}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.35 }}
+                    className="mt-1.5 text-sm leading-relaxed text-ink/75"
+                  >
+                    {REVISE_LOADING_TIPS[tipIndex]}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
             </div>
           ) : (
             <>
