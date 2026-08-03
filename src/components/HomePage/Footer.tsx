@@ -17,7 +17,7 @@ const Footer = () => {
             </Link>
             <p className="mt-5 max-w-sm leading-7 text-paper/60">
               AI website builder and designer for US local businesses. Free demo
-              from your Facebook page — $0 build, $84/mo care.
+              from your Facebook page — then just $495 once, hosting included.
             </p>
           </div>
 
@@ -93,7 +93,7 @@ const Footer = () => {
         <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-paper/15 pt-6 text-[13px] text-paper/40 sm:flex-row">
           <p>&copy; {new Date().getFullYear()} Bsites.io — All rights reserved.</p>
           <p className="uppercase tracking-[0.2em]">
-            Free demo · $0 build · $84/mo
+            Free demo · Just $495 · Hosting included
           </p>
         </div>
       </div>

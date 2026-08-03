@@ -17,6 +17,8 @@ type CheckoutButtonProps = {
   modalTitle?: string;
   modalDescription?: string;
   submitLabel?: string;
+  /** managed ($84/mo) or one_time ($495) */
+  offer?: "managed" | "one_time";
 };
 
 const CheckoutButton = ({
@@ -29,6 +31,7 @@ const CheckoutButton = ({
   modalTitle = "Subscribe to the plan",
   modalDescription = "Enter your email to continue to Stripe checkout. $0 build today, then $84/mo for hosting and care.",
   submitLabel = "Continue to checkout",
+  offer = "managed",
 }: CheckoutButtonProps) => {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,7 +76,7 @@ const CheckoutButton = ({
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: checkoutEmail }),
+        body: JSON.stringify({ email: checkoutEmail, offer }),
       });
 
       const data = await response.json();

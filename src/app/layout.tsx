@@ -20,11 +20,11 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.bsites.io"),
   title: {
-    default: "Bsites.io — Free Website Build + $84/mo Hosting",
+    default: "Bsites.io — Just $495 Website + Hosting",
     template: "%s | Bsites.io",
   },
   description:
-    "Custom websites built for free with managed hosting, maintenance, and basic updates for $84/month.",
+    "Free Facebook demo, then just $495 for a custom website with hosting included. One customer pays for the life of your website.",
   applicationName: "Bsites Admin",
   appleWebApp: {
     capable: true,

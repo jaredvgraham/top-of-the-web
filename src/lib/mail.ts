@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { isOneTimeOffer } from "@/lib/checkoutOffers";
 import { siteOrigin } from "@/lib/siteOrigin";
 
 export { siteOrigin };
@@ -26,6 +27,8 @@ export type PurchaseConfirmationInput = {
   phone?: string;
   businessName?: string;
   previewSlug?: string;
+  /** From Stripe checkout metadata when available. */
+  offer?: string;
 };
 
 export async function sendPurchaseConfirmationEmail(
@@ -42,8 +45,38 @@ export async function sendPurchaseConfirmationEmail(
   const nameLine = input.businessName?.trim()
     ? ` for ${input.businessName.trim()}`
     : "";
+  const oneTime = isOneTimeOffer(input.offer, input.pack, input.plan);
+  const planLabel = input.plan || input.pack || "Managed Website Plan";
 
   const subject = `Bsites purchase confirmed — your Website ID`;
+
+  const boughtLines = oneTime
+    ? [
+        `Plan: ${planLabel}`,
+        `Price: $495 one-time`,
+        `Hosting: included`,
+        `No monthly subscription`,
+      ]
+    : [
+        `Plan: ${planLabel}`,
+        `Build: $0`,
+        `Hosting & care: $84/mo`,
+      ];
+
+  const nextSteps = oneTime
+    ? [
+        `1. Keep this email — your Website ID is your order reference.`,
+        `2. We'll call or text you for a short brief on the custom updates you want.`,
+        `3. Your site goes live within about 24 hours of checkout.`,
+        `4. 100% satisfaction — we work it until you're happy.`,
+      ]
+    : [
+        `1. Keep this email — your Website ID is how you sign into billing (and future updates).`,
+        `2. We'll call or text you for a short brief on the custom updates you want.`,
+        `3. Your site goes live within about 24 hours of checkout.`,
+        `4. After you're live, you can cancel anytime from the billing portal.`,
+        `5. 100% satisfaction — we work it until you're happy.`,
+      ];
 
   const text = [
     `Thanks for your purchase${nameLine}!`,
@@ -53,20 +86,16 @@ export async function sendPurchaseConfirmationEmail(
     `YOUR WEBSITE ID (save this)`,
     `${input.websiteId}`,
     ``,
-    `Use this ID anytime at ${billingUrl} to manage billing, update your card, view invoices, or cancel.`,
+    oneTime
+      ? `Questions or invoices: reply to this email or use ${billingUrl} with your Website ID.`
+      : `Use this ID anytime at ${billingUrl} to manage billing, update your card, view invoices, or cancel.`,
     ``,
     `WHAT YOU BOUGHT`,
-    `Plan: ${input.plan || input.pack || "Managed Website Plan"}`,
-    `Build: $0`,
-    `Hosting & care: $84/mo`,
+    ...boughtLines,
     input.phone ? `Phone on file: ${input.phone}` : null,
     ``,
     `WHAT HAPPENS NEXT`,
-    `1. Keep this email — your Website ID is how you sign into billing (and future updates).`,
-    `2. We'll call or text you for a short brief on the custom updates you want.`,
-    `3. Your site goes live within about 24 hours of checkout.`,
-    `4. After you're live, you can cancel anytime from the billing portal.`,
-    `5. 100% satisfaction — we work it until you're happy.`,
+    ...nextSteps,
     previewUrl ? `` : null,
     previewUrl ? `Your demo preview: ${previewUrl}` : null,
     ``,
@@ -77,6 +106,25 @@ export async function sendPurchaseConfirmationEmail(
     .filter((line) => line !== null)
     .join("\n");
 
+  const htmlBought = oneTime
+    ? `<p style="margin:0 0 10px;"><strong>Plan:</strong> ${escapeHtml(planLabel)}</p>
+      <p style="margin:0 0 10px;"><strong>Price:</strong> $495 one-time</p>
+      <p style="margin:0 0 10px;"><strong>Hosting:</strong> included</p>
+      <p style="margin:0 0 10px;"><strong>Billing:</strong> No monthly subscription</p>`
+    : `<p style="margin:0 0 10px;"><strong>Plan:</strong> ${escapeHtml(planLabel)}</p>
+      <p style="margin:0 0 10px;"><strong>Build:</strong> $0</p>
+      <p style="margin:0 0 10px;"><strong>Hosting &amp; care:</strong> $84/mo</p>`;
+
+  const htmlSteps = oneTime
+    ? `<li>Save your Website ID as your order reference.</li>
+      <li>We’ll call/text for your custom brief.</li>
+      <li>Site goes live within ~24 hours.</li>
+      <li>100% satisfaction guarantee.</li>`
+    : `<li>Save your Website ID for billing access.</li>
+      <li>We’ll call/text for your custom brief.</li>
+      <li>Site goes live within ~24 hours.</li>
+      <li>Cancel anytime once you’re live · 100% satisfaction guarantee.</li>`;
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -85,33 +133,32 @@ export async function sendPurchaseConfirmationEmail(
     <p style="margin:0 0 8px;font-family:system-ui,sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5B2E9E;font-weight:600;">Purchase confirmed</p>
     <h1 style="margin:0 0 16px;font-size:28px;line-height:1.15;font-weight:500;">Thanks — your build is on.</h1>
     <p style="margin:0 0 24px;font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#3D3654;">
-      Your custom website${nameLine ? ` for <strong>${escapeHtml(input.businessName || "")}</strong>` : ""} is underway. Save your Website ID — you’ll use it to manage billing.
+      Your custom website${nameLine ? ` for <strong>${escapeHtml(input.businessName || "")}</strong>` : ""} is underway. Save your Website ID.
     </p>
 
     <div style="background:#fff;border:1px solid rgba(26,20,51,0.1);border-radius:16px;padding:20px 22px;margin-bottom:20px;">
       <p style="margin:0 0 6px;font-family:system-ui,sans-serif;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#6B6578;">Your Website ID</p>
       <p style="margin:0;font-family:ui-monospace,Menlo,monospace;font-size:18px;word-break:break-all;color:#1A1433;"><strong>${escapeHtml(input.websiteId)}</strong></p>
       <p style="margin:12px 0 0;font-family:system-ui,sans-serif;font-size:13px;line-height:1.5;color:#6B6578;">
-        Sign in at <a href="${billingUrl}" style="color:#5B2E9E;">${billingUrl}</a> with this ID to manage payment, invoices, or cancel.
+        ${
+          oneTime
+            ? `Use <a href="${billingUrl}" style="color:#5B2E9E;">${billingUrl}</a> with this ID if you need invoices or help.`
+            : `Sign in at <a href="${billingUrl}" style="color:#5B2E9E;">${billingUrl}</a> with this ID to manage payment, invoices, or cancel.`
+        }
       </p>
     </div>
 
     <div style="background:#fff;border:1px solid rgba(26,20,51,0.1);border-radius:16px;padding:20px 22px;margin-bottom:20px;font-family:system-ui,sans-serif;font-size:14px;line-height:1.55;color:#3D3654;">
-      <p style="margin:0 0 10px;"><strong>Plan:</strong> ${escapeHtml(input.plan || input.pack || "Managed Website Plan")}</p>
-      <p style="margin:0 0 10px;"><strong>Build:</strong> $0</p>
-      <p style="margin:0 0 10px;"><strong>Hosting &amp; care:</strong> $84/mo</p>
+      ${htmlBought}
       ${input.phone ? `<p style="margin:0;"><strong>Phone on file:</strong> ${escapeHtml(input.phone)}</p>` : ""}
     </div>
 
     <ol style="margin:0 0 24px;padding-left:20px;font-family:system-ui,sans-serif;font-size:14px;line-height:1.7;color:#3D3654;">
-      <li>Save your Website ID for billing access.</li>
-      <li>We’ll call/text for your custom brief.</li>
-      <li>Site goes live within ~24 hours.</li>
-      <li>Cancel anytime once you’re live · 100% satisfaction guarantee.</li>
+      ${htmlSteps}
     </ol>
 
     <p style="margin:0 0 8px;font-family:system-ui,sans-serif;">
-      <a href="${billingUrl}" style="display:inline-block;background:#5B2E9E;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;">Manage billing</a>
+      <a href="${billingUrl}" style="display:inline-block;background:#5B2E9E;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;">${oneTime ? "View billing help" : "Manage billing"}</a>
     </p>
     ${
       previewUrl

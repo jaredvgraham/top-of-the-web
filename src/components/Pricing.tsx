@@ -29,12 +29,22 @@ const assurances = [
 
 const faqs = PRICING_FAQS;
 
-const CTA_COPY = {
+const MANAGED_CTA = {
   modalEyebrow: "Secure checkout",
   modalTitle: "Start your $84/mo plan",
   modalDescription:
     "Enter your email to continue to Stripe. $0 for the build today, then $84/mo for hosting and care. Cancel anytime.",
   submitLabel: "Continue to Stripe",
+  offer: "managed" as const,
+};
+
+const ONE_TIME_CTA = {
+  modalEyebrow: "Most popular",
+  modalTitle: "Get your site for just $495",
+  modalDescription:
+    "Enter your email for Stripe. Custom website + hosting for just $495 — one customer pays for the life of your website.",
+  submitLabel: "Continue to Stripe",
+  offer: "one_time" as const,
 };
 
 const Pricing = () => {
@@ -77,7 +87,7 @@ const Pricing = () => {
                 transition={{ duration: 0.7, ease }}
                 className="mb-6 text-[13px] font-medium uppercase tracking-[0.24em] text-ink/50"
               >
-                Pricing — One simple offer
+                Pricing — Surprisingly affordable
               </motion.p>
               <motion.h1
                 initial={{ opacity: 0, y: 40 }}
@@ -85,10 +95,10 @@ const Pricing = () => {
                 transition={{ duration: 0.9, ease, delay: 0.1 }}
                 className="font-display display-tight max-w-4xl text-5xl font-medium text-ink sm:text-7xl lg:text-[5.5rem]"
               >
-                <span className="block">Free website.</span>
+                <span className="block">A real website.</span>
                 <span className="block">
-                  <em className="font-light italic text-accent">$84/mo</em>{" "}
-                  care.
+                  Just{" "}
+                  <em className="font-light italic text-accent">$495</em>.
                 </span>
               </motion.h1>
               <motion.p
@@ -97,55 +107,87 @@ const Pricing = () => {
                 transition={{ duration: 0.8, ease, delay: 0.22 }}
                 className="mt-7 max-w-xl text-lg leading-8 text-ink/70"
               >
-                No upfront build cost, no tiers, no add-on maze. One monthly
-                plan that keeps your site live, maintained, and ready to
-                convert.
+                One customer pays for the life of your website. Custom site +
+                hosting — one small payment.
               </motion.p>
             </div>
 
-            {/* Buy box */}
+            {/* Buy boxes — one-time deal featured first */}
             <motion.div
               ref={heroCtaRef}
               initial={{ opacity: 0, y: 28 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease, delay: 0.3 }}
-              className="min-w-0 rounded-3xl border border-ink/15 bg-white/70 p-6 shadow-[0_18px_60px_-30px_rgba(26,20,51,0.5)] sm:p-8"
+              className="min-w-0 space-y-3"
             >
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="font-display text-5xl font-medium leading-none tracking-tight text-ink sm:text-6xl">
-                    $84
-                    <span className="font-light italic text-accent">/mo</span>
-                  </p>
-                  <p className="mt-3 text-[13px] uppercase tracking-[0.18em] text-ink/55">
-                    Build included for $0
-                  </p>
+              <div className="rounded-3xl border border-accent/40 bg-white/80 p-6 shadow-[0_18px_60px_-30px_rgba(26,20,51,0.5)] sm:p-7">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
+                      Most popular
+                    </p>
+                    <p className="font-display mt-1 text-4xl font-medium leading-none tracking-tight text-ink sm:text-5xl">
+                      Just $495
+                    </p>
+                    <p className="mt-2 text-[13px] font-medium text-accent">
+                      1 customer pays for the life of your website
+                    </p>
+                  </div>
+                  <span className="whitespace-nowrap rounded-full bg-accent/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
+                    Hosting included
+                  </span>
                 </div>
-                <span className="whitespace-nowrap rounded-full bg-accent/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
-                  Cancel anytime
-                </span>
+                <p className="mt-4 text-sm leading-6 text-ink/60">
+                  Custom website + hosting for one small payment. No monthly
+                  subscription.
+                </p>
+                <div className="mt-5 space-y-3">
+                  <CheckoutButton
+                    {...ONE_TIME_CTA}
+                    className="group relative w-full overflow-hidden rounded-full bg-ink px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-paper"
+                  >
+                    <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
+                    <span className="relative">Get my site — just $495</span>
+                  </CheckoutButton>
+                  <Link
+                    href="/#start"
+                    className="block w-full rounded-full border border-ink/10 px-8 py-3 text-center text-xs font-semibold uppercase tracking-[0.14em] text-ink/55 transition-colors hover:border-ink/30 hover:text-ink"
+                  >
+                    See a free demo first
+                  </Link>
+                </div>
               </div>
 
-              <div className="mt-8 space-y-3">
-                <CheckoutButton
-                  {...CTA_COPY}
-                  className="group relative w-full overflow-hidden rounded-full bg-ink px-8 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-paper"
-                >
-                  <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
-                  <span className="relative">Buy now — $84/mo</span>
-                </CheckoutButton>
-                <Link
-                  href="/#start"
-                  className="block w-full rounded-full border border-ink/20 px-8 py-5 text-center text-sm font-semibold uppercase tracking-[0.14em] text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper"
-                >
-                  See a free demo first
-                </Link>
+              <div className="rounded-3xl border border-ink/12 bg-white/40 p-6 sm:p-7">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/40">
+                      Or go monthly
+                    </p>
+                    <p className="font-display mt-1 text-4xl font-medium leading-none tracking-tight text-ink sm:text-5xl">
+                      $84
+                      <span className="font-light italic text-accent">/mo</span>
+                    </p>
+                    <p className="mt-2 text-[13px] uppercase tracking-[0.18em] text-ink/55">
+                      Build included for $0
+                    </p>
+                  </div>
+                  <span className="whitespace-nowrap rounded-full bg-ink/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/55">
+                    Cancel anytime
+                  </span>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-ink/60">
+                  Hosting, SSL, care, and basic updates. Live in about 24 hours.
+                </p>
+                <div className="mt-5">
+                  <CheckoutButton
+                    {...MANAGED_CTA}
+                    className="w-full rounded-full border border-ink/20 bg-transparent px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+                  >
+                    Buy now — $84/mo
+                  </CheckoutButton>
+                </div>
               </div>
-
-              <p className="mt-5 text-center text-[13px] leading-6 text-ink/50">
-                Secure Stripe checkout · $0 due for the build · Live in about 24
-                hours
-              </p>
             </motion.div>
           </div>
 
@@ -198,7 +240,7 @@ const Pricing = () => {
                   <p>— Built for service businesses, creators, startups</p>
                 </div>
                 <CheckoutButton
-                  {...CTA_COPY}
+                  {...MANAGED_CTA}
                   className="group relative mt-10 w-full overflow-hidden rounded-full bg-accentSoft px-8 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-ink"
                 >
                   <span className="absolute inset-0 translate-y-full bg-paper transition-transform duration-300 ease-out group-hover:translate-y-0" />
@@ -284,11 +326,11 @@ const Pricing = () => {
             <div className="relative flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <h2 className="font-display display-tight max-w-2xl text-4xl font-medium sm:text-5xl">
-                  Ready when you are — $0 to build, $84/mo to keep it running.
+                  Just $495 — or go $84/mo.
                 </h2>
                 <p className="mt-5 max-w-xl text-paper/65">
-                  Buy now and we start your build, or see a free private demo
-                  first. Larger builds like ecommerce and booking get scoped
+                  One customer pays for the life of your website. Or choose
+                  monthly care. Larger builds like ecommerce get scoped
                   separately —{" "}
                   <Link
                     href="/contact"
@@ -302,11 +344,11 @@ const Pricing = () => {
               <div className="flex w-full shrink-0 flex-col gap-3 sm:flex-row lg:w-auto">
                 <div className="w-full sm:w-[260px]">
                   <CheckoutButton
-                    {...CTA_COPY}
+                    {...ONE_TIME_CTA}
                     className="group relative w-full overflow-hidden rounded-full bg-accentSoft px-8 py-5 text-sm font-semibold uppercase tracking-[0.14em] text-ink"
                   >
                     <span className="absolute inset-0 translate-y-full bg-paper transition-transform duration-300 ease-out group-hover:translate-y-0" />
-                    <span className="relative">Buy now — $84/mo</span>
+                    <span className="relative">Get my site — $495</span>
                   </CheckoutButton>
                 </div>
                 <Link
@@ -332,10 +374,10 @@ const Pricing = () => {
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-8 sm:py-4">
           <div className="min-w-0">
             <p className="font-display text-xl font-medium leading-none text-ink sm:text-2xl">
-              $84<span className="font-light italic text-accent">/mo</span>
+              Just $495
             </p>
             <p className="mt-1 truncate text-[10px] uppercase tracking-[0.14em] text-ink/50 sm:text-[11px] sm:tracking-[0.16em]">
-              $0 build · Cancel anytime
+              1 customer · Hosting included
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-3">
@@ -347,11 +389,11 @@ const Pricing = () => {
             </Link>
             <div className="w-[150px] sm:w-[240px]">
               <CheckoutButton
-                {...CTA_COPY}
+                {...ONE_TIME_CTA}
                 className="group relative w-full overflow-hidden rounded-full bg-ink px-6 py-4 text-[13px] font-semibold uppercase tracking-[0.14em] text-paper"
               >
                 <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-300 ease-out group-hover:translate-y-0" />
-                <span className="relative">Buy now</span>
+                <span className="relative">Get my site</span>
               </CheckoutButton>
             </div>
           </div>

@@ -18,7 +18,7 @@ const steps = [
   {
     n: "03",
     title: "Claim and go live",
-    body: "Like the demo? Claim it for $0 build. We polish and launch while you pay $84/mo for hosting, security, and care.",
+    body: "Like the demo? Claim it for just $495 — custom site + hosting. One customer pays for the life of your website. Or choose $84/mo if you prefer.",
   },
 ];
 

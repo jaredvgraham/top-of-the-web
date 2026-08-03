@@ -3,6 +3,11 @@ import Stripe from "stripe";
 import dbConnect from "@/lib/db";
 import Lead from "@/models/Lead";
 import Preview from "@/models/Preview";
+import {
+  offerContentName,
+  offerPurchaseValue,
+  parseCheckoutOffer,
+} from "@/lib/checkoutOffers";
 import { hasMetaAdClickAttribution } from "@/lib/preview/hasMetaAdClick";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
@@ -64,9 +69,17 @@ export async function GET(req: NextRequest) {
       fbclid: attr.fbclid || "",
       fbc: attr.fbc || "",
     });
+    const offer = parseCheckoutOffer(session.metadata?.offer);
+    const amountTotal =
+      typeof session.amount_total === "number" ? session.amount_total / 100 : 0;
 
     return NextResponse.json(
-      { creditMeta },
+      {
+        creditMeta,
+        offer,
+        value: amountTotal > 0 ? amountTotal : offerPurchaseValue(offer),
+        contentName: offerContentName(offer),
+      },
       {
         headers: {
           "Cache-Control": "no-store",

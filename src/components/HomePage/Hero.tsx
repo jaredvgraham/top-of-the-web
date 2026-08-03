@@ -10,10 +10,10 @@ const ease = [0.65, 0, 0.35, 1] as const;
 const marqueeItems = [
   "AI website builder",
   "Website designer",
-  "AI website generator",
   "Free Facebook demo",
-  "$0 custom build",
-  "$84/mo hosting + care",
+  "Just $495 once",
+  "Hosting included",
+  "1 customer pays for the life of your website",
   "Built for US businesses",
 ];
 
@@ -93,9 +93,9 @@ export default function Hero() {
             transition={{ duration: 0.75, ease, delay: 0.55 }}
             className="mt-8 max-w-[36rem] text-[17px] leading-8 text-paper/80 sm:text-lg sm:leading-9"
           >
-            A website designer and AI website generator in one. Start with a
-            free private demo built from your Facebook page, then claim a custom
-            site for $0 build and $84/mo care — anywhere in the US.
+            Free private demo from your Facebook page. Then go live for just
+            $495 — custom site + hosting. One customer pays for the life of your
+            website.
           </motion.p>
         </div>
 
@@ -123,8 +123,8 @@ export default function Hero() {
 
           <div className="grid grid-cols-3 gap-6 text-sm sm:gap-10 lg:text-right">
             {[
-              ["$0", "custom build"],
-              ["$84/mo", "host + care"],
+              ["$495", "once · hosting in"],
+              ["1 customer", "pays for life"],
               ["~24h", "after claim"],
             ].map(([value, label]) => (
               <div key={label}>

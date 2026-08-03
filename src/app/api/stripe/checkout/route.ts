@@ -3,11 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 import Customer from "@/models/Customer";
 import Order from "@/models/Order";
 import dbConnect from "@/lib/db";
+import {
+  MANAGED_PACK,
+  MANAGED_PLAN,
+  ONE_TIME_PACK,
+  ONE_TIME_PLAN,
+  parseCheckoutOffer,
+  type CheckoutOffer,
+} from "@/lib/checkoutOffers";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
-
-const PACK_NAME = "Managed Website Plan";
-const PLAN_NAME = "Managed Website Plan";
 
 async function getCustomerByEmail(email: string) {
   await dbConnect();
@@ -42,12 +47,18 @@ async function getOrCreateCustomerId(email: string, phone: string) {
   return customer.id;
 }
 
-async function createOrder(email: string, phone: string) {
+async function createOrder(
+  email: string,
+  phone: string,
+  offer: CheckoutOffer
+) {
   await dbConnect();
+  const pack = offer === "one_time" ? ONE_TIME_PACK : MANAGED_PACK;
+  const plan = offer === "one_time" ? ONE_TIME_PLAN : MANAGED_PLAN;
   const order = await Order.findOne({ email });
   if (order) {
-    order.pack = PACK_NAME;
-    order.plan = PLAN_NAME;
+    order.pack = pack;
+    order.plan = plan;
     order.progress = 0;
     if (phone) order.phone = phone;
     await order.save();
@@ -56,8 +67,8 @@ async function createOrder(email: string, phone: string) {
   const newOrder = new Order({
     email,
     phone: phone || "",
-    pack: PACK_NAME,
-    plan: PLAN_NAME,
+    pack,
+    plan,
     progress: 0,
   });
   await newOrder.save();
@@ -72,45 +83,54 @@ export async function POST(req: NextRequest) {
     typeof body?.previewSlug === "string"
       ? body.previewSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "")
       : "";
+  const offer = parseCheckoutOffer(body?.offer);
 
   if (!email) {
     return NextResponse.json({ message: "Email is required" }, { status: 400 });
   }
 
-  const freePriceId = process.env.FREE_PRICE_ID;
+  const priceId =
+    offer === "one_time"
+      ? process.env.ONE_TIME_PRICE_ID?.trim()
+      : process.env.FREE_PRICE_ID?.trim();
 
-  if (!freePriceId) {
+  if (!priceId) {
     return NextResponse.json(
-      { message: "Checkout is not configured" },
+      {
+        message:
+          offer === "one_time"
+            ? "One-time checkout is not configured (ONE_TIME_PRICE_ID)"
+            : "Checkout is not configured (FREE_PRICE_ID)",
+      },
       { status: 500 }
     );
   }
 
   try {
     const customerId = await getOrCreateCustomerId(email, phone);
-    await createOrder(email, phone);
+    await createOrder(email, phone, offer);
 
     const origin = req.headers.get("origin") || "https://www.bsites.io";
     const cancelUrl = previewSlug
       ? `${origin}/preview/${previewSlug}/claim`
       : `${origin}/pricing`;
 
-    const metadata: Record<string, string> = {};
+    const metadata: Record<string, string> = {
+      offer,
+      pack: offer === "one_time" ? ONE_TIME_PACK : MANAGED_PACK,
+    };
     if (previewSlug) metadata.previewSlug = previewSlug;
     if (phone) metadata.phone = phone;
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
       customer: customerId,
-      line_items: [{ price: freePriceId, quantity: 1 }],
-      mode: "subscription",
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: offer === "one_time" ? "payment" : "subscription",
       success_url: `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl,
+      metadata,
     };
-
-    if (Object.keys(metadata).length) {
-      sessionParams.metadata = metadata;
-    }
 
     // Pricing-page checkouts still collect phone in Stripe when we don't have it yet
     if (!phone) {

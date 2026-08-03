@@ -10,6 +10,7 @@ import {
   trackMetaEvent,
   type MetaClickAttribution,
 } from "@/lib/preview/metaAttribution";
+import type { CheckoutOffer } from "@/lib/checkoutOffers";
 
 const ease = [0.65, 0, 0.35, 1] as const;
 
@@ -41,6 +42,7 @@ export default function PreviewClaimCheckout({
   const router = useRouter();
   const [email, setEmail] = useState(defaultEmail);
   const [phone, setPhone] = useState(defaultPhone);
+  const [offer, setOffer] = useState<CheckoutOffer>("one_time");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -81,6 +83,11 @@ export default function PreviewClaimCheckout({
   const showTopCta =
     isValidEmail(defaultEmail) && isValidPhone(defaultPhone) && readyToCheckout;
 
+  const ctaLabel =
+    offer === "one_time"
+      ? "Get my site — just $495"
+      : "Claim my site — $84/mo";
+
   const runCheckout = async () => {
     const checkoutEmail = email.trim().toLowerCase();
     const checkoutPhone = phone.trim();
@@ -103,6 +110,7 @@ export default function PreviewClaimCheckout({
           email: checkoutEmail,
           phone: checkoutPhone,
           previewSlug: slug,
+          offer,
         }),
       });
       const data = await response.json();
@@ -161,7 +169,7 @@ export default function PreviewClaimCheckout({
               onClick={() => void runCheckout()}
               className="shrink-0 rounded-full bg-accent px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-paper transition hover:opacity-90 disabled:opacity-60 sm:px-5"
             >
-              {loading ? "Opening…" : "Continue to checkout"}
+              {loading ? "Opening…" : "Continue"}
             </button>
           </div>
           {error ? (
@@ -179,15 +187,97 @@ export default function PreviewClaimCheckout({
           transition={{ duration: 0.55, ease }}
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">
-            Live in 24 hours · 100% satisfaction
+            Live in 24 hours · Hosting included
           </p>
           <h1 className="font-display mt-4 text-[2.35rem] font-medium leading-[1.05] tracking-tight text-ink sm:text-5xl">
-            Get {name} online for real — today.
+            Get {name} online for just $495.
           </h1>
           <p className="mt-4 text-base leading-relaxed text-ink/60">
-            $0 build. $84/mo after. We call you for a quick brief, then ship
-            your custom site.
+            One customer pays for the life of your website. Custom site +
+            hosting included.
           </p>
+
+          <div
+            className="mt-7 grid gap-3"
+            role="radiogroup"
+            aria-label="Choose a plan"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={offer === "one_time"}
+              onClick={() => setOffer("one_time")}
+              className={`relative rounded-2xl border px-4 py-4 text-left transition ${
+                offer === "one_time"
+                  ? "border-accent bg-accent/[0.07] shadow-[0_0_0_1px_rgba(91,46,158,0.4)]"
+                  : "border-accent/35 bg-accent/[0.03] hover:border-accent/55"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
+                    Most popular
+                  </p>
+                  <p className="font-display text-3xl font-medium leading-none text-ink">
+                    Just $495
+                    <span className="text-base font-normal text-ink/45">
+                      {" "}
+                      total
+                    </span>
+                  </p>
+                  <p className="mt-1.5 text-xs font-medium text-accent">
+                    1 customer pays for the life of your website
+                  </p>
+                </div>
+                <span
+                  className={`mt-1 h-4 w-4 shrink-0 rounded-full border-2 ${
+                    offer === "one_time"
+                      ? "border-accent bg-accent"
+                      : "border-ink/25"
+                  }`}
+                />
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-ink/65">
+                Custom website + hosting for one small payment. No monthly
+                subscription.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              role="radio"
+              aria-checked={offer === "managed"}
+              onClick={() => setOffer("managed")}
+              className={`rounded-2xl border px-4 py-4 text-left transition ${
+                offer === "managed"
+                  ? "border-accent bg-accent/[0.06] shadow-[0_0_0_1px_rgba(91,46,158,0.35)]"
+                  : "border-ink/12 bg-white/50 hover:border-ink/25"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/40">
+                    Or go monthly
+                  </p>
+                  <p className="font-display mt-1 text-2xl font-medium text-ink">
+                    $0 today · $84
+                    <span className="text-base text-ink/45">/mo</span>
+                  </p>
+                </div>
+                <span
+                  className={`mt-1 h-4 w-4 shrink-0 rounded-full border-2 ${
+                    offer === "managed"
+                      ? "border-accent bg-accent"
+                      : "border-ink/25"
+                  }`}
+                />
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-ink/65">
+                Custom build included. Hosting, SSL, care, and basic updates for
+                $84/mo. Cancel anytime once you’re live.
+              </p>
+            </button>
+          </div>
 
           {showTopCta ? (
             <button
@@ -196,7 +286,7 @@ export default function PreviewClaimCheckout({
               onClick={() => void runCheckout()}
               className="mt-7 w-full rounded-full bg-accent px-6 py-4 text-[13px] font-semibold uppercase tracking-[0.14em] text-paper transition hover:opacity-90 disabled:opacity-60"
             >
-              {loading ? "Opening checkout…" : "Continue to checkout"}
+              {loading ? "Opening checkout…" : ctaLabel}
             </button>
           ) : null}
 
@@ -221,14 +311,7 @@ export default function PreviewClaimCheckout({
                 <strong className="font-semibold text-ink">
                   100% satisfaction guarantee
                 </strong>{" "}
-                — we work it until you’re happy. Cancel anytime once live.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="mt-0.5 font-semibold text-accent">→</span>
-              <span>
-                <strong className="font-semibold text-ink">Email confirmation</strong>{" "}
-                the second you purchase.
+                — we work it until you’re happy.
               </span>
             </li>
           </ul>
@@ -241,21 +324,27 @@ export default function PreviewClaimCheckout({
           transition={{ duration: 0.55, ease, delay: 0.08 }}
           className="mt-10 border-t border-ink/10 pt-8"
         >
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/40">
-                Build
-              </p>
-              <p className="font-display text-4xl font-medium text-ink">$0</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/40">
-                Then
-              </p>
-              <p className="font-display text-4xl font-medium text-ink">
-                $84<span className="text-lg text-ink/45">/mo</span>
-              </p>
-            </div>
+          <div className="mb-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/40">
+              {offer === "one_time" ? "Best value selected" : "Selected"}
+            </p>
+            <p className="font-display mt-1 text-3xl font-medium text-ink">
+              {offer === "one_time" ? (
+                <>
+                  Just $495
+                  <span className="ml-2 text-sm font-normal text-accent">
+                    all-in
+                  </span>
+                </>
+              ) : (
+                <>
+                  $84<span className="text-lg text-ink/45">/mo</span>
+                  <span className="ml-2 text-base font-normal text-ink/45">
+                    ($0 build)
+                  </span>
+                </>
+              )}
+            </p>
           </div>
 
           <label
@@ -308,11 +397,12 @@ export default function PreviewClaimCheckout({
             disabled={loading}
             className="mt-6 w-full rounded-full bg-accent px-6 py-4 text-[13px] font-semibold uppercase tracking-[0.14em] text-paper transition hover:opacity-90 disabled:opacity-60"
           >
-            {loading ? "Opening checkout…" : "Claim my site — live in 24 hrs"}
+            {loading ? "Opening checkout…" : ctaLabel}
           </button>
 
           <p className="mt-3 text-center text-xs text-ink/40">
-            100% satisfaction guarantee · Secure Stripe · Cancel anytime
+            100% satisfaction guarantee · Secure Stripe
+            {offer === "managed" ? " · Cancel anytime" : ""}
           </p>
 
           <Link

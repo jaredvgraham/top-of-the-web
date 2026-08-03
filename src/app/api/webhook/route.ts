@@ -128,7 +128,10 @@ export async function POST(req: NextRequest) {
         });
       }
       if (phone) customer.phone = phone;
-      customer.subscriptionStatus = "active";
+      const offer = (session.metadata?.offer || "").trim();
+      if (session.mode === "subscription") {
+        customer.subscriptionStatus = "active";
+      }
       await customer.save();
 
       if (customer.customerId) {
@@ -176,6 +179,7 @@ export async function POST(req: NextRequest) {
             phone,
             businessName,
             previewSlug: previewSlug || undefined,
+            offer: offer || undefined,
           });
           order.confirmationEmailSent = true;
           await order.save();

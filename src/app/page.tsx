@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       "AI Website Builder & Designer for US Businesses | Free Demo | Bsites.io",
   },
   description:
-    "Bsites is an AI website builder and website designer for US local businesses. Paste your Facebook page, get a free custom demo, then go live for $0 build + $84/mo hosting.",
+    "Bsites is an AI website builder for US local businesses. Free Facebook demo, then go live for just $495 — custom site + hosting. One customer pays for the life of your website.",
   keywords: [
     "AI website builder",
     "AI website generator",
@@ -23,13 +23,14 @@ export const metadata: Metadata = {
     "website designer",
     "US local business website",
     "Facebook website demo",
-    "free website builder",
+    "affordable website",
+    "one time website cost",
     "web design for small business",
   ],
   openGraph: {
     title: "AI Website Builder for US Businesses | Free Facebook Demo | Bsites",
     description:
-      "See a free custom website demo from your Facebook page. $0 to build, $84/mo to host and care — serving local businesses across the United States.",
+      "Free custom website demo from your Facebook page. Go live for just $495 — hosting included. One customer pays for the life of your website.",
     url: "https://www.bsites.io/",
     siteName: "Bsites",
     locale: "en_US",
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AI Website Builder for US Businesses | Free Demo | Bsites",
     description:
-      "Free custom website demo from your Facebook page. $0 build, $84/mo care. Nationwide.",
+      "Free Facebook demo. Just $495 for site + hosting. One customer pays for the life of your website.",
   },
   alternates: {
     canonical: "https://www.bsites.io/",
@@ -93,15 +94,15 @@ export default function Home() {
         { "@type": "AdministrativeArea", name: "South Shore Massachusetts" },
       ],
       description:
-        "Website designer and AI website builder for US local businesses. Free custom demo from your Facebook page, then $0 build and $84/mo managed hosting.",
+        "Website designer and AI website builder for US local businesses. Free custom demo from your Facebook page, then just $495 for site + hosting.",
     },
     {
       "@context": "https://schema.org",
       "@type": "Service",
-      name: "Managed Website Plan",
-      serviceType: "Website design, build, and managed hosting",
+      name: "One-Time Website",
+      serviceType: "Website design, build, and hosting",
       description:
-        "Custom website designed and built for $0, then hosted and maintained for $84/month. Includes hosting, SSL, security updates, monitoring, and basic content updates.",
+        "Custom website with hosting included for a one-time payment of $495. One customer pays for the life of your website.",
       provider: {
         "@type": "Organization",
         name: "Bsites",
@@ -111,16 +112,9 @@ export default function Home() {
       offers: {
         "@type": "Offer",
         url: "https://www.bsites.io/pricing",
-        price: "84.00",
+        price: "495.00",
         priceCurrency: "USD",
         availability: "https://schema.org/InStock",
-        priceSpecification: {
-          "@type": "UnitPriceSpecification",
-          price: "84.00",
-          priceCurrency: "USD",
-          unitCode: "MON",
-          billingIncrement: 1,
-        },
       },
     },
   ];

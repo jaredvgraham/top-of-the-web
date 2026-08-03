@@ -4,20 +4,21 @@ import type { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Pricing — Free Website Build + $84/mo Hosting",
+  title: "Pricing — Just $495 or $84/mo",
   description:
-    "One simple offer: a custom website designed and built for $0, then $84/month for managed hosting, SSL, security updates, and basic content changes. Cancel anytime.",
+    "Custom website + hosting for just $495 — one customer pays for the life of your website. Or $0 build + $84/month. Live in about 24 hours.",
   keywords: [
     "website design pricing",
     "website builder cost",
     "monthly website plan",
+    "one time website cost",
     "managed website hosting",
     "small business website cost",
   ],
   openGraph: {
-    title: "Free Website Build + $84/mo Hosting | Bsites Pricing",
+    title: "Just $495 or $84/mo | Bsites Pricing",
     description:
-      "$0 to design and build your custom website, then $84/month for hosting, security, and care. No contract — cancel anytime.",
+      "Custom website + hosting for just $495 — one customer pays for the life of your website. Or $0 build + $84/mo care.",
     url: "https://www.bsites.io/pricing",
     siteName: "Bsites",
     locale: "en_US",
@@ -25,9 +26,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Free Website Build + $84/mo Hosting | Bsites Pricing",
+    title: "Just $495 or $84/mo | Bsites Pricing",
     description:
-      "$0 build, $84/mo hosting and care. Cancel anytime. Live in about 24 hours.",
+      "Just $495 — one customer pays for the life of your website. Or $84/mo care.",
   },
   alternates: { canonical: "https://www.bsites.io/pricing" },
 };
@@ -54,6 +55,21 @@ const page = () => {
         "@type": "Offer",
         url: "https://www.bsites.io/pricing",
         price: "84.00",
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "One-Time Website",
+      description:
+        "A custom website build with hosting included for a one-time payment of $495 — no monthly subscription.",
+      brand: { "@type": "Brand", name: "Bsites" },
+      offers: {
+        "@type": "Offer",
+        url: "https://www.bsites.io/pricing",
+        price: "495.00",
         priceCurrency: "USD",
         availability: "https://schema.org/InStock",
       },

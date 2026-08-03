@@ -17,27 +17,53 @@ declare global {
   }
 }
 
-const PURCHASE_VALUE = 84;
 const PURCHASE_CURRENCY = "USD";
 
-async function shouldCreditMeta(sessionId: string) {
+async function loadPurchaseMeta(sessionId: string) {
   // Fast path: cookies still have an ad-click signal
-  if (hasMetaAdClickAttribution(readMetaAttributionFromBrowser())) {
-    return true;
+  const browserHasClick = hasMetaAdClickAttribution(
+    readMetaAttributionFromBrowser()
+  );
+
+  if (!sessionId.startsWith("cs_")) {
+    return {
+      creditMeta: browserHasClick,
+      value: 84,
+      contentName: "Managed Website Plan",
+    };
   }
 
-  // Durable path: Lead stored fbclid/fbc when they entered via Meta
-  if (!sessionId.startsWith("cs_")) return false;
   try {
     const res = await fetch(
       `/api/stripe/meta-credit?session_id=${encodeURIComponent(sessionId)}`,
       { cache: "no-store" }
     );
-    if (!res.ok) return false;
-    const data = (await res.json()) as { creditMeta?: boolean };
-    return Boolean(data.creditMeta);
+    if (!res.ok) {
+      return {
+        creditMeta: browserHasClick,
+        value: 84,
+        contentName: "Managed Website Plan",
+      };
+    }
+    const data = (await res.json()) as {
+      creditMeta?: boolean;
+      value?: number;
+      contentName?: string;
+    };
+    return {
+      creditMeta: browserHasClick || Boolean(data.creditMeta),
+      value:
+        typeof data.value === "number" && Number.isFinite(data.value)
+          ? data.value
+          : 84,
+      contentName: data.contentName || "Managed Website Plan",
+    };
   } catch {
-    return false;
+    return {
+      creditMeta: browserHasClick,
+      value: 84,
+      contentName: "Managed Website Plan",
+    };
   }
 }
 
@@ -68,8 +94,8 @@ export default function ThankYouPurchasePixel() {
         // private mode — continue
       }
 
-      const creditMeta = await shouldCreditMeta(sessionId);
-      if (cancelled || !creditMeta) return;
+      const purchase = await loadPurchaseMeta(sessionId);
+      if (cancelled || !purchase.creditMeta) return;
 
       try {
         sessionStorage.setItem(key, "1");
@@ -78,9 +104,9 @@ export default function ThankYouPurchasePixel() {
       }
 
       window.fbq?.("track", "Purchase", {
-        value: PURCHASE_VALUE,
+        value: purchase.value,
         currency: PURCHASE_CURRENCY,
-        content_name: "Managed Website Plan",
+        content_name: purchase.contentName,
         ...(sessionId ? { order_id: sessionId } : {}),
       });
     })();

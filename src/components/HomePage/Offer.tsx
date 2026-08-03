@@ -6,20 +6,20 @@ const ease = [0.65, 0, 0.35, 1] as const;
 
 const points = [
   {
-    title: "$0 custom build",
-    body: "No agency invoice to get online. You claim the demo; we build the real site.",
+    title: "Just $495 once",
+    body: "Custom website + hosting for one small payment. No monthly subscription.",
   },
   {
-    title: "$84/mo hosting + care",
-    body: "Hosting, security, maintenance, and basic updates — one flat monthly price.",
+    title: "1 customer pays for the life of your website",
+    body: "Get one job or sale from the site and it’s covered — that’s the whole point.",
   },
   {
     title: "Live in about 24 hours",
-    body: "After you claim, we push toward launch fast. Your private demo stays available for 30 days.",
+    body: "After you claim, we polish and launch fast. Your private demo stays available for 30 days.",
   },
   {
-    title: "Cancel anytime once live",
-    body: "Manage billing with your Website ID. Satisfaction-focused — we work it until you’re happy.",
+    title: "Or go $84/mo if you prefer",
+    body: "$0 build today, then hosting, security, and care for $84/mo. Cancel anytime once live.",
   },
 ];
 
@@ -41,11 +41,11 @@ export default function Offer() {
             The offer
           </p>
           <h2 className="mt-3 font-display text-3xl font-medium tracking-tight text-ink sm:text-4xl">
-            Free to try. Simple to keep.
+            Free to try. Just $495 to keep.
           </h2>
           <p className="mt-4 text-base leading-relaxed text-ink/60 sm:text-lg">
-            See the demo first. Checkout only happens when you claim — not from
-            this page.
+            See the demo first. When you claim, most people choose $495 once —
+            one customer pays for the life of your website.
           </p>
         </motion.div>
 
