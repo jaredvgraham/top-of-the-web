@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadPreviewSite } from "@/lib/preview/loadPreview";
 import SiteRenderer from "@/components/preview/SiteRenderer";
-import CustomPreviewFrame from "@/components/preview/CustomPreviewFrame";
+import CustomPreviewFrame, {
+  externalDemoPageUrl,
+} from "@/components/preview/CustomPreviewFrame";
 import PreviewClaimBanner from "@/components/preview/PreviewClaimBanner";
 import PreviewDemoRibbon from "@/components/preview/PreviewDemoRibbon";
 import type { SiteSpec } from "@/lib/preview/siteSpecSchema";
@@ -64,13 +66,19 @@ function PreviewShell({
   page,
   site,
   pages,
+  externalDemoUrl,
 }: {
   slug: string;
   page: PageKey;
   site: SiteSpec;
   pages?: PreviewPages;
+  externalDemoUrl?: string;
 }) {
+  const liveUrl = externalDemoUrl
+    ? externalDemoPageUrl(externalDemoUrl, page)
+    : "";
   const html =
+    !liveUrl &&
     pages &&
     (page === "home"
       ? pages.home
@@ -82,8 +90,13 @@ function PreviewShell({
     <>
       <PreviewDemoRibbon slug={slug} page={page} />
       <div className="pb-44 sm:pb-36">
-        {html ? (
-          <CustomPreviewFrame html={html} slug={slug} page={page} />
+        {liveUrl || html ? (
+          <CustomPreviewFrame
+            html={html || undefined}
+            slug={slug}
+            page={page}
+            externalUrl={liveUrl || undefined}
+          />
         ) : (
           <SiteRenderer site={site} basePath={`/preview/${slug}`} page={page} />
         )}
@@ -119,6 +132,7 @@ export default async function PreviewSlugPage({ params }: Props) {
       page="home"
       site={loaded.site}
       pages={loaded.pages}
+      externalDemoUrl={loaded.externalDemoUrl}
     />
   );
 }

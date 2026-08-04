@@ -115,7 +115,9 @@ export async function listGhostLeads(
       .sort({ updatedAt: -1 })
       .lean(),
     Preview.find()
-      .select("slug email leadToken status expiresAt createdAt source")
+      .select(
+        "slug email leadToken status expiresAt createdAt source externalDemoUrl"
+      )
       .sort({ createdAt: -1 })
       .lean(),
   ]);
@@ -169,6 +171,11 @@ export async function listGhostLeads(
       previewReady: ready,
       previewExpired: expired,
     });
+    const demoOverride = (
+      lead.demoUrl ||
+      preview?.externalDemoUrl ||
+      ""
+    ).trim();
 
     const continueUrl =
       lead.token && !isLeadExpired(lead) ? leadContinueUrl(lead.token) : "";
@@ -196,7 +203,7 @@ export async function listGhostLeads(
         : null,
       facebookUrl,
       segment: rowSegment,
-      previewUrl: urls.previewUrl,
+      previewUrl: demoOverride || urls.previewUrl,
       claimUrl: urls.claimUrl,
       continueUrl,
       createdAt: lead.createdAt
@@ -226,6 +233,7 @@ export async function listGhostLeads(
       previewReady: ready,
       previewExpired: expired,
     });
+    const demoOverride = (preview.externalDemoUrl || "").trim();
 
     rows.push({
       id: `preview:${String(preview._id)}`,
@@ -250,7 +258,7 @@ export async function listGhostLeads(
         : null,
       facebookUrl,
       segment: rowSegment,
-      previewUrl: urls.previewUrl,
+      previewUrl: demoOverride || urls.previewUrl,
       claimUrl: urls.claimUrl,
       continueUrl: "",
       createdAt: preview.createdAt

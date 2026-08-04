@@ -19,6 +19,8 @@ export type LoadedPreview =
       slug: string;
       site: SiteSpec;
       pages?: PreviewPages;
+      /** Live site to iframe instead of stored HTML (optional). */
+      externalDemoUrl?: string;
       /** Email entered with the Facebook URL (owner). */
       email: string;
       /** Best contact email for checkout autofill. */
@@ -240,6 +242,7 @@ export async function loadPreviewSite(slugRaw: string): Promise<LoadedPreview> {
       slug: doc.slug,
       site,
       pages,
+      externalDemoUrl: (doc.externalDemoUrl || "").trim() || undefined,
       email: doc.email || "",
       checkoutEmail: resolveCheckoutEmail(
         doc.email || "",
@@ -271,6 +274,7 @@ export async function loadPreviewSite(slugRaw: string): Promise<LoadedPreview> {
     ok: true,
     slug: doc.slug,
     site: parsed.data,
+    externalDemoUrl: (doc.externalDemoUrl || "").trim() || undefined,
     email: doc.email || "",
     checkoutEmail: resolveCheckoutEmail(
       doc.email || "",

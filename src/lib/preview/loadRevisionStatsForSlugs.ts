@@ -12,7 +12,9 @@ export async function loadRevisionStatsForSlugs(
   if (!unique.length) return map;
 
   const docs = await Preview.find({ slug: { $in: unique } })
-    .select("slug revisionsBeforePayUsed revisionsAfterPayUsed revisionLog")
+    .select(
+      "slug revisionsBeforePayUsed revisionsAfterPayUsed revisionLog externalDemoUrl"
+    )
     .lean();
 
   for (const doc of docs) {
@@ -22,6 +24,7 @@ export async function loadRevisionStatsForSlugs(
       revisionsBeforePayUsed: Number(doc.revisionsBeforePayUsed) || 0,
       revisionsAfterPayUsed: Number(doc.revisionsAfterPayUsed) || 0,
       lastRevisionNote: (last?.note || "").trim(),
+      externalDemoUrl: (doc.externalDemoUrl || "").trim(),
     });
   }
 

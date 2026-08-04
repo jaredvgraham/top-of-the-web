@@ -17,22 +17,38 @@ function measureDocHeight(doc: Document) {
   );
 }
 
+export function externalDemoPageUrl(
+  baseUrl: string,
+  page: PageKey
+): string {
+  const trimmed = baseUrl.trim().replace(/\/+$/, "");
+  if (!trimmed) return "";
+  if (page === "home") return `${trimmed}/`;
+  return `${trimmed}/${page}`;
+}
+
 export default function CustomPreviewFrame({
   html,
   slug,
   page,
+  externalUrl,
 }: {
-  html: string;
+  html?: string;
   slug: string;
   page: PageKey;
+  /** When set, load this live URL instead of stored HTML (srcDoc). */
+  externalUrl?: string;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const liveUrl = (externalUrl || "").trim();
   const srcDoc = useMemo(() => {
+    if (liveUrl || !html) return "";
     const basePath = `/preview/${slug}`;
     return rewritePreviewHtmlLinks(html, basePath);
-  }, [html, slug]);
+  }, [html, slug, liveUrl]);
 
   useEffect(() => {
+    if (liveUrl) return;
     const iframe = iframeRef.current;
     if (!iframe) return;
 
@@ -120,7 +136,23 @@ export default function CustomPreviewFrame({
       if (debounceTimer) clearTimeout(debounceTimer);
       for (const fn of cleanups) fn();
     };
-  }, [srcDoc]);
+  }, [srcDoc, liveUrl]);
+
+  if (liveUrl) {
+    return (
+      <iframe
+        title={`Website demo — ${page}`}
+        src={liveUrl}
+        className="block w-full border-0 bg-white"
+        style={{
+          width: "100%",
+          height: "calc(100vh - 9rem)",
+          minHeight: "720px",
+        }}
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation-by-user-activation"
+      />
+    );
+  }
 
   return (
     <iframe

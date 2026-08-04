@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
           .sort({ createdAt: -1 })
           .limit(limit)
           .select(
-            "name email phone businessName city state status source notes onboardingToken token previewSlug facebookUrl attribution demoViewCount demoFirstViewedAt demoLastViewedAt createdAt updatedAt"
+            "name email phone businessName city state status source notes onboardingToken token previewSlug demoUrl facebookUrl attribution demoViewCount demoFirstViewedAt demoLastViewedAt createdAt updatedAt"
           )
           .lean(),
       ]);

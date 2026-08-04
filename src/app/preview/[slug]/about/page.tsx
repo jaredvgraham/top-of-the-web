@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadPreviewSite } from "@/lib/preview/loadPreview";
 import SiteRenderer from "@/components/preview/SiteRenderer";
-import CustomPreviewFrame from "@/components/preview/CustomPreviewFrame";
+import CustomPreviewFrame, {
+  externalDemoPageUrl,
+} from "@/components/preview/CustomPreviewFrame";
 import PreviewClaimBanner from "@/components/preview/PreviewClaimBanner";
 import PreviewDemoRibbon from "@/components/preview/PreviewDemoRibbon";
 
@@ -40,15 +42,20 @@ export default async function PreviewAboutRoute({ params }: Props) {
     );
   }
 
+  const liveUrl = loaded.externalDemoUrl
+    ? externalDemoPageUrl(loaded.externalDemoUrl, "about")
+    : "";
+
   return (
     <>
       <PreviewDemoRibbon slug={loaded.slug} page="about" />
       <div className="pb-44 sm:pb-36">
-        {loaded.pages?.about ? (
+        {liveUrl || loaded.pages?.about ? (
           <CustomPreviewFrame
-            html={loaded.pages.about}
+            html={loaded.pages?.about}
             slug={loaded.slug}
             page="about"
+            externalUrl={liveUrl || undefined}
           />
         ) : (
           <SiteRenderer

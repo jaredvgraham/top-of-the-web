@@ -42,6 +42,11 @@ export interface IPreview extends Document {
   siteSpec?: SiteSpec;
   /** Custom $4k-quality HTML pages (primary render path). */
   pages?: PreviewPages;
+  /**
+   * When set, demo iframes load this live site instead of stored HTML
+   * (home → /, services → /services, about → /about).
+   */
+  externalDemoUrl?: string;
   generation?: {
     engine: string;
     model: string;
@@ -115,6 +120,11 @@ const PreviewSchema = new Schema<IPreview>(
     pages: {
       type: Schema.Types.Mixed,
       default: undefined,
+    },
+    externalDemoUrl: {
+      type: String,
+      default: "",
+      trim: true,
     },
     generation: {
       type: Schema.Types.Mixed,

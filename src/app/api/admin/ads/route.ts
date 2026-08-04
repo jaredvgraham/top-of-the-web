@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
           .sort({ createdAt: -1 })
           .limit(200)
           .select(
-            "name email phone businessName city state status token previewSlug facebookUrl attribution demoViewCount demoFirstViewedAt demoLastViewedAt createdAt updatedAt"
+            "name email phone businessName city state status token previewSlug demoUrl facebookUrl attribution demoViewCount demoFirstViewedAt demoLastViewedAt createdAt updatedAt"
           )
           .lean(),
       ]);

@@ -87,6 +87,7 @@ type LeanLead = {
   onboardingToken?: string;
   token?: string;
   previewSlug?: string;
+  demoUrl?: string;
   facebookUrl?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
@@ -193,7 +194,10 @@ export function serializeAdminLead(doc: LeanLead): AdminLeadRow {
   const token = doc.token || "";
   const previewSlug = doc.previewSlug || "";
   const origin = siteOrigin();
-  const demoUrl = previewSlug ? `${origin}/preview/${previewSlug}` : "";
+  const demoOverride = (doc.demoUrl || "").trim();
+  const demoUrl =
+    demoOverride ||
+    (previewSlug ? `${origin}/preview/${previewSlug}` : "");
   const source = doc.source === "contact" ? "contact" : "preview";
   const onboardingToken = doc.onboardingToken || "";
   const onboardingUrl = onboardingToken
@@ -245,6 +249,8 @@ export type PreviewRevisionStats = {
   revisionsBeforePayUsed: number;
   revisionsAfterPayUsed: number;
   lastRevisionNote: string;
+  /** When set, admin Demo link uses this live URL instead of /preview/{slug}. */
+  externalDemoUrl: string;
 };
 
 /** Attach Preview AI revision usage onto serialized leads (by previewSlug). */
@@ -257,6 +263,13 @@ export function applyPreviewRevisionStats(
     if (!slug) return lead;
     const stats = bySlug.get(slug);
     if (!stats) return lead;
-    return { ...lead, ...stats };
+    const external = (stats.externalDemoUrl || "").trim().replace(/\/+$/, "");
+    return {
+      ...lead,
+      revisionsBeforePayUsed: stats.revisionsBeforePayUsed,
+      revisionsAfterPayUsed: stats.revisionsAfterPayUsed,
+      lastRevisionNote: stats.lastRevisionNote,
+      demoUrl: external || lead.demoUrl,
+    };
   });
 }

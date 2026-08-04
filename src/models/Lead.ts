@@ -47,6 +47,8 @@ export interface ILead extends Document {
   onboardingToken?: string;
   attribution: ILeadAttribution;
   previewSlug?: string;
+  /** Optional override for admin Demo link (e.g. live Vercel URL). */
+  demoUrl?: string;
   facebookUrl?: string;
   authorized?: boolean;
   /** Client demo page views (admin sessions excluded). */
@@ -152,6 +154,11 @@ const LeadSchema = new Schema<ILead>(
       type: String,
       default: "",
       index: true,
+    },
+    demoUrl: {
+      type: String,
+      default: "",
+      trim: true,
     },
     facebookUrl: {
       type: String,
