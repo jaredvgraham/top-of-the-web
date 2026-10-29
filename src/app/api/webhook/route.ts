@@ -1,6 +1,5 @@
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
-import Customer from "@/models/Customer";
 import Order from "@/models/Order";
 import dbConnect from "@/lib/db";
 import { findCustomerByEmail } from "@/models/Customer";
@@ -9,27 +8,12 @@ import Preview from "@/models/Preview";
 import Lead from "@/models/Lead";
 import { sendPurchaseConfirmationEmail } from "@/lib/mail";
 import {
-  getSubscriptionInfoForCustomer,
   summarizeSubscriptions,
+  syncStoredSubscription,
 } from "@/lib/stripeSubscription";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-
-async function syncCustomerSubscription(stripeCustomerId: string) {
-  const customer = await Customer.findOne({ customerId: stripeCustomerId });
-  if (!customer) return;
-
-  const info = await getSubscriptionInfoForCustomer(stripeCustomerId);
-  customer.subscriptionStatus = info.status;
-  customer.subscriptionCancelAt = info.cancelAt
-    ? new Date(info.cancelAt * 1000)
-    : null;
-  customer.subscriptionCanceledAt = info.canceledAt
-    ? new Date(info.canceledAt * 1000)
-    : null;
-  await customer.save();
-}
 
 export async function POST(req: NextRequest) {
   console.log("Webhook received");
@@ -95,6 +79,18 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      if (session.metadata?.resubscribe === "true") {
+        const stripeCustomerId =
+          typeof session.customer === "string"
+            ? session.customer
+            : session.customer?.id;
+        if (stripeCustomerId) {
+          await syncStoredSubscription(stripeCustomerId);
+        }
+        console.log("[webhook] resubscribe checkout completed", email);
+        return NextResponse.json({ status: "success", event: event.type });
+      }
+
       const order = await Order.findOne({ email });
       if (!order) {
         return NextResponse.json({
@@ -135,7 +131,7 @@ export async function POST(req: NextRequest) {
       await customer.save();
 
       if (customer.customerId) {
-        await syncCustomerSubscription(customer.customerId);
+        await syncStoredSubscription(customer.customerId);
       }
 
       if (!order.confirmationEmailSent) {
@@ -229,7 +225,7 @@ export async function POST(req: NextRequest) {
           ? subscription.customer
           : subscription.customer.id;
 
-      await syncCustomerSubscription(stripeCustomerId);
+      await syncStoredSubscription(stripeCustomerId);
 
       const info = summarizeSubscriptions([subscription]);
       console.log(

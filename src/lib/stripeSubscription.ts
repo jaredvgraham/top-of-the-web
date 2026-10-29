@@ -1,4 +1,6 @@
 import Stripe from "stripe";
+import Customer from "@/models/Customer";
+import dbConnect from "@/lib/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
@@ -35,7 +37,11 @@ export function summarizeSubscriptions(
     (s) => s.status === "active" || s.status === "trialing"
   );
   if (active) {
-    if (active.cancel_at_period_end) {
+    const scheduledCancel =
+      active.cancel_at_period_end ||
+      (typeof active.cancel_at === "number" &&
+        active.cancel_at * 1000 > Date.now());
+    if (scheduledCancel) {
       return {
         status: "canceling",
         cancelAt: active.cancel_at ?? active.current_period_end ?? null,
@@ -95,6 +101,31 @@ export async function getSubscriptionInfoForCustomer(
     console.error("Failed to fetch Stripe subscriptions:", error);
     return { ...emptySubscriptionInfo(), status: "unknown" };
   }
+}
+
+export function resubscribeMode(
+  status: SubscriptionStatus
+): "checkout" | "resume" | null {
+  if (status === "canceled") return "checkout";
+  if (status === "canceling") return "resume";
+  return null;
+}
+
+export async function syncStoredSubscription(stripeCustomerId: string) {
+  await dbConnect();
+  const customer = await Customer.findOne({ customerId: stripeCustomerId });
+  if (!customer) return null;
+
+  const info = await getSubscriptionInfoForCustomer(stripeCustomerId);
+  customer.subscriptionStatus = info.status;
+  customer.subscriptionCancelAt = info.cancelAt
+    ? new Date(info.cancelAt * 1000)
+    : null;
+  customer.subscriptionCanceledAt = info.canceledAt
+    ? new Date(info.canceledAt * 1000)
+    : null;
+  await customer.save();
+  return info;
 }
 
 export async function getSubscriptionInfoMap(

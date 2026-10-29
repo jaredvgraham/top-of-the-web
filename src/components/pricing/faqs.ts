@@ -27,7 +27,7 @@ export const PRICING_FAQS = [
   },
   {
     q: "Can I cancel the monthly plan later?",
-    a: "Anytime. Manage or cancel your subscription yourself from the billing portal using your Website ID — no phone call, no retention maze.",
+    a: "Anytime. Manage or cancel your subscription yourself from the billing portal using your Website ID — no phone call, no retention maze. If you cancel, come back to that same billing page and resubscribe.",
   },
   {
     q: "What if I need ecommerce or booking?",
